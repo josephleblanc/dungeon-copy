@@ -1,0 +1,33 @@
+How to seperate a split gui file using gthumb and imagemagick
+
+1. Download the file with the splits
+  This is a file with the menu box split into a 3x3, separated by transparent
+  space.
+
+2. Use gthumb to crop the 3x3 box
+  Open gthumb and open the edit tools with 'e' or by pressing the brush icon in
+  the top right. Manually crop the image, and save it as a new file with a
+  suitable name.
+  Crop the image so that there will not be anything cut off when the image is
+  split into a 3x3 by eye-balling the grid in the crop tool.
+
+3. Use imagemagick to split the file into 9 separate files
+  Create a directory for the file output.
+  Use the following command to split the file into 9 equal parts and put the
+  output in the newly created directory:
+    magick <filename>.ext -crop 3x3@ <output_dir>/<filename>.ext
+  for example:
+    magick dark_menu_gui.png -crop 3x3@ dark_menu_3x3/dark_menu_gui.png
+  This will create new files with the names dark_menu_gui-0.png,
+  dark_menu_gui-1.png, etc., in the dark_menu_3x3 directory.
+
+4. Use imagemagick to trim the 9 new files
+  Use the following command to trim the remaining transparent space around the
+  files:
+    magick <directory>/<filename>.ext -trim <directory>/filename.ext
+  for example:
+    magick dark_menu_3x3/dark_menu_gui-*.png -trim \
+      dark_menu_3x3/dark_menu_gui-*.png
+  NOTE: This will only work if the menu texture itself does not use transparent
+  space near its border areas.
+

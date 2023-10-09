@@ -1,0 +1,10 @@
+{
+  "main_menu_scene_text": {
+    "play": "Play",
+    "options": "Options",
+    "quit": "Quit"
+  },
+  "loading_scene_text": {
+    "loading": "Loading..."
+  }
+}
