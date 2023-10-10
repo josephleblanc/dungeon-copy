@@ -10,6 +10,7 @@ use crate::resources::language::Language;
 pub struct Glossery {
     pub main_menu_scene_text: MainMenuSceneText,
     pub loading_scene_text: LoadingSceneText,
+    pub shared_text: SharedText,
 }
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct MainMenuSceneText {
@@ -21,6 +22,15 @@ pub struct MainMenuSceneText {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct LoadingSceneText {
     pub loading: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct SharedText {
+    pub classic_mode: String,
+    pub survival_mode: String,
+    pub select_game_mode: String,
+    pub continue_: String,
+    pub quit: String,
 }
 
 impl Glossery {

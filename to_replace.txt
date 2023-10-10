@@ -1,0 +1,13 @@
+This is a list of assets used from the original dungeon-quest, which should
+be replaced moving forward.
+
+Main Menu background image
+assets/images/main_menu_background.png
+
+Sub Menu background image
+assets/images/sub_menu_background.png
+
+Home icon
+assets/icons/home_icon_clicked.png
+assets/icons/home_icon_hovered.png
+assets/icons/home_icon_normal.png

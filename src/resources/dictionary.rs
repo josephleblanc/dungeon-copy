@@ -19,7 +19,7 @@ impl Dictionary {
             current_language,
         }
     }
-    pub fn get_glossery(&self) -> Glossery {
+    pub fn get_glossary(&self) -> Glossery {
         match self.current_language {
             Language::EN => self.en_glossery.clone(),
             // more languages here

@@ -111,7 +111,7 @@ fn main_menu_box(root: &mut ChildBuilder, menu_box_materials: &MenuBoxMaterials)
 }
 
 fn buttons(root: &mut ChildBuilder, materials: &Res<FontMaterials>, dictionary: Res<Dictionary>) {
-    let glossery = dictionary.get_glossery();
+    let glossery = dictionary.get_glossary();
 
     for (index, button) in ButtonComponent::iterator().enumerate() {
         root.spawn(ButtonBundle {
@@ -175,7 +175,7 @@ fn button_handle_system(
             Interaction::Pressed => {
                 text.sections[0].style.color = Color::RED;
                 match button {
-                    ButtonComponent::Play => (), // state.set(SceneState::GameModeSelectScene),
+                    ButtonComponent::Play => state.set(SceneState::GameModeSelectScene),
                     ButtonComponent::Options => (), // state.set(SceneState::OptionsScene),
                     ButtonComponent::Quit => exit.send(AppExit),
                 }

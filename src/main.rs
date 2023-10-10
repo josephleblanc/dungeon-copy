@@ -45,6 +45,7 @@ fn main() {
         .add_plugins(plugins::camera::CameraPlugin)
         .add_plugins(scenes::loading_scene::LoadingScenePlugin)
         .add_plugins(scenes::main_menu_scene::MainMenuScenePlugin)
+        .add_plugins(scenes::game_mode_select::GameModeSelectScenePlugin)
         .add_plugins(DebugPlugin)
         .run();
 }

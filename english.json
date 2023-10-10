@@ -6,5 +6,12 @@
   },
   "loading_scene_text": {
     "loading": "Loading..."
+  },
+  "shared_text": {
+    "classic_mode": "Classic Mode",
+    "survival_mode": "Survival Mode",
+    "select_game_mode": "Select Game Mode",
+    "continue_": "Continue",
+    "quit": "Quit"
   }
 }

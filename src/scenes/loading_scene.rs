@@ -4,6 +4,7 @@ use crate::config::*;
 use crate::scenes::SceneState;
 
 use crate::materials::font::FontMaterials;
+use crate::materials::icon::IconMaterials;
 use crate::materials::menu_box::MenuBoxMaterials;
 use crate::materials::scenes::ScenesMaterials;
 use crate::resources::dictionary::Dictionary;
@@ -165,7 +166,7 @@ fn loading_text(
         ..Default::default()
     })
     .with_children(|parent| {
-        let glossery = dictionary.get_glossery();
+        let glossery = dictionary.get_glossary();
 
         let font_str = match dictionary.get_current_language() {
             Language::EN => ROBOTO_FONT,
@@ -234,6 +235,11 @@ fn load_materials(mut commands: Commands, asset_server: Res<AssetServer>) {
             bottom_right: asset_server.load("scenes/gui/menu_box_parchment/bottom_right.png"),
             bottom_center: asset_server.load("scenes/gui/menu_box_parchment/bottom_center.png"),
             bottom_left: asset_server.load("scenes/gui/menu_box_parchment/bottom_left.png"),
+        },
+        icon_materials: IconMaterials {
+            home_icon_normal: asset_server.load("icons/home_icon_normal.png"),
+            home_icon_hovered: asset_server.load("icons/home_icon_hovered.png"),
+            home_icon_clicked: asset_server.load("icons/home_icon_clicked.png"),
         },
     };
 
