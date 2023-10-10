@@ -40,7 +40,6 @@ impl Plugin for LoadingScenePlugin {
 }
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>, dictionary: Res<Dictionary>) {
-    println!("running LoadingScenePlugin::setup");
     let user_interface_root = commands
         .spawn(NodeBundle {
             style: Style {

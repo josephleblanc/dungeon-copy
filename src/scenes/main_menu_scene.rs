@@ -8,16 +8,6 @@ use crate::materials::scenes::ScenesMaterials;
 use crate::resources::dictionary::Dictionary;
 use crate::scenes::SceneState;
 
-const MAIN_MENU_BOX_ARRAY: [[i8; 5]; 8] = [
-    [0, 1, 1, 1, 2],
-    [3, 4, 4, 4, 5],
-    [3, 4, 4, 4, 5],
-    [3, 4, 4, 4, 5],
-    [3, 4, 4, 4, 5],
-    [3, 4, 4, 4, 5],
-    [3, 4, 4, 4, 5],
-    [6, 7, 7, 7, 8],
-];
 const FONT_SIZE: f32 = 36.0;
 const MAIN_MENU_BOX_TILE_SIZE: f32 = 50.0;
 
@@ -95,23 +85,14 @@ fn cleanup(mut commands: Commands, main_menu_scene_data: Res<MainMenuSceneData>)
 }
 
 fn main_menu_box(root: &mut ChildBuilder, menu_box_materials: &MenuBoxMaterials) {
-    for (row_index, row) in MAIN_MENU_BOX_ARRAY.iter().enumerate() {
+    let main_menu_box = menu_box_materials.build_box(5, 8).unwrap();
+    for (row_index, row) in main_menu_box.iter().enumerate() {
+        println!("row_index: {}", row_index);
         for (column_index, value) in row.iter().enumerate() {
-            let image: Handle<Image> = match value {
-                0 => menu_box_materials.top_left.clone(),
-                1 => menu_box_materials.top_center.clone(),
-                2 => menu_box_materials.top_right.clone(),
-                3 => menu_box_materials.mid_left.clone(),
-                4 => menu_box_materials.mid_center.clone(),
-                5 => menu_box_materials.mid_right.clone(),
-                6 => menu_box_materials.bottom_left.clone(),
-                7 => menu_box_materials.bottom_center.clone(),
-                8 => menu_box_materials.bottom_right.clone(),
-                _ => panic!("Unknown resources"),
-            };
+            let image = value;
 
             root.spawn(ImageBundle {
-                image: UiImage::new(image),
+                image: UiImage::new(image.clone()),
                 style: Style {
                     position_type: PositionType::Absolute,
                     left: Val::Px(10.0 + MAIN_MENU_BOX_TILE_SIZE * column_index as f32),

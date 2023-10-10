@@ -3,7 +3,6 @@ use bevy::{prelude::*, window::WindowMode};
 
 use config::*;
 use plugins::debug::DebugPlugin;
-use scenes::SceneState;
 
 mod config;
 mod materials;
@@ -46,14 +45,6 @@ fn main() {
         .add_plugins(plugins::camera::CameraPlugin)
         .add_plugins(scenes::loading_scene::LoadingScenePlugin)
         .add_plugins(scenes::main_menu_scene::MainMenuScenePlugin)
-        .add_systems(
-            Update,
-            debug_scene_state.run_if(state_changed::<SceneState>()),
-        )
         .add_plugins(DebugPlugin)
         .run();
-}
-
-fn debug_scene_state(scene_state: Res<State<SceneState>>) {
-    println!("scene:state: {:?}", scene_state.get());
 }
