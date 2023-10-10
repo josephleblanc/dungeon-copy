@@ -47,6 +47,11 @@ struct GameModeSelectSceneData {
 impl Plugin for GameModeSelectScenePlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(SceneState::GameModeSelectScene), setup);
+        app.add_systems(
+            Update,
+            (button_handle_system, return_button_handle)
+                .run_if(in_state(SceneState::GameModeSelectScene)),
+        );
         app.add_systems(OnExit(SceneState::GameModeSelectScene), cleanup);
     }
 }
@@ -242,6 +247,32 @@ fn button_handle_system(
                 } else if *button == ButtonComponent::SurvivalMode {
                     // set game mode to another mode
                     ();
+                }
+            }
+        }
+    }
+}
+
+fn return_button_handle(
+    mut button_query: Query<
+        (&Interaction, &ButtonComponent, &mut UiImage),
+        (Changed<Interaction>, With<Button>),
+    >,
+    scenes_materials: Res<ScenesMaterials>,
+    mut state: ResMut<NextState<SceneState>>,
+) {
+    for (interaction, button, mut ui_image) in button_query.iter_mut() {
+        if *button == ButtonComponent::Return {
+            match *interaction {
+                Interaction::None => {
+                    ui_image.texture = scenes_materials.icon_materials.home_icon_normal.clone()
+                }
+                Interaction::Hovered => {
+                    ui_image.texture = scenes_materials.icon_materials.home_icon_hovered.clone()
+                }
+                Interaction::Pressed => {
+                    ui_image.texture = scenes_materials.icon_materials.home_icon_clicked.clone();
+                    state.set(SceneState::MainMenuScene);
                 }
             }
         }
