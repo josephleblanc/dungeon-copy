@@ -243,14 +243,20 @@ fn load_materials(mut commands: Commands, asset_server: Res<AssetServer>) {
             home_icon_hovered: asset_server.load("icons/home_icon_hovered.png"),
             home_icon_clicked: asset_server.load("icons/home_icon_clicked.png"),
         },
-    };
-
-    let in_game_materials = InGameMaterials {
         heroes_materials: HeroesMaterials {
             male_fighter: asset_server.load("scenes/heroes/male_fighter.png"),
             male_wizard: asset_server.load("scenes/heroes/male_wizard.png"),
             female_fighter: asset_server.load("scenes/heroes/female_fighter.png"),
             female_wizard: asset_server.load("scenes/heroes/female_wizard.png"),
+        },
+    };
+
+    let in_game_materials = InGameMaterials {
+        heroes_materials: HeroesMaterials {
+            male_fighter: asset_server.load("ingame/heroes/male_fighter.png"),
+            male_wizard: asset_server.load("ingame/heroes/male_wizard.png"),
+            female_fighter: asset_server.load("ingame/heroes/female_fighter.png"),
+            female_wizard: asset_server.load("ingame/heroes/female_wizard.png"),
         },
     };
 

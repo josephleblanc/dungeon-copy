@@ -64,11 +64,15 @@ struct HeroSelectSceneData {
 impl Plugin for HeroSelectScenePlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(SceneState::HeroSelectScene), setup);
-        // app.add_systems(Update, (
-        //     return_button_handle,
-        //     hero_select_handle,
-        //     hero_image_animation_handle,
-        // ).run_if(in_state(SceneState::HeroSelectScene)));
+        app.add_systems(
+            Update,
+            (
+                return_button_handle,
+                hero_select_handle,
+                hero_image_animation_handle,
+            )
+                .run_if(in_state(SceneState::HeroSelectScene)),
+        );
         app.add_systems(OnExit(SceneState::HeroSelectScene), cleanup);
     }
 }
@@ -170,15 +174,16 @@ fn heroes_images(
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
     let mut index = 0;
-    let hero_image_positions: [[f32; 2]; 8] = [
-        [-250.0, 75.0],
-        [-250.0, -100.0],
+    let hero_image_positions: [[f32; 2]; 4] = [
         [-75.0, 75.0],
-        [-75.0, -100.0],
-        [100.0, 75.0],
-        [100.0, -100.0],
+        [-250.0, 75.0],
         [275.0, 75.0],
-        [275.0, -100.0],
+        [100.0, 75.0],
+        // for more heroes
+        // [-250.0, -100.0],
+        // [-75.0, -100.0],
+        // [100.0, -100.0],
+        // [275.0, -100.0],
     ];
 
     for hero_class in HeroClass::iterator() {
@@ -287,26 +292,23 @@ fn return_button(root: &mut ChildBuilder, scenes_materials: &ScenesMaterials) {
 }
 
 fn heroes_buttons(root: &mut ChildBuilder) {
-    let button_positions: [[f32; 2]; 8] = [
+    let button_positions: [[f32; 2]; 4] = [
         [210.0, 170.0],
         [380.0, 170.0],
         [560.0, 170.0],
         [740.0, 170.0],
-        [210.0, 350.0],
-        [380.0, 350.0],
-        [560.0, 350.0],
-        [740.0, 350.0],
+        // for more heroes
+        // [210.0, 350.0],
+        // [380.0, 350.0],
+        // [560.0, 350.0],
+        // [740.0, 350.0],
     ];
 
     for (index, value) in ButtonComponent::iterator().enumerate() {
         let component_name = match index {
-            1 => "MaleElf",
-            2 => "MaleKnight",
-            3 => "MaleLizard",
-            4 => "MaleWizard",
-            5 => "FemaleElf",
-            6 => "FemaleKnight",
-            7 => "FemaleLizard",
+            1 => "MaleFighter",
+            2 => "FemaleFighter",
+            3 => "MaleWizard",
             _ => "FemaleWizard",
         };
 
@@ -361,6 +363,51 @@ fn hero_select_handle(
                     state.set(SceneState::PreClassicMode);
                 } else {
                     // state.set(SceneState::PreSurvivalMode);
+                }
+            }
+        }
+    }
+}
+
+fn return_button_handle(
+    mut button_query: Query<
+        (&Interaction, &mut UiImage),
+        (Changed<Interaction>, With<ReturnButtonComponent>),
+    >,
+    scenes_materials: Res<ScenesMaterials>,
+    mut state: ResMut<NextState<SceneState>>,
+) {
+    for (interaction, mut ui_image) in button_query.iter_mut() {
+        match *interaction {
+            Interaction::None => {
+                ui_image.texture = scenes_materials.icon_materials.home_icon_normal.clone()
+            }
+            Interaction::Hovered => {
+                ui_image.texture = scenes_materials.icon_materials.home_icon_hovered.clone()
+            }
+            Interaction::Pressed => {
+                ui_image.texture = scenes_materials.icon_materials.home_icon_clicked.clone();
+                state.set(SceneState::MainMenuScene);
+            }
+        }
+    }
+}
+
+fn hero_image_animation_handle(
+    time: Res<Time>,
+    mut query: Query<(&HeroImageComponent, &mut TextureAtlasSprite)>,
+    mut animation_controller: ResMut<AnimationController>,
+) {
+    for (hero_image, mut sprite) in query.iter_mut() {
+        if animation_controller.run_animation && *hero_image == animation_controller.hero_image {
+            animation_controller.timer.tick(time.delta());
+            if animation_controller.timer.just_finished() {
+                let min_index = 0;
+                let max_index = 3;
+                if sprite.index > max_index || sprite.index < min_index {
+                    sprite.index = min_index;
+                } else {
+                    sprite.index += 1;
                 }
             }
         }
