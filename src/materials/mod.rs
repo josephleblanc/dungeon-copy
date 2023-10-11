@@ -1,4 +1,6 @@
 pub mod font;
+pub mod heroes;
 pub mod icon;
+pub mod ingame;
 pub mod menu_box;
 pub mod scenes;

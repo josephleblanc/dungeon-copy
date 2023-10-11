@@ -1,9 +1,11 @@
 use bevy::prelude::*;
 
 use crate::config::*;
+use crate::materials::ingame::InGameMaterials;
 use crate::scenes::SceneState;
 
 use crate::materials::font::FontMaterials;
+use crate::materials::heroes::HeroesMaterials;
 use crate::materials::icon::IconMaterials;
 use crate::materials::menu_box::MenuBoxMaterials;
 use crate::materials::scenes::ScenesMaterials;
@@ -243,6 +245,16 @@ fn load_materials(mut commands: Commands, asset_server: Res<AssetServer>) {
         },
     };
 
+    let in_game_materials = InGameMaterials {
+        heroes_materials: HeroesMaterials {
+            male_fighter: asset_server.load("scenes/heroes/male_fighter.png"),
+            male_wizard: asset_server.load("scenes/heroes/male_wizard.png"),
+            female_fighter: asset_server.load("scenes/heroes/female_fighter.png"),
+            female_wizard: asset_server.load("scenes/heroes/female_wizard.png"),
+        },
+    };
+
     commands.insert_resource(font_materials);
     commands.insert_resource(scenes_materials);
+    commands.insert_resource(in_game_materials);
 }

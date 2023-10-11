@@ -11,6 +11,7 @@
     "classic_mode": "Classic Mode",
     "survival_mode": "Survival Mode",
     "select_game_mode": "Select Game Mode",
+    "select_hero": "Select Hero",
     "continue_": "Continue",
     "quit": "Quit"
   }

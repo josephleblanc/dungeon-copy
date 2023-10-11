@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 
+use crate::materials::heroes::HeroesMaterials;
 use crate::materials::icon::IconMaterials;
 use crate::materials::menu_box::MenuBoxMaterials;
 
