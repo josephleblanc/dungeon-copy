@@ -19,6 +19,10 @@ pub const ROBOTO_FONT: &str = "fonts/roboto.ttf";
 
 // Dungeon Floor file names
 pub const LIST_FLOOR_FILE: &str = "list_floor.txt";
+pub const LIST_ROOM_FILE: &str = "list_room.txt";
 
 // Dungeon info
 pub const TILE_SIZE: f32 = 64.0;
+
+// Game data
+pub const DATA_FILE: &str = "data.json";

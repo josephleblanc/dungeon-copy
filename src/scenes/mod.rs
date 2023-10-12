@@ -13,5 +13,5 @@ pub enum SceneState {
     GameModeSelectScene,
     HeroSelectScene,
     PreClassicMode,
-    InGameModeClassic,
+    InGameClassicMode,
 }

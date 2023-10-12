@@ -1,0 +1,10 @@
+{
+  "heroes": [
+    {
+      "hero_class": "Fighter"
+    },
+    {
+      "hero_class": "Wizard"
+    }
+]
+}

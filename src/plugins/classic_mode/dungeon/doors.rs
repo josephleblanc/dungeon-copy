@@ -206,6 +206,10 @@ pub fn horizontal_doors_system(
     }
 }
 
+/// Manages the open/close state of doors and whether or not they are visible.
+/// Doors are opened when a room is cleared, closed otherwise.
+/// Doors are visible if there is a next room in that direction (up/down,left/right),
+/// hidden otherwise.
 pub fn vertical_doors_system(
     mut vertical_door_query: Query<(&VerticaltDoor, &Children, &mut Visibility)>,
     mut visibility_query: Query<&mut Visibility, Without<VerticaltDoor>>,
@@ -220,6 +224,7 @@ pub fn vertical_doors_system(
             let current_position = current_floor.current_position;
             let total_rows = current_floor.total_rows;
 
+            // Checks whether there are rooms above or below the current room.
             let has_next_room = if *vertical_door == VerticaltDoor::Top {
                 if current_position.row_index > 0 {
                     let above_room_row_index = current_position.row_index - 1;
@@ -234,12 +239,14 @@ pub fn vertical_doors_system(
                 false
             };
 
+            // hides the doors if there is no next room.
             *visibility = if has_next_room {
                 Visibility::Inherited
             } else {
                 Visibility::Hidden
             };
 
+            // the children of VerticalDoor are their images
             for child in children.iter() {
                 let mut child_visibility = visibility_query.get_mut(*child).unwrap();
                 *child_visibility = if has_next_room {
@@ -253,6 +260,7 @@ pub fn vertical_doors_system(
                 let is_room_cleared = player_dungeon_stats.is_room_cleared;
                 for child in children.iter() {
                     let result = image_query.get_mut(*child);
+                    // TODO: change `if let Ok(result)`
                     if result.is_ok() {
                         let (_door, mut texture) = result.unwrap();
                         *texture = if is_room_cleared {

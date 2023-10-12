@@ -1,3 +1,5 @@
+#![allow(clippy::collapsible_else_if)]
+
 use bevy::window::{WindowResizeConstraints, WindowResolution};
 use bevy::{prelude::*, window::WindowMode};
 
@@ -47,6 +49,7 @@ fn main() {
         .add_plugins(scenes::main_menu_scene::MainMenuScenePlugin)
         .add_plugins(scenes::game_mode_select::GameModeSelectScenePlugin)
         .add_plugins(scenes::hero_select_scene::HeroSelectScenePlugin)
+        .add_plugins(plugins::classic_mode::ClassicModePlugin)
         .add_plugins(DebugPlugin)
         .run();
 }

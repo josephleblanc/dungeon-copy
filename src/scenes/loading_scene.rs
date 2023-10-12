@@ -11,6 +11,8 @@ use crate::materials::icon::IconMaterials;
 use crate::materials::menu_box::MenuBoxMaterials;
 use crate::materials::scenes::ScenesMaterials;
 use crate::resources::dictionary::Dictionary;
+use crate::resources::dungeon::rooms::Rooms;
+use crate::resources::game_data::GameData;
 use crate::resources::language::Language;
 
 const LOADING_TEXT_FONT_SIZE: f32 = 30.0;
@@ -37,7 +39,8 @@ impl Plugin for LoadingScenePlugin {
         app.add_systems(OnEnter(SceneState::LoadingScene), setup)
             .add_systems(
                 Update,
-                (load_materials, update_loader).run_if(in_state(SceneState::LoadingScene)),
+                (load_materials, load_data, update_loader)
+                    .run_if(in_state(SceneState::LoadingScene)),
             )
             .add_systems(OnExit(SceneState::LoadingScene), cleanup);
     }
@@ -292,4 +295,9 @@ fn load_materials(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.insert_resource(font_materials);
     commands.insert_resource(scenes_materials);
     commands.insert_resource(in_game_materials);
+}
+
+fn load_data(mut commands: Commands) {
+    commands.insert_resource(GameData::new());
+    commands.insert_resource(Rooms::new());
 }

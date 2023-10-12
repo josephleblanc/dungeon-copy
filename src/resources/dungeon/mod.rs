@@ -4,12 +4,21 @@ use rand::distributions::{Distribution, Uniform};
 use std::fs::File;
 use std::io::{self, BufRead};
 
+// TODO: A number of these mod files are just a single Component.
+// Think about moving them into this file.
+pub mod block_type;
 pub mod door;
 pub mod doors;
+pub mod end_point;
 pub mod floor;
 pub mod ground;
 pub mod layer;
 pub mod position;
+pub mod room;
+pub mod rooms;
+pub mod wall;
+pub mod wall_type;
+pub mod walls;
 
 use crate::config::LIST_FLOOR_FILE;
 use floor::Floor;

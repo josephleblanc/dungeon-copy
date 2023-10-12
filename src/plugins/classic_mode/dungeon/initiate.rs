@@ -13,7 +13,9 @@ pub fn initiate_classic_mode(mut commands: Commands, mut state: ResMut<NextState
 
     let player_dungeon_stats = PlayerDungeonStats {
         current_room_position: dungeon.current_floor.current_position,
-        is_room_cleared: true,
+        // CHANGED: original
+        // is_room_cleared: true,
+        is_room_cleared: false,
         current_floor_index: 0,
     };
 
@@ -49,5 +51,5 @@ pub fn initiate_classic_mode(mut commands: Commands, mut state: ResMut<NextState
     commands.insert_resource(classic_mode_data);
     commands.insert_resource(monster_spawn_controller);
 
-    state.set(SceneState::InGameModeClassic);
+    state.set(SceneState::InGameClassicMode);
 }
