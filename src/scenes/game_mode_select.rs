@@ -119,7 +119,7 @@ fn menu_box(root: &mut ChildBuilder, menu_box_materials: &MenuBoxMaterials) {
         }
     }
 }
-
+// TODO:  merge the two below functions, similar to main_menu_scene
 fn select_game_mode_text(
     root: &mut ChildBuilder,
     font_materials: &FontMaterials,

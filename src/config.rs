@@ -16,3 +16,9 @@ pub const ENGLISH_LANGUAGE_FILE: &str = "english.json";
 
 // Fonts
 pub const ROBOTO_FONT: &str = "fonts/roboto.ttf";
+
+// Dungeon Floor file names
+pub const LIST_FLOOR_FILE: &str = "list_floor.txt";
+
+// Dungeon info
+pub const TILE_SIZE: f32 = 64.0;

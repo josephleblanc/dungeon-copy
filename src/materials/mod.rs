@@ -1,3 +1,4 @@
+pub mod dungeon;
 pub mod font;
 pub mod heroes;
 pub mod icon;
