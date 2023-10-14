@@ -4,6 +4,7 @@ use std::fs::File;
 use std::io::prelude::*;
 
 use crate::config::DATA_FILE;
+use crate::resources::hero::hero_class::HeroClass;
 use crate::resources::hero::Hero;
 
 #[derive(Resource)]
@@ -31,5 +32,14 @@ impl GameData {
             Err(err) => panic!("Can't find language file: {}", err),
         };
         data
+    }
+
+    /// Searcher GameData for the initial/base Hero info.
+    pub fn get_hero(&self, hero_class: HeroClass) -> Hero {
+        self.heroes
+            .iter()
+            .find(|hero| hero.hero_class == hero_class)
+            .unwrap()
+            .clone()
     }
 }

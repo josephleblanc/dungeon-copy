@@ -6,6 +6,7 @@ use bevy::{prelude::*, window::WindowMode};
 use config::*;
 use plugins::debug::DebugPlugin;
 
+mod components;
 mod config;
 mod materials;
 mod plugins;
@@ -50,6 +51,7 @@ fn main() {
         .add_plugins(scenes::game_mode_select::GameModeSelectScenePlugin)
         .add_plugins(scenes::hero_select_scene::HeroSelectScenePlugin)
         .add_plugins(plugins::classic_mode::ClassicModePlugin)
+        .add_plugins(plugins::player::PlayerPlugin)
         .add_plugins(DebugPlugin)
         .run();
 }

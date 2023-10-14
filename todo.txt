@@ -1,0 +1,6 @@
+Add animation states for players/creatures
+When adding animation states,
+1.) Update the Enum AnimationState in src/resources/animation_state.rs
+2.) For players, update PlayerAnimation::new with the correct animation_timer.
+    The animations currently use 0.1 seconds of delay between animation frames,
+    but this can be changed as seems natural for the animation.

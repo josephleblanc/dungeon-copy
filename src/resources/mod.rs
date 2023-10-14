@@ -1,3 +1,4 @@
+pub mod animation_state;
 pub mod dictionary;
 pub mod dungeon;
 pub mod game_data;
