@@ -1,4 +1,6 @@
 use bevy::prelude::*;
+use std::ops::Deref;
+use std::ops::DerefMut;
 use std::slice::Iter;
 
 use crate::components::player::PlayerComponent;
@@ -6,23 +8,46 @@ use crate::components::player::PlayerComponent;
 use crate::config::{RESOLUTION, WINDOW_HEIGHT};
 use crate::materials::font::FontMaterials;
 use crate::materials::ingame::InGameMaterials;
-use crate::plugins::game_ui::IngameUiData;
+// use crate::plugins::game_ui::IngameUiData;
 use crate::resources::dictionary::Dictionary;
 // use crate::resources::skill::skill_type::SkillType;
 
-#[derive(Component, Clone)]
-pub enum MovementModeText {
+#[derive(Resource)]
+pub struct MovementModeData {
+    user_interface_root: Entity,
+}
+
+#[derive(Resource, Clone, Default, Debug)]
+pub struct MovementModeRes(MovementMode);
+
+#[derive(Component, Clone, Default, Resource, Debug, PartialEq)]
+pub enum MovementMode {
+    #[default]
     WanderMovement,
     TurnBasedMovement,
 }
 
-impl MovementModeText {
-    pub fn iterator() -> Iter<'static, MovementModeText> {
+impl MovementMode {
+    pub fn iterator() -> Iter<'static, MovementMode> {
         [
-            MovementModeText::WanderMovement,
-            MovementModeText::TurnBasedMovement,
+            MovementMode::WanderMovement,
+            MovementMode::TurnBasedMovement,
         ]
         .iter()
+    }
+}
+
+impl Deref for MovementModeRes {
+    type Target = MovementMode;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for MovementModeRes {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
     }
 }
 
@@ -54,11 +79,16 @@ pub fn setup(
         })
         .insert(Name::new("PlayerUI"))
         .id();
+
+    commands.insert_resource(MovementModeRes::default());
+    commands.insert_resource(MovementModeData {
+        user_interface_root,
+    });
 }
 
-pub fn cleanup(mut commands: Commands, ingame_ui_data: Res<IngameUiData>) {
+pub fn cleanup(mut commands: Commands, movement_mode_data: Res<MovementModeData>) {
     commands
-        .entity(ingame_ui_data.user_interface_root)
+        .entity(movement_mode_data.user_interface_root)
         .despawn_recursive();
 }
 
@@ -71,12 +101,12 @@ pub fn movement_mode(
     let font_size = 20.0;
 
     let glossary = dictionary.get_glossary();
-    let ingame_glossary = glossary.movement_mode_text;
+    let ingame_glossary = glossary.movement_mode;
 
     let text_style = TextStyle {
         font: font.clone(),
         font_size,
-        color: Color::WHITE.into(),
+        color: Color::WHITE,
     };
 
     root.spawn(NodeBundle {
@@ -88,10 +118,10 @@ pub fn movement_mode(
         ..Default::default()
     })
     .with_children(|parent| {
-        for (index, movement_mode_text) in MovementModeText::iterator().enumerate() {
-            let component_name = match *movement_mode_text {
-                MovementModeText::WanderMovement => ingame_glossary.wander_movement.clone(),
-                MovementModeText::TurnBasedMovement => ingame_glossary.turn_based_movement.clone(),
+        for movement_mode in MovementMode::iterator() {
+            let component_name = match *movement_mode {
+                MovementMode::WanderMovement => ingame_glossary.wander_movement.clone(),
+                MovementMode::TurnBasedMovement => ingame_glossary.turn_based_movement.clone(),
             };
 
             parent
@@ -109,6 +139,7 @@ pub fn movement_mode(
                         border_color: Color::BLACK.into(),
                         ..Default::default()
                     },
+                    movement_mode.clone(),
                     Name::new("Movement Mode Button"),
                 ))
                 .with_children(|parent| {
@@ -125,4 +156,34 @@ pub fn movement_mode(
         }
     })
     .insert(Name::new("Movement Mode"));
+}
+
+pub fn button_handle_system(
+    mut button_query: Query<
+        (&Interaction, &MovementMode, &mut BackgroundColor),
+        (Changed<Interaction>, With<Button>),
+    >,
+    mut current_mode: ResMut<MovementModeRes>,
+) {
+    for (interaction, movement_mode, mut bg_color) in button_query.iter_mut() {
+        match interaction {
+            Interaction::Pressed => {
+                match *movement_mode {
+                    MovementMode::TurnBasedMovement => {
+                        if **current_mode != MovementMode::TurnBasedMovement {
+                            **current_mode = MovementMode::TurnBasedMovement;
+                        }
+                    }
+                    MovementMode::WanderMovement => {
+                        if **current_mode != MovementMode::WanderMovement {
+                            **current_mode = MovementMode::WanderMovement;
+                        }
+                    }
+                }
+                *bg_color = Color::DARK_GREEN.into();
+            }
+            Interaction::Hovered => *bg_color = Color::GREEN.into(),
+            Interaction::None => *bg_color = Color::DARK_GREEN.into(),
+        };
+    }
 }

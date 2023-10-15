@@ -15,7 +15,7 @@
     "continue_": "Continue",
     "quit": "Quit"
   },
-  "movement_mode_text": {
+  "movement_mode": {
     "wander_movement": "Wander",
     "turn_based_movement": "Turn-Based"
   }

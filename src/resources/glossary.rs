@@ -11,7 +11,7 @@ pub struct Glossary {
     pub main_menu_scene_text: MainMenuSceneText,
     pub loading_scene_text: LoadingSceneText,
     pub shared_text: SharedText,
-    pub movement_mode_text: MovementModeText,
+    pub movement_mode: MovementModeText,
 }
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct MainMenuSceneText {
