@@ -14,5 +14,9 @@
     "select_hero": "Select Hero",
     "continue_": "Continue",
     "quit": "Quit"
+  },
+  "movement_mode_text": {
+    "wander_movement": "Wander",
+    "turn_based_movement": "Turn-Based"
   }
 }

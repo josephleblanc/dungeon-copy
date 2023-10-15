@@ -1,10 +1,18 @@
 {
   "heroes": [
     {
-      "hero_class": "Fighter"
+      "hero_class": "Fighter",
+      "stats": {
+        "health_points": 3.0,
+        "speed": 5.0
+      }
     },
     {
-      "hero_class": "Wizard"
+      "hero_class": "Wizard",
+      "stats": {
+        "health_points": 3.0,
+        "speed": 5.0
+      }
     }
 ]
 }

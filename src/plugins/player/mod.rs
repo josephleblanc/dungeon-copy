@@ -4,6 +4,7 @@ use crate::scenes::SceneState;
 
 pub mod animation;
 mod cleanup;
+pub mod collisions;
 pub mod initiate;
 
 pub struct PlayerPlugin;

@@ -172,7 +172,7 @@ fn loading_text(
         ..Default::default()
     })
     .with_children(|parent| {
-        let glossery = dictionary.get_glossary();
+        let Glossary = dictionary.get_glossary();
 
         let font_str = match dictionary.get_current_language() {
             Language::EN => ROBOTO_FONT,
@@ -189,7 +189,7 @@ fn loading_text(
             },
 
             text: Text::from_section(
-                glossery.loading_scene_text.loading,
+                Glossary.loading_scene_text.loading,
                 TextStyle {
                     font: asset_server.load(font_str),
                     font_size: LOADING_TEXT_FONT_SIZE,

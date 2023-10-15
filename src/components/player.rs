@@ -12,7 +12,7 @@ pub struct PlayerComponent {
     pub class: HeroClass,
     // pub current_health_points: f32,
     // pub max_health_points: f32,
-    // pub speed: f32,
+    pub speed: f32,
     // pub strength: f32,
     // pub intelligence: f32,
     // pub critical_chance: f32,
@@ -26,13 +26,13 @@ pub struct PlayerComponent {
 impl PlayerComponent {
     pub fn new(hero_class: HeroClass, game_data: GameData) -> Self {
         let hero = game_data.get_hero(hero_class.clone());
-        // let base_stats = hero.stats;
+        let base_stats = hero.stats;
 
         PlayerComponent {
             class: hero_class,
             // current_health_points: base_stats.health_points,
             // max_health_points: base_stats.health_points,
-            // speed: base_stats.speed,
+            speed: base_stats.speed,
             // strength: base_stats.strength,
             // intelligence: base_stats.intelligence,
             // critical_chance: base_stats.critical_chance,

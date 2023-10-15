@@ -3,7 +3,7 @@ pub mod dictionary;
 pub mod dungeon;
 pub mod game_data;
 pub mod game_mode;
-pub mod glossery;
+pub mod glossary;
 pub mod hero;
 pub mod language;
 pub mod monster;

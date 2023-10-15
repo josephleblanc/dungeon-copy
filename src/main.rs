@@ -52,6 +52,8 @@ fn main() {
         .add_plugins(scenes::hero_select_scene::HeroSelectScenePlugin)
         .add_plugins(plugins::classic_mode::ClassicModePlugin)
         .add_plugins(plugins::player::PlayerPlugin)
+        .add_plugins(plugins::input::InputHandlePlugin)
+        .add_plugins(plugins::game_ui::IngameUiPlugin)
         .add_plugins(DebugPlugin)
         .run();
 }

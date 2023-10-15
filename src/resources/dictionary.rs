@@ -1,13 +1,13 @@
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::resources::glossery::Glossery;
+use crate::resources::glossary::Glossary;
 use crate::resources::language::Language;
 use crate::resources::setting::Setting;
 
 #[derive(Resource, Serialize, Deserialize, Debug, Clone)]
 pub struct Dictionary {
-    en_glossery: Glossery,
+    en_glossary: Glossary,
     // more languages here
     current_language: Language,
 }
@@ -15,13 +15,13 @@ pub struct Dictionary {
 impl Dictionary {
     pub fn new(current_language: Language) -> Self {
         Dictionary {
-            en_glossery: Glossery::new(Language::EN),
+            en_glossary: Glossary::new(Language::EN),
             current_language,
         }
     }
-    pub fn get_glossary(&self) -> Glossery {
+    pub fn get_glossary(&self) -> Glossary {
         match self.current_language {
-            Language::EN => self.en_glossery.clone(),
+            Language::EN => self.en_glossary.clone(),
             // more languages here
         }
     }

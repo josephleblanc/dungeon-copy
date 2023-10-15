@@ -7,10 +7,11 @@ use std::io::prelude::*;
 use crate::resources::language::Language;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Glossery {
+pub struct Glossary {
     pub main_menu_scene_text: MainMenuSceneText,
     pub loading_scene_text: LoadingSceneText,
     pub shared_text: SharedText,
+    pub movement_mode_text: MovementModeText,
 }
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct MainMenuSceneText {
@@ -34,7 +35,13 @@ pub struct SharedText {
     pub quit: String,
 }
 
-impl Glossery {
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct MovementModeText {
+    pub wander_movement: String,
+    pub turn_based_movement: String,
+}
+
+impl Glossary {
     pub fn new(language: Language) -> Self {
         let file_name = match language {
             Language::EN => ENGLISH_LANGUAGE_FILE,
@@ -56,10 +63,10 @@ impl Glossery {
 
                 let mut contents = String::new();
                 file.read_to_string(&mut contents).unwrap();
-                let glossery = serde_json::from_str(&contents).unwrap();
+                let Glossary = serde_json::from_str(&contents).unwrap();
                 // I prefer the default error message over the one constructed here.
                 // .unwrap_or_else(|_| panic!("{}", error_message));
-                glossery
+                Glossary
             }
             Err(err) => panic!("Can't find language file: {}", err),
         }

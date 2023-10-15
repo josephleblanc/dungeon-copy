@@ -111,7 +111,7 @@ fn main_menu_box(root: &mut ChildBuilder, menu_box_materials: &MenuBoxMaterials)
 }
 
 fn buttons(root: &mut ChildBuilder, materials: &Res<FontMaterials>, dictionary: Res<Dictionary>) {
-    let glossery = dictionary.get_glossary();
+    let Glossary = dictionary.get_glossary();
 
     for (index, button) in ButtonComponent::iterator().enumerate() {
         root.spawn(ButtonBundle {
@@ -135,9 +135,9 @@ fn buttons(root: &mut ChildBuilder, materials: &Res<FontMaterials>, dictionary: 
         })
         .with_children(|parent| {
             let text: &str = match button {
-                ButtonComponent::Play => glossery.main_menu_scene_text.play.as_str(),
-                ButtonComponent::Options => glossery.main_menu_scene_text.options.as_str(),
-                ButtonComponent::Quit => glossery.main_menu_scene_text.quit.as_str(),
+                ButtonComponent::Play => Glossary.main_menu_scene_text.play.as_str(),
+                ButtonComponent::Options => Glossary.main_menu_scene_text.options.as_str(),
+                ButtonComponent::Quit => Glossary.main_menu_scene_text.quit.as_str(),
             };
             parent.spawn(TextBundle {
                 text: Text::from_section(
