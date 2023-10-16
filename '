@@ -35,24 +35,16 @@ impl Movement {
         println!("target set: {:#?}", self);
     }
 
-    pub fn delta_over_time(&mut self, delta_time: Duration) -> Result<Vec3, &'static str> {
+    pub fn delta_over_time(&self, delta_time: Duration) -> Result<Vec3, &'static str> {
         if self.speed.is_some() && self.start.is_some() && self.target.is_some() {
             // let mut move_delta = self.speed.unwrap() * TILE_SIZE * delta_time.as_secs_f32();
             let mut move_delta =
                 self.speed.unwrap() * self.delta.unwrap() * delta_time.as_secs_f32();
             let move_delta_length = move_delta.length();
 
-            // make sure the movement doesn't overshoot the target.
-            if move_delta_length + self.moved_length.unwrap() > self.delta_length.unwrap() {
-                move_delta = move_delta.clamp_length_max(
-                    (self.delta_length.unwrap() - self.moved_length.unwrap()).abs(),
-                );
+            if (move_delta_length + self.moved_length.unwrap() > self.delta_length.unwrap()) {
+                move_delta.clamp_length_max(self.delta_length.unwrap()
             }
-            self.moved_length = Some(self.moved_length.unwrap() + move_delta.length());
-            //     self.moved_length = self.delta_length;
-            // } else {
-            //     self.moved_length = Some(self.moved_length.unwrap() + move_delta_length);
-            // }
             Ok(move_delta)
         } else {
             Err("Attempted to use delta_over_time method on empty movement.")
@@ -62,19 +54,8 @@ impl Movement {
     pub fn update(&mut self, translation: &mut Vec3, tick: Duration) -> Result<(), &'static str> {
         let delta_time = self.smart_tick(tick);
         let move_delta = self.delta_over_time(delta_time)?;
-
-        let near_end = (self.delta_length.unwrap() - self.moved_length.unwrap())
-            .abs()
-            .floor()
-            == 0.0;
-        if near_end || self.timer.finished() {
-            *translation = self.target.unwrap();
-            self.pos = self.target;
-        } else {
-            *translation += move_delta;
-            self.pos = Some(self.pos.unwrap() + move_delta);
-        };
-        println!("{:?}", self);
+        self.pos = Some(move_delta);
+        *translation += move_delta;
         Ok(())
     }
 
@@ -83,7 +64,6 @@ impl Movement {
     }
 
     pub fn reset(&mut self) {
-        self.timer.reset();
         self.moving = false;
         self.target = None;
         self.start = None;
@@ -117,8 +97,6 @@ impl Default for Movement {
             delta: None,
             pos: None,
             speed: None,
-            delta_length: None,
-            moved_length: None,
         }
     }
 }
@@ -241,10 +219,6 @@ pub fn player_turn_based_movement(
         println!(
             "debug | update movement for time.delta(): {}",
             time_delta.as_secs()
-        );
-        println!(
-            "      | self.pos - self.target: {}",
-            movement.pos.unwrap() - movement.target.unwrap()
         );
         movement
             .update(&mut transform.translation, time_delta)
