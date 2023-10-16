@@ -1,7 +1,5 @@
 use bevy::prelude::*;
 
-use crate::scenes::SceneState;
-
 #[derive(Component)]
 pub struct UserInterfaceCamera;
 

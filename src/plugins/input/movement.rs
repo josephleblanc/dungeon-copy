@@ -120,31 +120,33 @@ impl Default for Movement {
     }
 }
 
+/// Hands off player movement control to the correct system, either
+/// wander or turn-based.
 pub fn player_movement_system(
     movement_mode: Res<MovementModeRes>,
-    mut player_query: Query<(&PlayerComponent, &mut PlayerAnimation, &mut Transform)>,
+    player_query: Query<(&PlayerComponent, &mut PlayerAnimation, &mut Transform)>,
     block_type_query: Query<(&BlockType, &Transform), Without<PlayerComponent>>,
     keyboard_input: Res<Input<KeyCode>>,
     time: Res<Time>,
-    mut movement_cooldown: ResMut<Movement>,
+    movement: ResMut<Movement>,
 ) {
     match **movement_mode {
         MovementMode::WanderMovement => {
-            player_movement_handle_system(player_query, block_type_query, keyboard_input, time)
+            wander_movement_system(player_query, block_type_query, keyboard_input, time)
         }
         MovementMode::TurnBasedMovement => {
-            player_turn_based_movement(
+            turn_based_movement(
                 player_query,
                 block_type_query,
                 keyboard_input,
                 time,
-                movement_cooldown,
+                movement,
             );
         }
     };
 }
 
-pub fn player_movement_handle_system(
+pub fn wander_movement_system(
     mut player_query: Query<(&PlayerComponent, &mut PlayerAnimation, &mut Transform)>,
     block_type_query: Query<(&BlockType, &Transform), Without<PlayerComponent>>,
     keyboard_input: Res<Input<KeyCode>>,
@@ -159,28 +161,20 @@ pub fn player_movement_handle_system(
 
     let player_availalbe_movement = wall_collision_check(player_position, &block_type_query);
 
-    if keyboard_input.pressed(KeyCode::W) {
-        if player_availalbe_movement.can_move_up {
-            delta.y += player_stats.speed * TILE_SIZE * time.delta_seconds();
-        }
+    if keyboard_input.pressed(KeyCode::W) && player_availalbe_movement.can_move_up {
+        delta.y += player_stats.speed * TILE_SIZE * time.delta_seconds();
     }
 
-    if keyboard_input.pressed(KeyCode::S) {
-        if player_availalbe_movement.can_move_down {
-            delta.y -= player_stats.speed * TILE_SIZE * time.delta_seconds();
-        }
+    if keyboard_input.pressed(KeyCode::S) && player_availalbe_movement.can_move_down {
+        delta.y -= player_stats.speed * TILE_SIZE * time.delta_seconds();
     }
 
-    if keyboard_input.pressed(KeyCode::A) {
-        if player_availalbe_movement.can_move_left {
-            delta.x -= player_stats.speed * TILE_SIZE * time.delta_seconds();
-        }
+    if keyboard_input.pressed(KeyCode::A) && player_availalbe_movement.can_move_left {
+        delta.x -= player_stats.speed * TILE_SIZE * time.delta_seconds();
     }
 
-    if keyboard_input.pressed(KeyCode::D) {
-        if player_availalbe_movement.can_move_right {
-            delta.x += player_stats.speed * TILE_SIZE * time.delta_seconds();
-        }
+    if keyboard_input.pressed(KeyCode::D) && player_availalbe_movement.can_move_right {
+        delta.x += player_stats.speed * TILE_SIZE * time.delta_seconds();
     }
 
     transform.translation += delta;
@@ -196,7 +190,7 @@ pub fn player_movement_handle_system(
     }
 }
 
-pub fn player_turn_based_movement(
+pub fn turn_based_movement(
     mut player_query: Query<(&PlayerComponent, &mut PlayerAnimation, &mut Transform)>,
     block_type_query: Query<(&BlockType, &Transform), Without<PlayerComponent>>,
     keyboard_input: Res<Input<KeyCode>>,
