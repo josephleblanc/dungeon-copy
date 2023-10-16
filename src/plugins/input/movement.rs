@@ -49,10 +49,6 @@ impl Movement {
                 );
             }
             self.moved_length = Some(self.moved_length.unwrap() + move_delta.length());
-            //     self.moved_length = self.delta_length;
-            // } else {
-            //     self.moved_length = Some(self.moved_length.unwrap() + move_delta_length);
-            // }
             Ok(move_delta)
         } else {
             Err("Attempted to use delta_over_time method on empty movement.")
@@ -67,6 +63,7 @@ impl Movement {
             .abs()
             .floor()
             == 0.0;
+        // make sure the movement doesn't overshoot the target.
         if near_end || self.timer.finished() {
             *translation = self.target.unwrap();
             self.pos = self.target;
@@ -232,6 +229,11 @@ pub fn player_turn_based_movement(
             delta.x += TILE_SIZE;
         }
         if delta != Vec3::ZERO {
+            if delta.x < 0.0 {
+                transform.rotation = Quat::from_rotation_y(std::f32::consts::PI);
+            } else if delta.x > 0.0 {
+                transform.rotation = Quat::default();
+            }
             movement.set_target(transform.translation, delta, player_stats.speed);
         }
     }
