@@ -4,6 +4,8 @@ use crate::config::*;
 use crate::materials::ingame::InGameMaterials;
 use crate::plugins::classic_mode::dungeon::{TOTAL_TILE_HEIGHT, TOTAL_TILE_WIDTH};
 use crate::plugins::classic_mode::ClassicModeData;
+use crate::plugins::interact::Interactable;
+use crate::resources::dungeon::grid_square::GridSquare;
 use crate::resources::dungeon::ground::Ground;
 use crate::resources::dungeon::layer::Layer;
 
@@ -28,8 +30,13 @@ pub fn ground(
             for row_index in 0..TOTAL_TILE_HEIGHT {
                 for column_index in 0..TOTAL_TILE_WIDTH {
                     if row_index >= 1 && column_index > 0 && column_index < 15 {
+                        let offset_x = column_index as f32 * TILE_SIZE;
+                        let offset_y = row_index as f32 * TILE_SIZE;
                         let x = start_x + column_index as f32 * TILE_SIZE;
                         let y = start_y - row_index as f32 * TILE_SIZE;
+
+                        let box_lower: Vec2 = Vec2::new(offset_x, offset_y);
+                        let box_upper: Vec2 = Vec2::new(offset_x + TILE_SIZE, offset_y + TILE_SIZE);
 
                         parent
                             .spawn(SpriteBundle {
@@ -45,7 +52,9 @@ pub fn ground(
                                 ..Default::default()
                             })
                             .insert(Layer)
-                            .insert(Name::new("Layer"));
+                            .insert(GridSquare)
+                            .insert(Interactable::new(box_lower, box_upper))
+                            .insert(Name::new(format!("Layer ({}, {})", x, y)));
                     }
                 }
             }

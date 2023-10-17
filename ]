@@ -39,8 +39,8 @@ pub fn cartesian_to_ui(x_in: f32, y_in: f32) -> (f32, f32) {
     let start_x = 0.0 - (WINDOW_HEIGHT * RESOLUTION - TILE_SIZE) / 2.0;
     let start_y = 0.0 + (WINDOW_HEIGHT + TILE_SIZE) / 2.0;
 
-    let x_out = x_in - TILE_SIZE / 2.0 + (WINDOW_HEIGHT * RESOLUTION) / 2.0;
-    let y_out = y_in - TILE_SIZE / 2.0 + WINDOW_HEIGHT / 2.0;
+    let x_out = x_in;
+    let y_out = (y_in + start_y);
 
     (x_out, y_out)
 }

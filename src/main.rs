@@ -54,6 +54,7 @@ fn main() {
         .add_plugins(plugins::player::PlayerPlugin)
         .add_plugins(plugins::input::InputHandlePlugin)
         .add_plugins(plugins::game_ui::IngameUiPlugin)
+        .add_plugins(plugins::interact::InteractionPlugin)
         .add_plugins(DebugPlugin)
         .run();
 }

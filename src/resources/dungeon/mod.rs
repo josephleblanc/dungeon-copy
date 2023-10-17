@@ -11,6 +11,7 @@ pub mod door;
 pub mod doors;
 pub mod end_point;
 pub mod floor;
+pub mod grid_square;
 pub mod ground;
 pub mod layer;
 pub mod position;

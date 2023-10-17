@@ -4,12 +4,15 @@ use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use crate::plugins::game_ui::turn_mode::MovementModeRes;
 use crate::scenes::SceneState;
 
+use super::interact::Interactable;
+
 pub struct DebugPlugin;
 
 impl Plugin for DebugPlugin {
     fn build(&self, app: &mut App) {
         if cfg!(debug_assertions) {
             app.add_plugins(WorldInspectorPlugin::new());
+            app.register_type::<Interactable>();
             app.add_systems(
                 Update,
                 (
