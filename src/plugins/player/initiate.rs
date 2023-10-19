@@ -82,5 +82,9 @@ pub fn initiate_player(
         .id();
 
     // commands.insert_resource(UpgradeController::new());
+    // TODO: Decide whether there is sufficient justification for a PlayerEntity
+    // resource to exist. If there is only ever one Player, then it could just
+    // as easily be a component on the player entity, which can be queried for
+    // when needed.
     commands.insert_resource(PlayerEntity { entity });
 }

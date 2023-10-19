@@ -1,4 +1,4 @@
-#![allow(clippy::collapsible_else_if)]
+#![allow(clippy::collapsible_else_if, clippy::type_complexity)]
 
 use bevy::window::{WindowResizeConstraints, WindowResolution};
 use bevy::{prelude::*, window::WindowMode};

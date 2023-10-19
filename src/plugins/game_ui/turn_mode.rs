@@ -60,7 +60,6 @@ pub struct TurnBasedMovement {}
 pub fn setup(
     mut commands: Commands,
     font_materials: Res<FontMaterials>,
-    ingame_materials: Res<InGameMaterials>,
     dictionary: Res<Dictionary>,
 ) {
     let user_interface_root = commands

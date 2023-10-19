@@ -8,6 +8,7 @@ use crate::materials::dungeon::DungeonMaterials;
 use crate::materials::font::FontMaterials;
 use crate::materials::heroes::HeroesMaterials;
 use crate::materials::icon::IconMaterials;
+use crate::materials::map_ui::MapUiMaterials;
 use crate::materials::menu_box::MenuBoxMaterials;
 use crate::materials::scenes::ScenesMaterials;
 use crate::resources::dictionary::Dictionary;
@@ -172,7 +173,7 @@ fn loading_text(
         ..Default::default()
     })
     .with_children(|parent| {
-        let Glossary = dictionary.get_glossary();
+        let glossary = dictionary.get_glossary();
 
         let font_str = match dictionary.get_current_language() {
             Language::EN => ROBOTO_FONT,
@@ -189,7 +190,7 @@ fn loading_text(
             },
 
             text: Text::from_section(
-                Glossary.loading_scene_text.loading,
+                glossary.loading_scene_text.loading,
                 TextStyle {
                     font: asset_server.load(font_str),
                     font_size: LOADING_TEXT_FONT_SIZE,
@@ -289,6 +290,9 @@ fn load_materials(mut commands: Commands, asset_server: Res<AssetServer>) {
             door_top_part: asset_server.load("ingame/dungeon/door_top_part.png"),
             door_left_part: asset_server.load("ingame/dungeon/door_left_part.png"),
             door_right_part: asset_server.load("ingame/dungeon/door_right_part.png"),
+        },
+        map_ui: MapUiMaterials {
+            grid_select_box: asset_server.load("ingame/map_ui/grid_select_box.png"),
         },
     };
 

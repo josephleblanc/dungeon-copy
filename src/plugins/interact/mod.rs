@@ -1,10 +1,10 @@
 // Inspired by https://github.com/Anshorei/bevy_rei/tree/master
 
+use crate::config::{RESOLUTION, TILE_SIZE, WINDOW_HEIGHT};
 use bevy::prelude::*;
+use std::ops::{Deref, DerefMut};
 
 use crate::scenes::SceneState;
-
-pub mod grid_map;
 
 pub struct InteractionPlugin;
 
@@ -16,6 +16,34 @@ impl Plugin for InteractionPlugin {
         );
     }
 }
+
+// #[derive(Resource, Default)]
+// pub struct InteractingEntity {
+//     pub entity: Entity,
+// }
+
+// impl Deref for InteractingEntity {
+//     type Target = Entity;
+//     fn deref(&self) -> &Self::Target {
+//         &self.entity
+//     }
+// }
+//
+// impl DerefMut for InteractingEntity {
+//     fn deref_mut(&mut self) -> &mut Self::Target {
+//         &mut self.entity
+//     }
+// }
+//
+// impl<T> AsRef<T> for InteractingEntity
+// where
+//     T: ?Sized,
+//     <InteractingEntity as Deref>::Target: AsRef<T>,
+// {
+//     fn as_ref(&self) -> &T {
+//         self.deref().as_ref()
+//     }
+// }
 
 #[derive(Component, Reflect)]
 pub struct Interactable {
@@ -39,7 +67,7 @@ impl Interactable {
     }
 }
 
-#[derive(Component, Reflect)]
+#[derive(Component, Reflect, Debug)]
 pub struct BoundingBox {
     pub upper: Vec2,
     pub lower: Vec2,
@@ -55,13 +83,14 @@ impl BoundingBox {
 
 pub fn interact_system(
     window_query: Query<&Window>,
-    mut interactable_query: Query<&mut Interactable>,
+    mut interactable_query: Query<(&mut Interactable, Entity)>,
+    // mut interacting_entity: ResMut<InteractingEntity>,
 ) {
     for window in window_query.iter() {
         if let Some(cursor_pos) = window.cursor_position() {
-            println!("debug | cursor_pos: {}", cursor_pos);
-            for mut interactable in interactable_query.iter_mut() {
+            for (mut interactable, entity) in interactable_query.iter_mut() {
                 interactable.focused = interactable.bounding_box.contains(cursor_pos);
+                // **interacting_entity = entity;
             }
         }
     }

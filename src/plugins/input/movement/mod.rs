@@ -3,27 +3,66 @@ use bevy::utils::Duration;
 
 use crate::components::player::PlayerComponent;
 use crate::components::player_animation::PlayerAnimation;
-use crate::config::*;
 use crate::plugins::game_ui::turn_mode::{MovementMode, MovementModeRes};
-use crate::plugins::player::collisions::wall_collision_check;
-use crate::resources::animation_state::AnimationState;
+use crate::plugins::input::movement::turn_based::to_nearest_square;
+use crate::plugins::input::movement::turn_based::turn_based_movement;
+use crate::plugins::input::movement::wander::wander_movement_system;
+use crate::plugins::interact::Interactable;
 use crate::resources::dungeon::block_type::BlockType;
+use crate::resources::dungeon::grid_square::GridSquare;
+
+pub mod turn_based;
+pub mod wander;
+
+/// Hands off player movement control to the correct system, either
+/// wander or turn-based.
+pub fn player_movement_system(
+    movement_mode: Res<MovementModeRes>,
+    player_query: Query<(&PlayerComponent, &mut PlayerAnimation, &mut Transform)>,
+    block_type_query: Query<(&BlockType, &Transform), Without<PlayerComponent>>,
+    ground_query: Query<(&Transform, &Interactable), (Without<PlayerComponent>, With<GridSquare>)>,
+    keyboard_input: Res<Input<KeyCode>>,
+    time: Res<Time>,
+    movement: ResMut<Movement>,
+) {
+    if movement_mode.is_changed() && **movement_mode == MovementMode::TurnBasedMovement {
+        to_nearest_square(player_query, ground_query, movement);
+    } else {
+        match **movement_mode {
+            MovementMode::WanderMovement => {
+                wander_movement_system(player_query, block_type_query, keyboard_input, time)
+            }
+            MovementMode::TurnBasedMovement => {
+                turn_based_movement(
+                    player_query,
+                    block_type_query,
+                    keyboard_input,
+                    time,
+                    movement,
+                );
+            }
+        };
+    }
+}
 
 #[derive(Resource, Debug)]
 pub struct Movement {
     timer: Timer,
     moving: bool,
-    target: Option<Vec3>,
-    start: Option<Vec3>,
-    delta: Option<Vec3>,
+    target: Option<Vec2>,
+    start: Option<Vec2>,
+    delta: Option<Vec2>,
     delta_length: Option<f32>,
-    pos: Option<Vec3>,
+    pos: Option<Vec2>,
     moved_length: Option<f32>,
     speed: Option<f32>,
 }
 
 impl Movement {
-    pub fn set_target(&mut self, start: Vec3, delta: Vec3, speed: f32) {
+    // TODO: Change to set_delta() and make another function called set_target
+    // that takes `target` instead of `delta` as argument and adjusts `self`
+    // similarly to the current `set_target()`
+    pub fn set_target(&mut self, start: Vec2, delta: Vec2, speed: f32) {
         self.moving = true;
         self.target = Some(start + delta);
         self.start = Some(start);
@@ -35,7 +74,7 @@ impl Movement {
         println!("target set: {:#?}", self);
     }
 
-    pub fn delta_over_time(&mut self, delta_time: Duration) -> Result<Vec3, &'static str> {
+    pub fn delta_over_time(&mut self, delta_time: Duration) -> Result<Vec2, &'static str> {
         if self.speed.is_some() && self.start.is_some() && self.target.is_some() {
             // let mut move_delta = self.speed.unwrap() * TILE_SIZE * delta_time.as_secs_f32();
             let mut move_delta =
@@ -65,10 +104,11 @@ impl Movement {
             == 0.0;
         // make sure the movement doesn't overshoot the target.
         if near_end || self.timer.finished() {
-            *translation = self.target.unwrap();
+            let two_d = self.target.unwrap();
+            *translation = Vec3::new(two_d.x, two_d.y, translation.z);
             self.pos = self.target;
         } else {
-            *translation += move_delta;
+            *translation += Vec3::new(move_delta.x, move_delta.y, 0.0);
             self.pos = Some(self.pos.unwrap() + move_delta);
         };
         println!("{:?}", self);
@@ -116,137 +156,6 @@ impl Default for Movement {
             speed: None,
             delta_length: None,
             moved_length: None,
-        }
-    }
-}
-
-/// Hands off player movement control to the correct system, either
-/// wander or turn-based.
-pub fn player_movement_system(
-    movement_mode: Res<MovementModeRes>,
-    player_query: Query<(&PlayerComponent, &mut PlayerAnimation, &mut Transform)>,
-    block_type_query: Query<(&BlockType, &Transform), Without<PlayerComponent>>,
-    keyboard_input: Res<Input<KeyCode>>,
-    time: Res<Time>,
-    movement: ResMut<Movement>,
-) {
-    match **movement_mode {
-        MovementMode::WanderMovement => {
-            wander_movement_system(player_query, block_type_query, keyboard_input, time)
-        }
-        MovementMode::TurnBasedMovement => {
-            turn_based_movement(
-                player_query,
-                block_type_query,
-                keyboard_input,
-                time,
-                movement,
-            );
-        }
-    };
-}
-
-pub fn wander_movement_system(
-    mut player_query: Query<(&PlayerComponent, &mut PlayerAnimation, &mut Transform)>,
-    block_type_query: Query<(&BlockType, &Transform), Without<PlayerComponent>>,
-    keyboard_input: Res<Input<KeyCode>>,
-    time: Res<Time>,
-) {
-    let (player_stats, mut player_animation, mut transform) = player_query.single_mut();
-
-    let mut delta = Vec3::new(0.0, 0.0, 0.0);
-
-    let player_position = transform.translation;
-    player_animation.animation_state = AnimationState::Idle;
-
-    let player_availalbe_movement = wall_collision_check(player_position, &block_type_query);
-
-    if keyboard_input.pressed(KeyCode::W) && player_availalbe_movement.can_move_up {
-        delta.y += player_stats.speed * TILE_SIZE * time.delta_seconds();
-    }
-
-    if keyboard_input.pressed(KeyCode::S) && player_availalbe_movement.can_move_down {
-        delta.y -= player_stats.speed * TILE_SIZE * time.delta_seconds();
-    }
-
-    if keyboard_input.pressed(KeyCode::A) && player_availalbe_movement.can_move_left {
-        delta.x -= player_stats.speed * TILE_SIZE * time.delta_seconds();
-    }
-
-    if keyboard_input.pressed(KeyCode::D) && player_availalbe_movement.can_move_right {
-        delta.x += player_stats.speed * TILE_SIZE * time.delta_seconds();
-    }
-
-    transform.translation += delta;
-
-    if delta.x < 0.0 {
-        transform.rotation = Quat::from_rotation_y(std::f32::consts::PI);
-    } else if delta.x > 0.0 {
-        transform.rotation = Quat::default();
-    }
-
-    if delta != Vec3::ZERO {
-        player_animation.animation_state = AnimationState::Moving;
-    }
-}
-
-pub fn turn_based_movement(
-    mut player_query: Query<(&PlayerComponent, &mut PlayerAnimation, &mut Transform)>,
-    block_type_query: Query<(&BlockType, &Transform), Without<PlayerComponent>>,
-    keyboard_input: Res<Input<KeyCode>>,
-    time: Res<Time>,
-    mut movement: ResMut<Movement>,
-) {
-    let (player_stats, mut player_animation, mut transform) = player_query.single_mut();
-
-    let mut delta = Vec3::new(0.0, 0.0, 0.0);
-
-    let player_position = transform.translation;
-    player_animation.animation_state = AnimationState::Idle;
-
-    let player_availalbe_movement = wall_collision_check(player_position, &block_type_query);
-
-    if !movement.moving && movement.target.is_none() {
-        if keyboard_input.pressed(KeyCode::W) && player_availalbe_movement.can_move_up {
-            delta.y += TILE_SIZE;
-        }
-
-        if keyboard_input.pressed(KeyCode::S) && player_availalbe_movement.can_move_down {
-            delta.y -= TILE_SIZE;
-        }
-
-        if keyboard_input.pressed(KeyCode::A) && player_availalbe_movement.can_move_left {
-            delta.x -= TILE_SIZE;
-        }
-
-        if keyboard_input.pressed(KeyCode::D) && player_availalbe_movement.can_move_right {
-            delta.x += TILE_SIZE;
-        }
-        if delta != Vec3::ZERO {
-            if delta.x < 0.0 {
-                transform.rotation = Quat::from_rotation_y(std::f32::consts::PI);
-            } else if delta.x > 0.0 {
-                transform.rotation = Quat::default();
-            }
-            movement.set_target(transform.translation, delta, player_stats.speed);
-        }
-    }
-
-    if !movement.is_finished() && movement.moving {
-        let time_delta = time.delta();
-        println!(
-            "debug | update movement for time.delta(): {}",
-            time_delta.as_secs()
-        );
-        println!(
-            "      | self.pos - self.target: {}",
-            movement.pos.unwrap() - movement.target.unwrap()
-        );
-        movement
-            .update(&mut transform.translation, time_delta)
-            .unwrap();
-        if movement.is_finished() {
-            movement.reset();
         }
     }
 }
