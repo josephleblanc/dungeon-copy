@@ -261,8 +261,8 @@ pub fn vertical_doors_system(
                 for child in children.iter() {
                     let result = image_query.get_mut(*child);
                     // TODO: change `if let Ok(result)`
-                    if result.is_ok() {
-                        let (_door, mut texture) = result.unwrap();
+                    if let Ok(result) = result {
+                        let (_door, mut texture) = result;
                         *texture = if is_room_cleared {
                             ingame_materials.dungeon_materials.door_opened.clone()
                         } else {

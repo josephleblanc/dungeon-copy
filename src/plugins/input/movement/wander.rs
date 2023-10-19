@@ -4,7 +4,7 @@ use bevy::utils::Duration;
 use crate::components::player::PlayerComponent;
 use crate::components::player_animation::PlayerAnimation;
 use crate::config::*;
-use crate::plugins::game_ui::translate::cartesian_to_ui;
+use crate::plugins::game_ui::translate::trans_to_window;
 use crate::plugins::game_ui::turn_mode::{MovementMode, MovementModeRes};
 use crate::plugins::input::movement::turn_based::turn_based_movement;
 use crate::plugins::player::collisions::wall_collision_check;
@@ -48,8 +48,8 @@ pub fn wander_movement_system(
         transform.translation.x, transform.translation.y
     );
     println!(
-        "debug | cartesian_to_ui: {:?}",
-        cartesian_to_ui(transform.translation.x, transform.translation.y)
+        "debug | trans_to_window: {:?}",
+        trans_to_window(transform.translation.x, transform.translation.y)
     );
 
     if delta.x < 0.0 {

@@ -1,6 +1,7 @@
 // use std::time::Duration;
 
 use bevy::prelude::*;
+use bevy::sprite::Anchor;
 
 // use crate::components::invinsible_cooldown::InvisibleCooldownComponent;
 use crate::components::player::PlayerComponent;
@@ -60,6 +61,7 @@ pub fn initiate_player(
             texture_atlas: texture_atlas_handle,
             sprite: TextureAtlasSprite {
                 custom_size: Some(Vec2::new(PLAYER_SIZE_WIDTH, PLAYER_SIZE_HEIGHT)),
+                anchor: Anchor::BottomCenter,
                 ..Default::default()
             },
             transform: Transform {
@@ -67,6 +69,17 @@ pub fn initiate_player(
                 ..Default::default()
             },
             ..Default::default()
+        })
+        .with_children(|builder| {
+            builder.spawn(SpriteBundle {
+                sprite: Sprite {
+                    color: Color::rgb(1.0, 0.25, 0.75),
+                    custom_size: Some(Vec2::new(10.0, 10.0)),
+                    ..default()
+                },
+                transform: Transform::from_translation(Vec3::new(0., 0., 10.)),
+                ..default()
+            });
         })
         .insert(player)
         .insert(PlayerAnimation::new())

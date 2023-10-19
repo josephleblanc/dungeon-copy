@@ -13,7 +13,7 @@ pub struct HeroesMaterials {
 
 impl HeroesMaterials {
     pub fn get_texture(&self, hero_class: HeroClass, gender: Gender) -> Handle<Image> {
-        return match hero_class {
+        match hero_class {
             HeroClass::Fighter => match gender {
                 Gender::Male => self.male_fighter.clone(),
                 Gender::Female => self.female_fighter.clone(),
@@ -22,6 +22,6 @@ impl HeroesMaterials {
                 Gender::Male => self.male_wizard.clone(),
                 Gender::Female => self.female_wizard.clone(),
             },
-        };
+        }
     }
 }

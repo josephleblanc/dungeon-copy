@@ -14,8 +14,9 @@ pub fn ground(
     ingame_materials: Res<InGameMaterials>,
     mut data: ResMut<ClassicModeData>,
 ) {
-    let start_y: f32 = 0.0 + WINDOW_HEIGHT / 2.0 - TILE_SIZE / 2.0;
-    let start_x: f32 = 0.0 - WINDOW_HEIGHT * RESOLUTION / 2.0 + TILE_SIZE / 2.0;
+    let tile_offset = TILE_SIZE / 2.0;
+    let start_y: f32 = 0.0 + WINDOW_HEIGHT / 2.0 - tile_offset;
+    let start_x: f32 = 0.0 - WINDOW_HEIGHT * RESOLUTION / 2.0 + tile_offset;
 
     let ground = commands
         .spawn(SpriteBundle {
@@ -30,13 +31,13 @@ pub fn ground(
             for row_index in 0..TOTAL_TILE_HEIGHT {
                 for column_index in 0..TOTAL_TILE_WIDTH {
                     if row_index >= 1 && column_index > 0 && column_index < 15 {
-                        let offset_x = column_index as f32 * TILE_SIZE;
-                        let offset_y = row_index as f32 * TILE_SIZE;
+                        // let offset_x = column_index as f32 * TILE_SIZE;
+                        // let offset_y = row_index as f32 * TILE_SIZE;
                         let x = start_x + column_index as f32 * TILE_SIZE;
                         let y = start_y - row_index as f32 * TILE_SIZE;
 
-                        let box_lower: Vec2 = Vec2::new(offset_x, offset_y);
-                        let box_upper: Vec2 = Vec2::new(offset_x + TILE_SIZE, offset_y + TILE_SIZE);
+                        let box_lower_tr: Vec2 = Vec2::new(x - tile_offset, y - tile_offset);
+                        let box_upper_tr: Vec2 = Vec2::new(x + tile_offset, y + tile_offset);
 
                         parent
                             .spawn(SpriteBundle {
@@ -51,9 +52,21 @@ pub fn ground(
                                 texture: ingame_materials.dungeon_materials.floor.clone(),
                                 ..Default::default()
                             })
+                            // adds a blue dot at tile position for debugging
+                            .with_children(|builder| {
+                                builder.spawn(SpriteBundle {
+                                    sprite: Sprite {
+                                        color: Color::rgb(1.0, 0.25, 0.75),
+                                        custom_size: Some(Vec2::new(10.0, 10.0)),
+                                        ..default()
+                                    },
+                                    transform: Transform::from_translation(Vec3::new(0., 0., 10.)),
+                                    ..default()
+                                });
+                            })
                             .insert(Layer)
                             .insert(GridSquare)
-                            .insert(Interactable::new(box_lower, box_upper))
+                            .insert(Interactable::new_from_trans(box_lower_tr, box_upper_tr))
                             .insert(Name::new(format!("Layer ({}, {})", x, y)));
                     }
                 }

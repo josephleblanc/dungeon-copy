@@ -4,7 +4,7 @@ use bevy::utils::Duration;
 use crate::components::player::PlayerComponent;
 use crate::components::player_animation::PlayerAnimation;
 use crate::config::*;
-use crate::plugins::game_ui::translate::cartesian_to_ui;
+use crate::plugins::game_ui::translate::trans_to_window;
 use crate::plugins::interact::Interactable;
 use crate::plugins::player::collisions::wall_collision_check;
 use crate::resources::animation_state::AnimationState;
@@ -96,21 +96,23 @@ pub fn to_nearest_square(
     let nearest_square_center = ground_query
         .iter()
         .filter(|(_, interactable)| {
-            println!(
-                "debug | interactable.bounding_box: {:?}",
-                interactable.bounding_box
-            );
             println!("debug | player_position: {}", player_position);
-            let (ui_x, ui_y) = cartesian_to_ui(player_position.x, player_position.y);
-            println!("debug | cartesian_to_ui: {}, {}", ui_x, ui_y);
-            interactable.bounding_box.contains(Vec2::new(ui_x, ui_y))
+            println!("debug | interactable.bound_wf: {:?}", interactable.bound_wf);
+            println!("debug | interactable.bound_tr: {:?}", interactable.bound_wf);
+            println!(
+                "debug |     interactable.bound_tr.contains(player_position.truncate()) = {}",
+                interactable.bound_tr.contains(player_position.truncate())
+            );
+            // let (ui_x, ui_y) = trans_to_window(player_position.x, player_position.y);
+            // println!("debug | cartesian_to_ui: {}, {}", ui_x, ui_y);
+            interactable.bound_tr.contains(player_position.truncate())
         })
         .map(|(transform, _)| transform.translation)
         .next()
         .unwrap();
 
     println!("debug | nearest_square_center: {:?}", nearest_square_center);
-    let delta = nearest_square_center - player_position - offset;
+    let delta = nearest_square_center - player_position;
 
     println!("debug | delta: {:?}", delta);
     movement.set_target(

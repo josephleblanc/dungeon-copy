@@ -10,9 +10,9 @@ pub struct FontMaterials {
 
 impl FontMaterials {
     pub fn get_font(&self, language: Language) -> Handle<Font> {
-        return match language {
+        match language {
             Language::EN => self.roboto_font.clone(),
             // more language here
-        };
+        }
     }
 }
