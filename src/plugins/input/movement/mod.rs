@@ -11,6 +11,7 @@ use crate::plugins::interact::Interactable;
 use crate::resources::dungeon::block_type::BlockType;
 use crate::resources::dungeon::grid_square::GridSquare;
 
+pub mod click_move;
 pub mod turn_based;
 pub mod wander;
 
