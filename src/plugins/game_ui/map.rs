@@ -17,6 +17,14 @@ pub struct FocusBox {
     display_z: f32,
 }
 
+/// Manages the position of the grid focus sprite.
+/// If there is an entity with both GridSquare and Interactable, the focus box
+/// will be moved to that position when the mouse hovers over it.
+/// This is in part managed through the Interactable component, which keeps track
+/// of whether the mouse is currently hovering over the area assigned to that
+/// grid square, and in part by the FocusBox component, which holds the position
+/// where the focus box sprite should be placed when no Interactable is being
+/// hovered.
 pub fn mouse_handle_system(
     query_grid: Query<
         (&Transform, &Interactable),
@@ -45,6 +53,8 @@ pub fn mouse_handle_system(
     }
 }
 
+/// Create a Node for the whole window which will be used as reference for
+/// placement of the focus box sprite.
 pub fn setup(mut commands: Commands, ingame_materials: Res<InGameMaterials>) {
     let user_interface_root = commands
         .spawn((
@@ -74,6 +84,13 @@ pub fn setup(mut commands: Commands, ingame_materials: Res<InGameMaterials>) {
     });
 }
 
+/// Initialize the grid focus box sprite.
+/// It is important to note that the z position of the box must be placed so that
+/// it appears above the grid square and below anything placed on the map sprite,
+/// for example the player.
+/// E.g. If the player is on z-position 1.5, and the grid square is on 1.0,
+/// then the focus box should have a `z_layer` value so that
+/// 1.0 < z_layer < 1.5
 pub fn build_focus_box(builder: &mut ChildBuilder, ingame_materials: Res<InGameMaterials>) {
     let x_pos = 0.0;
     let y_pos = 0.0;
@@ -109,6 +126,9 @@ pub fn build_focus_box(builder: &mut ChildBuilder, ingame_materials: Res<InGameM
     ));
 }
 
+/// Cleans up both the Node frame (w/ children) for the map sprite as well
+/// as any other UI elements attached to the user_interface_root, which
+/// are UI, rather than sprite, components.
 pub fn cleanup(mut commands: Commands, map_ui_data: Res<MapUiData>) {
     commands
         .entity(map_ui_data.user_interface_root)
