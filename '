@@ -15,7 +15,6 @@ pub struct InteractionPlugin;
 
 impl Plugin for InteractionPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<InteractingPos>();
         app.add_systems(
             Update,
             interact_system.run_if(in_state(SceneState::InGameClassicMode)),
@@ -31,12 +30,11 @@ pub enum ReferenceFrame {
 
 #[derive(Resource, Default, Reflect)]
 pub struct InteractingPos {
-    pub pos: Vec2,
-    pub active: bool,
+    pub pos: Vec3,
 }
 
 impl Deref for InteractingPos {
-    type Target = Vec2;
+    type Target = Vec3;
     fn deref(&self) -> &Self::Target {
         &self.pos
     }
@@ -57,15 +55,6 @@ where
         self.deref().as_ref()
     }
 }
-
-// impl From<Vec2> for InteractingPos {
-//     fn from(value: Vec2) -> Self {
-//         Self {
-//             pos: value,
-//             active: false,
-//         }
-//     }
-// }
 
 #[derive(Component, Reflect, Copy, Clone)]
 pub struct Interactable {
@@ -175,19 +164,16 @@ impl BoundingBox {
 
 pub fn interact_system(
     window_query: Query<&Window>,
-    mut interactable_query: Query<&mut Interactable>,
+    mut interactable_query: Query<(&mut Interactable, Entity)>,
     mut interacting_pos: ResMut<InteractingPos>,
 ) {
     for window in window_query.iter() {
         if let Some(cursor_pos) = window.cursor_position() {
-            for mut interactable in interactable_query.iter_mut() {
+            for (mut interactable, entity) in interactable_query.iter_mut() {
                 let is_interacting = interactable.bound_wf.contains(cursor_pos);
                 interactable.focused = is_interacting;
-
-                if is_interacting {
-                    interacting_pos.pos = interactable.center;
-                    interacting_pos.active = true;
-                }
+                interacting_pos = interactable.center;
+                // **interacting_entity = entity;
             }
         }
     }

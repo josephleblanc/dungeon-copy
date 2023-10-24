@@ -59,6 +59,13 @@ pub struct Movement {
     speed: Option<f32>,
 }
 
+pub enum MoveDirection {
+    Up,
+    Down,
+    Left,
+    Right,
+}
+
 impl Movement {
     // TODO: Change to set_delta() and make another function called set_target
     // that takes `target` instead of `delta` as argument and adjusts `self`

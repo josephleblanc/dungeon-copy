@@ -96,15 +96,13 @@ pub fn to_nearest_square(
     let nearest_square_center = ground_query
         .iter()
         .filter(|(_, interactable)| {
-            println!("debug | player_position: {}", player_position);
-            println!("debug | interactable.bound_wf: {:?}", interactable.bound_wf);
-            println!("debug | interactable.bound_tr: {:?}", interactable.bound_wf);
-            println!(
-                "debug |     interactable.bound_tr.contains(player_position.truncate()) = {}",
-                interactable.bound_tr.contains(player_position.truncate())
-            );
-            // let (ui_x, ui_y) = trans_to_window(player_position.x, player_position.y);
-            // println!("debug | cartesian_to_ui: {}, {}", ui_x, ui_y);
+            // println!("debug | player_position: {}", player_position);
+            // println!("debug | interactable.bound_wf: {:?}", interactable.bound_wf);
+            // println!("debug | interactable.bound_tr: {:?}", interactable.bound_wf);
+            // println!(
+            //     "debug |     interactable.bound_tr.contains(player_position.truncate()) = {}",
+            //     interactable.bound_tr.contains(player_position.truncate())
+            // );
             interactable.bound_tr.contains(player_position.truncate())
         })
         .map(|(transform, _)| transform.translation)

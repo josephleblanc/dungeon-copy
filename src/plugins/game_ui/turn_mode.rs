@@ -20,7 +20,7 @@ pub struct MovementModeData {
 #[derive(Resource, Clone, Default, Debug)]
 pub struct MovementModeRes(MovementMode);
 
-#[derive(Component, Clone, Default, Resource, Debug, PartialEq)]
+#[derive(Component, Clone, Default, Resource, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum MovementMode {
     #[default]
     WanderMovement,
