@@ -173,10 +173,22 @@ impl BoundingBox {
     }
 }
 
+#[derive(Event, Clone, Copy)]
+pub struct InteractingPosEvent {
+    pub pos: Vec2,
+}
+
+impl From<Vec2> for InteractingPosEvent {
+    fn from(value: Vec2) -> Self {
+        Self { pos: value }
+    }
+}
+
 pub fn interact_system(
     window_query: Query<&Window>,
     mut interactable_query: Query<&mut Interactable>,
     mut interacting_pos: ResMut<InteractingPos>,
+    mut event_writer: EventWriter<InteractingPosEvent>,
 ) {
     for window in window_query.iter() {
         if let Some(cursor_pos) = window.cursor_position() {
@@ -184,7 +196,8 @@ pub fn interact_system(
                 let is_interacting = interactable.bound_wf.contains(cursor_pos);
                 interactable.focused = is_interacting;
 
-                if is_interacting {
+                if is_interacting && interacting_pos.pos != interactable.center {
+                    event_writer.send(interacting_pos.pos.into());
                     interacting_pos.pos = interactable.center;
                     interacting_pos.active = true;
                 }

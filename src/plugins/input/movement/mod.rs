@@ -12,6 +12,7 @@ use crate::resources::dungeon::block_type::BlockType;
 use crate::resources::dungeon::grid_square::GridSquare;
 
 pub mod click_move;
+pub mod map;
 pub mod turn_based;
 pub mod wander;
 
@@ -49,7 +50,7 @@ pub fn player_movement_system(
 #[derive(Resource, Debug)]
 pub struct Movement {
     timer: Timer,
-    moving: bool,
+    pub moving: bool,
     target: Option<Vec2>,
     start: Option<Vec2>,
     delta: Option<Vec2>,
@@ -71,6 +72,7 @@ impl Movement {
     // that takes `target` instead of `delta` as argument and adjusts `self`
     // similarly to the current `set_target()`
     pub fn set_target(&mut self, start: Vec2, delta: Vec2, speed: f32) {
+        let debug = false;
         self.moving = true;
         self.target = Some(start + delta);
         self.start = Some(start);
@@ -79,7 +81,9 @@ impl Movement {
         self.delta = Some(delta);
         self.delta_length = Some(delta.length());
         self.speed = Some(speed);
-        println!("target set: {:#?}", self);
+        if debug {
+            println!("target set: {:#?}", self);
+        }
     }
 
     pub fn delta_over_time(&mut self, delta_time: Duration) -> Result<Vec2, &'static str> {
@@ -103,6 +107,7 @@ impl Movement {
     }
 
     pub fn update(&mut self, translation: &mut Vec3, tick: Duration) -> Result<(), &'static str> {
+        let debug = false;
         let delta_time = self.smart_tick(tick);
         let move_delta = self.delta_over_time(delta_time)?;
 
@@ -119,7 +124,9 @@ impl Movement {
             *translation += Vec3::new(move_delta.x, move_delta.y, 0.0);
             self.pos = Some(self.pos.unwrap() + move_delta);
         };
-        println!("{:?}", self);
+        if debug {
+            println!("{:?}", self);
+        }
         Ok(())
     }
 

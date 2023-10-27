@@ -20,6 +20,7 @@ pub fn turn_based_movement(
     time: Res<Time>,
     mut movement: ResMut<Movement>,
 ) {
+    let debug = false;
     let (player_stats, mut player_animation, mut transform) = player_query.single_mut();
 
     let mut delta = Vec3::new(0.0, 0.0, 0.0);
@@ -61,14 +62,16 @@ pub fn turn_based_movement(
 
     if !movement.is_finished() && movement.moving {
         let time_delta = time.delta();
-        println!(
-            "debug | update movement for time.delta(): {}",
-            time_delta.as_secs()
-        );
-        println!(
-            "      | self.pos - self.target: {}",
-            movement.pos.unwrap() - movement.target.unwrap()
-        );
+        if debug {
+            println!(
+                "debug | update movement for time.delta(): {}",
+                time_delta.as_secs()
+            );
+            println!(
+                "      | self.pos - self.target: {}",
+                movement.pos.unwrap() - movement.target.unwrap()
+            );
+        }
         movement
             .update(&mut transform.translation, time_delta)
             .unwrap();
@@ -80,39 +83,30 @@ pub fn turn_based_movement(
 
 pub fn to_nearest_square(
     mut player_query: Query<(&PlayerComponent, &mut PlayerAnimation, &mut Transform)>,
-    // block_type_query: Query<(&BlockType, &Transform), Without<PlayerComponent>>,
     ground_query: Query<(&Transform, &Interactable), (Without<PlayerComponent>, With<GridSquare>)>,
-    // time: Res<Time>,
     mut movement: ResMut<Movement>,
 ) {
+    let debug = false;
     let (player_stats, mut player_animation, mut transform) = player_query.single_mut();
 
     let player_position = transform.translation;
     player_animation.animation_state = AnimationState::Moving;
 
-    // let player_available_movement = wall_collision_check(player_position, &block_type_query);
-
-    let offset = Vec3::new(0.0, TILE_SIZE / 2.0, 0.0);
     let nearest_square_center = ground_query
         .iter()
-        .filter(|(_, interactable)| {
-            // println!("debug | player_position: {}", player_position);
-            // println!("debug | interactable.bound_wf: {:?}", interactable.bound_wf);
-            // println!("debug | interactable.bound_tr: {:?}", interactable.bound_wf);
-            // println!(
-            //     "debug |     interactable.bound_tr.contains(player_position.truncate()) = {}",
-            //     interactable.bound_tr.contains(player_position.truncate())
-            // );
-            interactable.bound_tr.contains(player_position.truncate())
-        })
+        .filter(|(_, interactable)| interactable.bound_tr.contains(player_position.truncate()))
         .map(|(transform, _)| transform.translation)
         .next()
         .unwrap();
 
-    println!("debug | nearest_square_center: {:?}", nearest_square_center);
+    if debug {
+        println!("debug | nearest_square_center: {:?}", nearest_square_center);
+    }
     let delta = nearest_square_center - player_position;
 
-    println!("debug | delta: {:?}", delta);
+    if debug {
+        println!("debug | delta: {:?}", delta);
+    }
     movement.set_target(
         player_position.truncate(),
         delta.truncate(),

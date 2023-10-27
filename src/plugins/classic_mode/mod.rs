@@ -3,6 +3,8 @@ use bevy::prelude::*;
 use crate::resources::game_data::PauseSceneData;
 use crate::scenes::SceneState;
 
+use super::input::movement::map::MapGrid;
+
 pub mod dungeon;
 
 pub struct ClassicModePlugin;
@@ -69,4 +71,6 @@ fn clean_up_classic_mode(mut commands: Commands, classic_mode_data: Res<ClassicM
     commands
         .entity(classic_mode_data.ground.unwrap())
         .despawn_recursive();
+
+    commands.remove_resource::<MapGrid>();
 }

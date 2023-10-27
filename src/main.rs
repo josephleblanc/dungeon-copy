@@ -8,6 +8,7 @@ use plugins::debug::DebugPlugin;
 
 mod components;
 mod config;
+mod events;
 mod materials;
 mod plugins;
 mod resources;

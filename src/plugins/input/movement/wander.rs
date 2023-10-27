@@ -17,6 +17,7 @@ pub fn wander_movement_system(
     keyboard_input: Res<Input<KeyCode>>,
     time: Res<Time>,
 ) {
+    let debug = false;
     let (player_stats, mut player_animation, mut transform) = player_query.single_mut();
 
     let mut delta = Vec3::new(0.0, 0.0, 0.0);
@@ -43,14 +44,16 @@ pub fn wander_movement_system(
     }
 
     transform.translation += delta;
-    println!(
-        "player_position: {:?}, {:?}",
-        transform.translation.x, transform.translation.y
-    );
-    println!(
-        "debug | trans_to_window: {:?}",
-        trans_to_window(transform.translation.x, transform.translation.y)
-    );
+    if debug {
+        println!(
+            "player_position: {:?}, {:?}",
+            transform.translation.x, transform.translation.y
+        );
+        println!(
+            "debug | trans_to_window: {:?}",
+            trans_to_window(transform.translation.x, transform.translation.y)
+        );
+    }
 
     if delta.x < 0.0 {
         transform.rotation = Quat::from_rotation_y(std::f32::consts::PI);

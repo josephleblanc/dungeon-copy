@@ -1,9 +1,11 @@
 use bevy::prelude::*;
+use bevy_inspector_egui::egui::Grid;
 
 use crate::config::*;
 use crate::materials::ingame::InGameMaterials;
 use crate::plugins::classic_mode::dungeon::{TOTAL_TILE_HEIGHT, TOTAL_TILE_WIDTH};
 use crate::plugins::classic_mode::ClassicModeData;
+use crate::plugins::input::movement::map::MapGrid;
 use crate::plugins::interact::Interactable;
 use crate::resources::dungeon::grid_square::GridSquare;
 use crate::resources::dungeon::ground::Ground;
@@ -17,6 +19,8 @@ pub fn ground(
     let tile_offset = TILE_SIZE / 2.0;
     let start_y: f32 = 0.0 + WINDOW_HEIGHT / 2.0 - tile_offset;
     let start_x: f32 = 0.0 - WINDOW_HEIGHT * RESOLUTION / 2.0 + tile_offset;
+
+    let mut grid_positions: Vec<Vec2> = vec![];
 
     let ground = commands
         .spawn(SpriteBundle {
@@ -38,6 +42,8 @@ pub fn ground(
 
                         let box_lower_tr: Vec2 = Vec2::new(x - tile_offset, y - tile_offset);
                         let box_upper_tr: Vec2 = Vec2::new(x + tile_offset, y + tile_offset);
+
+                        grid_positions.push(Vec2::new(x, y));
 
                         parent
                             .spawn(SpriteBundle {
@@ -75,6 +81,10 @@ pub fn ground(
         .insert(Name::new("Ground"))
         .insert(Ground)
         .id();
+
+    commands.insert_resource::<MapGrid>(MapGrid {
+        positions: grid_positions,
+    });
 
     data.ground = Some(ground);
 }

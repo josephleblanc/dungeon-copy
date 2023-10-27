@@ -74,7 +74,7 @@ pub fn setup(
             ..Default::default()
         })
         .with_children(|parent| {
-            movement_mode(parent, &font_materials, &dictionary);
+            movement_mode_buttons(parent, &font_materials, &dictionary);
         })
         .insert(Name::new("PlayerUI"))
         .id();
@@ -85,13 +85,7 @@ pub fn setup(
     });
 }
 
-pub fn cleanup(mut commands: Commands, movement_mode_data: Res<MovementModeData>) {
-    commands
-        .entity(movement_mode_data.user_interface_root)
-        .despawn_recursive();
-}
-
-pub fn movement_mode(
+pub fn movement_mode_buttons(
     root: &mut ChildBuilder,
     font_materials: &FontMaterials,
     dictionary: &Dictionary,

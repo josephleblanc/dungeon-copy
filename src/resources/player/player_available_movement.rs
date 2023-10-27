@@ -12,7 +12,10 @@ pub struct PlayerAvailableMovement {
 
 impl PlayerAvailableMovement {
     pub fn open_nodes(self, current_node: &MoveNode, dest: Vec3) -> Vec<MoveNode> {
-        println!("debug | PlayerAvailableMovement::open_nodes | start");
+        let debug = false;
+        if debug {
+            println!("debug | PlayerAvailableMovement::open_nodes | start");
+        }
         let mut open_paths: Vec<MoveNode> = Vec::with_capacity(4);
         if self.can_move_right {
             let new_move = Vec3::new(TILE_SIZE, 0.0, 0.0);
@@ -30,10 +33,12 @@ impl PlayerAvailableMovement {
             let new_move = Vec3::new(0.0, TILE_SIZE.neg(), 0.0);
             open_paths.push(current_node.to_new_pos(new_move, dest));
         }
-        println!(
-            "debug | PlayerAvailableMovement::open_nodes | open_paths: {:?}",
-            open_paths
-        );
+        if debug {
+            println!(
+                "debug | PlayerAvailableMovement::open_nodes | open_paths: {:?}",
+                open_paths
+            );
+        }
         open_paths
     }
 }

@@ -2,14 +2,9 @@ use bevy::prelude::*;
 
 use crate::config::{RESOLUTION, TILE_SIZE, WINDOW_HEIGHT};
 use crate::materials::ingame::InGameMaterials;
+use crate::plugins::game_ui::map::MapUiData;
 use crate::plugins::interact::Interactable;
 use crate::resources::dungeon::grid_square::GridSquare;
-
-#[derive(Resource)]
-pub struct MapUiData {
-    user_interface_root: Entity,
-    pub map_ui_sprites_root: Entity,
-}
 
 #[derive(Component)]
 pub struct FocusBox {
@@ -53,37 +48,6 @@ pub fn mouse_handle_system(
     }
 }
 
-/// Create a Node for the whole window which will be used as reference for
-/// placement of the focus box sprite.
-pub fn setup(mut commands: Commands, ingame_materials: Res<InGameMaterials>) {
-    let user_interface_root = commands
-        .spawn((
-            NodeBundle {
-                background_color: Color::NONE.into(),
-                ..Default::default()
-            },
-            Name::new("Map Focus Box Root Node"),
-        ))
-        .id();
-    // .with_children(|builder| {
-    //     build_focus_box(builder);
-    // })
-
-    let map_ui_sprites_root = commands
-        .spawn(SpriteBundle {
-            ..Default::default()
-        })
-        .with_children(|builder| {
-            build_focus_box(builder, ingame_materials);
-        })
-        .id();
-
-    commands.insert_resource(MapUiData {
-        user_interface_root,
-        map_ui_sprites_root,
-    });
-}
-
 /// Initialize the grid focus box sprite.
 /// It is important to note that the z position of the box must be placed so that
 /// it appears above the grid square and below anything placed on the map sprite,
@@ -91,7 +55,7 @@ pub fn setup(mut commands: Commands, ingame_materials: Res<InGameMaterials>) {
 /// E.g. If the player is on z-position 1.5, and the grid square is on 1.0,
 /// then the focus box should have a `z_layer` value so that
 /// 1.0 < z_layer < 1.5
-pub fn build_focus_box(builder: &mut ChildBuilder, ingame_materials: Res<InGameMaterials>) {
+pub fn setup(builder: &mut ChildBuilder, ingame_materials: Res<InGameMaterials>) {
     let x_pos = 0.0;
     let y_pos = 0.0;
     // TODO: Make consts for the z_layers and keep them in an organized list
@@ -124,18 +88,4 @@ pub fn build_focus_box(builder: &mut ChildBuilder, ingame_materials: Res<InGameM
         },
         Name::new("Grid Focus Box"),
     ));
-}
-
-/// Cleans up both the Node frame (w/ children) for the map sprite as well
-/// as any other UI elements attached to the user_interface_root, which
-/// are UI, rather than sprite, components.
-pub fn cleanup(mut commands: Commands, map_ui_data: Res<MapUiData>) {
-    commands
-        .entity(map_ui_data.user_interface_root)
-        .despawn_recursive();
-    commands
-        .entity(map_ui_data.map_ui_sprites_root)
-        .despawn_recursive();
-
-    commands.remove_resource::<MapUiData>();
 }
