@@ -7,17 +7,19 @@ pub mod movement;
 
 use movement::click_move;
 
-use self::movement::click_move::MovementPathEvent;
-
 use super::{game_ui::map::pathing::PathSpriteEvent, interact::InteractingPosEvent};
 use crate::plugins::input::click_move::PathListEvent;
+use crate::plugins::input::movement::move_event;
+use crate::plugins::input::movement::move_event::MovementPathEvent;
+use crate::plugins::input::movement::path_move;
 
 pub struct InputHandlePlugin;
 
 impl Plugin for InputHandlePlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<movement::Movement>();
-        app.init_resource::<movement::click_move::Paths>();
+        app.init_resource::<movement::click_move::PathNodes>();
+        app.init_resource::<movement::click_move::PathConditions>();
 
         app.add_event::<MovementPathEvent>();
         app.add_event::<PathListEvent>();
@@ -37,8 +39,9 @@ impl Plugin for InputHandlePlugin {
         app.add_systems(
             Update,
             (
-                click_move::move_path_system.before(click_move::move_event_system),
-                click_move::handle_path.before(click_move::move_event_system),
+                path_move::path_move_system.before(move_event::move_event_system),
+                click_move::handle_path.before(move_event::move_event_system),
+                click_move::check_path_conditions.before(click_move::start_path_list),
                 (
                     click_move::start_path_list,
                     click_move::repath.after(click_move::start_path_list),
@@ -47,7 +50,7 @@ impl Plugin for InputHandlePlugin {
                 )
                     .run_if(on_event::<movement::click_move::PathListEvent>())
                     .after(click_move::handle_path),
-                click_move::move_event_system,
+                move_event::move_event_system,
             )
                 .run_if(in_state(SceneState::InGameClassicMode)),
         );

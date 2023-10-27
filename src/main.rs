@@ -1,4 +1,8 @@
-#![allow(clippy::collapsible_else_if, clippy::type_complexity)]
+#![allow(
+    clippy::collapsible_else_if,
+    clippy::type_complexity,
+    clippy::too_many_arguments
+)]
 
 use bevy::window::{WindowResizeConstraints, WindowResolution};
 use bevy::{prelude::*, window::WindowMode};
@@ -8,7 +12,6 @@ use plugins::debug::DebugPlugin;
 
 mod components;
 mod config;
-mod events;
 mod materials;
 mod plugins;
 mod resources;

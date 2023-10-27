@@ -3,8 +3,7 @@ use bevy::prelude::*;
 use crate::components::player::PlayerComponent;
 use crate::plugins::game_ui::map::MapUiData;
 use crate::plugins::input::movement::Movement;
-use crate::plugins::player::PlayerEntity;
-use crate::{config::TILE_SIZE, plugins::input::movement::click_move::MovementPath};
+use crate::{config::TILE_SIZE, plugins::input::movement::path_move::MovementPath};
 
 #[derive(Resource, Clone, Copy)]
 pub struct MovePathFrameData {

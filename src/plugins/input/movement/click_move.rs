@@ -1,75 +1,31 @@
-use std::ops::ControlFlow;
 use std::ops::Deref;
 use std::ops::DerefMut;
 
 use bevy::prelude::*;
 
-use crate::events::MovePathEvent;
-// use crate::plugins::game_ui::map::pathing::despawn_move_path;
-use crate::plugins::game_ui::map::pathing::spawn_move_path;
-use crate::plugins::game_ui::map::pathing::MovePathFrameData;
 use crate::plugins::game_ui::map::pathing::PathSpriteEvent;
 use crate::plugins::game_ui::map::pathing::SpriteAction;
+use crate::plugins::input::movement::move_event::MovePathAction;
+use crate::plugins::input::movement::move_event::MovementPathEvent;
+use crate::plugins::input::movement::path_move::MovementPath;
 use crate::plugins::input::movement::Movement;
 use crate::plugins::input::movement::MovementMode;
 use crate::plugins::input::movement::MovementModeRes;
-use crate::plugins::input::movement::PlayerAnimation;
 use crate::plugins::input::movement::PlayerComponent;
-use crate::plugins::interact::Interactable;
 use crate::plugins::interact::InteractingPos;
-use crate::plugins::interact::InteractingPosEvent;
 use crate::plugins::player::collisions::wall_collision_check;
 use crate::resources::dungeon::block_type::BlockType;
-use crate::resources::dungeon::grid_square::GridSquare;
 
 use super::map::MapGrid;
 
 #[derive(Resource, Clone, Debug)]
-pub struct MovementPath {
-    pub path: Vec<(Vec3, Vec3)>,
-    active: bool,
-}
-
-impl MovementPath {
-    pub fn is_active(&self) -> bool {
-        self.active
-    }
-
-    pub fn set_active(&mut self) {
-        self.active = true;
-    }
-
-    pub fn set_inactive(&mut self) {
-        self.active = false;
-    }
-
-    pub fn new(path: Vec<(Vec3, Vec3)>) -> Self {
-        Self {
-            path,
-            active: false,
-        }
-    }
-
-    pub fn new_active(path: Vec<(Vec3, Vec3)>) -> Self {
-        Self { path, active: true }
-    }
-
-    pub fn to_event(self, action: MovePathAction) -> MovementPathEvent {
-        MovementPathEvent {
-            move_path: Some(self),
-            action: Some(action),
-        }
-    }
-}
-
-#[derive(Resource, Clone, Debug)]
 pub struct MovementPathList {
     pub list: Vec<MovementPath>,
-    pub shortest: MovementPath,
     pub focused: MovementPath,
     pub start: Vec3,
     pub end: Vec3,
     pub displayed: bool,
+    pub active: bool,
 }
 
 impl MovementPathList {
@@ -77,15 +33,15 @@ impl MovementPathList {
     /// MovementPathList will have a `shortest` and `focused` of clones of the
     /// new path.
     pub fn new_from_path(path: MovementPath) -> Self {
-        let (start, _) = *path.path.first().unwrap();
-        let (_, end) = *path.path.last().unwrap();
+        let (_, end) = *path.path.first().unwrap();
+        let (start, _) = *path.path.last().unwrap();
         MovementPathList {
             list: vec![path.clone()],
-            shortest: path.clone(),
             focused: path.clone(),
             start,
             end,
             displayed: false,
+            active: true,
         }
     }
 
@@ -125,19 +81,6 @@ pub struct MoveNode {
     pub path: Vec<Vec3>,
 }
 
-#[derive(Event, Debug)]
-pub struct MovementPathEvent {
-    move_path: Option<MovementPath>,
-    action: Option<MovePathAction>,
-}
-
-#[derive(Clone, Debug, Copy)]
-pub enum MovePathAction {
-    Insert,
-    Remove,
-    // TakePath,
-}
-
 impl MoveNode {
     pub fn to_new_pos(&self, step: Vec3, dest: Vec3) -> MoveNode {
         let mut path: Vec<Vec3> = self.path.clone();
@@ -151,18 +94,42 @@ impl MoveNode {
     }
 }
 
+#[derive(Copy, Clone, Deref, DerefMut, Resource, Default)]
+pub struct PathConditions(bool);
+
+pub fn check_path_conditions(
+    interacting_pos: Res<InteractingPos>,
+    movement_mode: Res<MovementModeRes>,
+    player_query: Query<(&PlayerComponent, &Transform)>,
+    map_grid: Res<MapGrid>,
+    movement: Res<Movement>,
+    movement_path: Option<Res<MovementPath>>,
+    mut path_ready: ResMut<PathConditions>,
+) {
+    let player_pos = player_query.get_single().unwrap().1.translation.truncate();
+    let focus_pos = interacting_pos.pos;
+    **path_ready = interacting_pos.active
+        && **movement_mode == MovementMode::TurnBasedMovement
+        && !movement.moving
+        && player_pos != focus_pos
+        && map_grid.positions.as_slice().contains(&player_pos)
+        && (if let Some(move_path) = movement_path {
+            move_path.is_traversing()
+        } else {
+            movement_path.is_none()
+        })
+}
+
 pub fn handle_path(
     path_list: Option<Res<MovementPathList>>,
     button: Res<Input<MouseButton>>,
     mut list_event_writer: EventWriter<PathListEvent>,
     mut move_event_writer: EventWriter<MovementPathEvent>,
-    mut interact_event_reader: EventReader<InteractingPosEvent>,
 
     interacting_pos: Res<InteractingPos>,
-    movement_mode: Res<MovementModeRes>,
-    movement: Res<Movement>,
     player_query: Query<(&PlayerComponent, &Transform)>,
     map_grid: Res<MapGrid>,
+    path_ready: Res<PathConditions>,
 ) {
     let debug = false;
     // if debug {
@@ -171,12 +138,7 @@ pub fn handle_path(
 
     let player_pos = player_query.get_single().unwrap().1.translation.truncate();
     let focus_pos = interacting_pos.pos;
-    if interacting_pos.active
-        && **movement_mode == MovementMode::TurnBasedMovement
-        && !movement.moving
-        && player_pos != focus_pos
-        && map_grid.positions.as_slice().contains(&player_pos)
-    {
+    if **path_ready {
         if debug {
             println!("debug | handle_path |     player_pos = {:?}", player_pos);
             println!(
@@ -190,15 +152,27 @@ pub fn handle_path(
         }
         if let Some(path_list) = path_list {
             if button.just_pressed(MouseButton::Left) {
-                move_event_writer.send(path_list.focused.clone().to_event(MovePathAction::Insert))
+                println!(
+                    "focus_pos: {}, path_list.end.truncate(): {}",
+                    focus_pos,
+                    path_list.end.truncate()
+                );
+                if focus_pos == path_list.end.truncate() {
+                    move_event_writer.send(
+                        path_list
+                            .focused
+                            .clone()
+                            .to_event(MovePathAction::InsertOrActivate),
+                    )
+                }
             } else if button.just_pressed(MouseButton::Right) {
-                list_event_writer.send(PathAction::Repath.into());
+                list_event_writer.send(PathAction::Remove.into());
+                move_event_writer.send(MovePathAction::Remove.into());
             } else {
                 if interacting_pos.is_changed() {
-                    println!("interacting_pos changed");
-                }
-                for _event in interact_event_reader.into_iter() {
-                    println!("Sending removed");
+                    if debug {
+                        println!("interacting_pos changed");
+                    }
                     list_event_writer.send(PathAction::Remove.into());
                 }
             }
@@ -210,82 +184,47 @@ pub fn handle_path(
 }
 
 #[derive(Resource, Clone, Default)]
-pub struct Paths {
+pub struct PathNodes {
     pub paths: Vec<MoveNode>,
     pub ignore: Vec<MoveNode>,
 }
 
-impl Paths {
+impl PathNodes {
     pub fn ignore_node(&mut self, node: MoveNode) {
         self.ignore.push(node);
     }
 }
 
-impl Deref for Paths {
+impl Deref for PathNodes {
     type Target = Vec<MoveNode>;
     fn deref(&self) -> &Self::Target {
         &self.paths
     }
 }
 
-impl DerefMut for Paths {
+impl DerefMut for PathNodes {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.paths
     }
 }
 
-impl Paths {
+impl PathNodes {
     pub fn reset(&mut self) {
         self.paths = vec![];
     }
 }
-
-// pub fn set_path(
-//     player_query: Query<(&PlayerComponent, &Transform)>,
-//     block_type_query: Query<(&BlockType, &Transform), Without<PlayerComponent>>,
-//     mut event_writer: EventWriter<MovementPathEvent>,
-//     interacting_pos: Res<InteractingPos>,
-//     mut open_paths: ResMut<Paths>,
-// ) {
-//     println!("debug | set_path | start");
-//     let (_player, transform) = player_query.single();
-//
-//     let start = transform.translation;
-//     let end = Vec3::new(interacting_pos.pos.x, interacting_pos.pos.y, start.z);
-//     println!("debug | set_path | variable start = {:?}", start);
-//     println!("debug | set_path | variable end = {:?}", end);
-//
-//     let start_node = MoveNode {
-//         pos: start,
-//         dist: start.distance(end),
-//         open: true,
-//         path: vec![start],
-//     };
-//
-//     if open_paths.paths.is_empty() {
-//         // let no: () = open_paths.paths;
-//         open_paths.paths = vec![start_node];
-//     }
-//
-//     let finished_path = find_path(open_paths, block_type_query, end).unwrap();
-//
-//     event_writer.send(MovementPathEvent {
-//         move_path: Some(finished_path),
-//         action: Some(MovePathAction::Insert),
-//     });
-// }
 
 pub fn start_path_list(
     mut commands: Commands,
     player_query: Query<(&PlayerComponent, &Transform)>,
     block_type_query: Query<(&BlockType, &Transform), Without<PlayerComponent>>,
     interacting_pos: Res<InteractingPos>,
-    mut open_paths: ResMut<Paths>,
+    mut open_paths: ResMut<PathNodes>,
     mut sprite_writer: EventWriter<PathSpriteEvent>,
     mut event_reader: EventReader<PathListEvent>,
 ) {
     open_paths.reset();
-    let debug = true;
+    let debug = false;
     if debug {
         println!("debug | start_path_list | start start_path_list");
     }
@@ -340,13 +279,13 @@ pub fn start_path_list(
 
 pub fn repath(
     block_type_query: Query<(&BlockType, &Transform), Without<PlayerComponent>>,
-    open_paths: ResMut<Paths>,
+    open_paths: ResMut<PathNodes>,
     mut path_list: Option<ResMut<MovementPathList>>,
     mut event_reader: EventReader<PathListEvent>,
     mut sprite_writer: EventWriter<PathSpriteEvent>,
 ) {
     // TODO: Look over this and test more to make sure it works as intended.
-    // It should be fine to have find_map here, but there could be a possibility
+    // It should be fine to have fthind_map here, but there could be a possibility
     // that the event_reader would somehow get delayed, in which case this function
     // may have some unintended consequences.
     // Also see if there is a way to get rid of the clone
@@ -367,7 +306,7 @@ pub fn repath(
 }
 
 fn find_path(
-    mut open_paths: ResMut<'_, Paths>,
+    mut open_paths: ResMut<'_, PathNodes>,
     // mut event_writer: EventWriter<'_, MovementPathEvent>,
     block_type_query: Query<'_, '_, (&BlockType, &Transform), Without<PlayerComponent>>,
     end: Vec3,
@@ -391,7 +330,7 @@ fn find_path(
                 .zip(closest.path.clone().into_iter().skip(1))
                 .rev()
                 .collect();
-            return Some(MovementPath::new_active(queue));
+            return Some(MovementPath::new_inactive(queue));
         }
         let possible_paths =
             wall_collision_check(closest.pos, &block_type_query).open_nodes(closest, end);
@@ -400,75 +339,6 @@ fn find_path(
         open_paths.paths.extend_from_slice(&possible_paths);
     }
     None
-}
-
-pub fn move_path_system(
-    mut player_query: Query<(&PlayerComponent, &mut PlayerAnimation, &mut Transform)>,
-    move_que: Option<ResMut<MovementPath>>,
-    mut movement: ResMut<Movement>,
-    time: Res<Time>,
-    mut event_writer: EventWriter<MovementPathEvent>,
-) {
-    let debug = false;
-    if debug {
-        println!("debug | move_path_system | start move_path_system");
-    }
-    let (player_stats, _player_animation, mut transform) = player_query.single_mut();
-    if let Some(mut move_que) = move_que {
-        if !movement.moving {
-            if let Some((start, end)) = move_que.path.pop() {
-                let delta = end - start;
-                movement.set_target(
-                    transform.translation.truncate(),
-                    delta.truncate(),
-                    player_stats.speed,
-                );
-            } else {
-                event_writer.send(MovementPathEvent {
-                    move_path: None,
-                    action: Some(MovePathAction::Remove),
-                });
-            }
-        } else if !movement.is_finished() {
-            let time_delta = time.delta();
-            movement
-                .update(&mut transform.translation, time_delta)
-                .unwrap();
-            if movement.is_finished() {
-                movement.reset();
-            }
-        }
-    }
-}
-
-pub fn move_event_system(
-    mut commands: Commands,
-    move_que: Option<Res<MovementPath>>,
-    mut event_reader: EventReader<MovementPathEvent>,
-    movement_mode: Res<MovementModeRes>,
-) {
-    let debug = false;
-    if debug {
-        println!("debug | move_event_system | start move_event_system");
-    }
-    if **movement_mode == MovementMode::TurnBasedMovement {
-        if let Some(event) = event_reader.into_iter().next() {
-            if let Some(action) = event.action {
-                match action {
-                    MovePathAction::Insert => {
-                        commands
-                            .insert_resource::<MovementPath>(event.move_path.to_owned().unwrap());
-                    }
-                    MovePathAction::Remove => {
-                        if move_que.is_some() {
-                            commands.remove_resource::<MovementPath>();
-                            commands.remove_resource::<MovementPathList>();
-                        }
-                    } // MovePathAction::TakePath => todo!(),
-                }
-            }
-        }
-    }
 }
 
 #[derive(Event, Debug, Clone)]
