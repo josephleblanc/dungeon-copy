@@ -6,7 +6,7 @@ use crate::plugins::input::movement::Movement;
 use crate::plugins::input::movement::PlayerAnimation;
 use crate::plugins::input::movement::PlayerComponent;
 
-#[derive(Resource, Clone, Debug)]
+#[derive(Resource, Clone, Debug, PartialEq)]
 pub struct MovementPath {
     pub path: Vec<(Vec3, Vec3)>,
     active: bool,
@@ -54,6 +54,16 @@ impl MovementPath {
         let mut event = MovementPathEvent::new();
         event.set_move_path(self).set_action(action);
         event
+    }
+
+    pub fn end(&self) -> Vec3 {
+        let end = self.path.first().unwrap().1;
+        println!("MovementPath::end() = {}", end);
+        end
+    }
+
+    pub fn join(&mut self, other: Self) {
+        self.path.extend_from_slice(other.path.as_slice())
     }
 }
 

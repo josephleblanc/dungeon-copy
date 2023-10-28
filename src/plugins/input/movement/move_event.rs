@@ -59,30 +59,10 @@ pub fn move_event_system(
             if let Some(action) = event.action {
                 match action {
                     MovePathAction::InsertOrActivate => {
-                        println!(
-                            "debug | move_event_system | MovePathEvent::InsertOrActivate received"
-                        );
-                        if let Some(mut movement_path) = move_path {
-                            if !movement_path
-                                .path
-                                .iter()
-                                .zip(event.move_path.clone().unwrap().path.iter())
-                                .inspect(|item| println!("{:?}", item))
-                                .any(|(step_old, step_new)| step_old != step_new)
-                            {
-                                println!(
-                                    "debug | move_event_system | movement_path.is_active() = {}",
-                                    movement_path.is_active()
-                                );
-                                if !movement_path.is_active() {
-                                    movement_path.set_active();
-                                }
-                            }
-                        } else {
-                            commands.insert_resource::<MovementPath>(
-                                event.move_path.to_owned().unwrap(),
-                            );
-                        }
+                        let mut move_path = event.move_path.clone().unwrap();
+                        move_path.set_active();
+                        commands.insert_resource::<MovementPath>(move_path);
+                        // }
                     }
                     MovePathAction::Remove => {
                         if move_path.is_some() {

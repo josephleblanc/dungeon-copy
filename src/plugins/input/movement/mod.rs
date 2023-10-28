@@ -14,6 +14,7 @@ use crate::resources::dungeon::grid_square::GridSquare;
 pub mod click_move;
 pub mod map;
 pub mod move_event;
+pub mod path_list_event;
 pub mod path_move;
 pub mod turn_based;
 pub mod wander;

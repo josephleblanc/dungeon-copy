@@ -50,47 +50,35 @@ pub struct PathSprite {
 
 impl PathSprite {
     fn contains(self, other: Vec2) -> bool {
-        let debug = false;
-        if debug {
-            println!("self.step.0.y: {:?}, other.y: {:?}", self.step.0.y, other.y);
-            println!(
-                "(other.x - self.step.0.x).is_sign_positive(): {}",
-                (other.x - self.step.0.x).is_sign_positive()
-            );
-            println!(
-                "(other.x - self.step.1.x).is_sign_positive(): {}",
-                (other.x - self.step.1.x).is_sign_positive()
-            );
-            println!("self.step.0.x: {:?}, other.x: {:?}", self.step.0.x, other.x);
-            println!(
-                "(other.y - self.step.0.y).is_sign_positive(): {}",
-                (other.y - self.step.0.y).is_sign_positive()
-            );
-            println!(
-                "(other.y - self.step.1.y).is_sign_positive(): {}",
-                (other.y - self.step.1.y).is_sign_positive()
-            );
-        }
-        let x_min = self.step.0.x.min(self.step.1.x) + TILE_SIZE / 4.0;
-        let x_max = self.step.0.x.max(self.step.1.x) - TILE_SIZE / 4.0;
-        let y_min = self.step.0.y.min(self.step.1.y) + TILE_SIZE / 4.0;
-        let y_max = self.step.0.y.max(self.step.1.y) - TILE_SIZE / 4.0;
-        if self.is_horizontal() {
-            other.x.clamp(x_min, x_max) == other.x
-        } else if self.is_vertical() {
-            other.y.clamp(y_min, y_max) == other.y
+        let x_min = self.step.0.x.min(self.step.1.x);
+        let x_max = self.step.0.x.max(self.step.1.x);
+        let y_min = self.step.0.y.min(self.step.1.y);
+        let y_max = self.step.0.y.max(self.step.1.y);
+        if self.is_vertical() {
+            other
+                .y
+                .clamp(y_min + TILE_SIZE / 4.0, y_max - TILE_SIZE / 4.0)
+                == other.y
+                && other.x == self.step.0.x
         } else {
-            false
+            other
+                .x
+                .clamp(x_min + TILE_SIZE / 4.0, x_max - TILE_SIZE / 4.0)
+                == other.x
+                && other.y == self.step.0.y
         }
     }
 
     pub fn is_vertical(self) -> bool {
         self.step.0.x == self.step.1.x
     }
+}
+pub fn is_vertical(pos: &(Vec3, Vec3)) -> bool {
+    pos.0.x == pos.1.x
+}
 
-    pub fn is_horizontal(self) -> bool {
-        self.step.0.y == self.step.1.y
-    }
+pub fn is_horizontal(pos: &(Vec3, Vec3)) -> bool {
+    pos.0.y == pos.1.y
 }
 
 /// Create a Node for the whole window which will be used as reference for
@@ -130,43 +118,20 @@ pub fn spawn_move_path(
     };
     let offset: Vec3 = Vec3::new(TILE_SIZE / 2.0, TILE_SIZE / 2.0, 1.20);
 
-    if debug && old_path_sprites.is_empty() {
-        println!("old path sprites empty");
-    }
-
-    for (old_entity, old_step) in old_path_sprites
+    for (old_entity, _old_step) in old_path_sprites
         .iter()
-        .inspect(|(old_entity, old_step)| {
-            if debug {
-                println!("old step: {:?}", old_step)
-            }
-        })
         .filter(|(_, old)| !move_path.path.as_slice().contains(&old.step))
     {
-        if debug {
-            println!("despawning {:?}", old_step);
-        }
         commands.entity(old_entity).despawn();
     }
 
-    for step in move_path
-        .path
-        .iter()
-        .inspect(|new_step| {
-            if debug {
-                println!("new_step: {:?}", new_step);
-            }
-        })
-        .filter(|new_step| {
-            !old_path_sprites
-                .iter()
-                .any(|(_, old_sprite)| (**new_step == old_sprite.step))
-                || old_path_sprites.is_empty()
-        })
-    {
-        let is_horizontal = step.0.x + TILE_SIZE == step.1.x || step.0.x - TILE_SIZE == step.1.x;
-        let is_vertical = step.0.y + TILE_SIZE == step.1.y || step.0.y - TILE_SIZE == step.1.y;
-        if is_horizontal {
+    for step in move_path.path.iter().filter(|new_step| {
+        !old_path_sprites
+            .iter()
+            .any(|(_, old_sprite)| (**new_step == old_sprite.step))
+            || old_path_sprites.is_empty()
+    }) {
+        if is_horizontal(step) {
             let signed_offset_x = if (step.1.x - step.0.x).is_sign_positive() {
                 offset.x
             } else {
@@ -193,7 +158,7 @@ pub fn spawn_move_path(
             if debug {
                 println!("spawning step {:?}", step);
             }
-        } else if is_vertical {
+        } else if is_vertical(step) {
             let signed_offset_y = if (step.1.y - step.0.y).is_sign_positive() {
                 offset.y
             } else {

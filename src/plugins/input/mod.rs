@@ -6,11 +6,12 @@ pub mod feature;
 pub mod movement;
 
 use movement::click_move;
+use movement::path_list_event;
 
 use super::{game_ui::map::pathing::PathSpriteEvent, interact::InteractingPosEvent};
-use crate::plugins::input::click_move::PathListEvent;
 use crate::plugins::input::movement::move_event;
 use crate::plugins::input::movement::move_event::MovementPathEvent;
+use crate::plugins::input::movement::path_list_event::PathListEvent;
 use crate::plugins::input::movement::path_move;
 
 pub struct InputHandlePlugin;
@@ -44,11 +45,11 @@ impl Plugin for InputHandlePlugin {
                 click_move::check_path_conditions.before(click_move::start_path_list),
                 (
                     click_move::start_path_list,
-                    click_move::repath.after(click_move::start_path_list),
+                    click_move::add_path.after(click_move::start_path_list),
                     click_move::path_list_cleanup,
                     // click_move::path_list_cleanup,
                 )
-                    .run_if(on_event::<movement::click_move::PathListEvent>())
+                    .run_if(on_event::<path_list_event::PathListEvent>())
                     .after(click_move::handle_path),
                 move_event::move_event_system,
             )
