@@ -1,3 +1,5 @@
+use std::f32::consts::PI;
+
 use bevy::prelude::*;
 
 use crate::components::player::PlayerComponent;
@@ -60,17 +62,30 @@ impl PathSprite {
                 .clamp(y_min + TILE_SIZE / 4.0, y_max - TILE_SIZE / 4.0)
                 == other.y
                 && other.x == self.step.0.x
-        } else {
+        } else if self.is_horizontal() {
             other
                 .x
                 .clamp(x_min + TILE_SIZE / 4.0, x_max - TILE_SIZE / 4.0)
                 == other.x
                 && other.y == self.step.0.y
+        } else {
+            other
+                .y
+                .clamp(y_min + TILE_SIZE / 4.0, y_max - TILE_SIZE / 4.0)
+                == other.y
+                && other
+                    .x
+                    .clamp(x_min + TILE_SIZE / 4.0, x_max - TILE_SIZE / 4.0)
+                    == other.x
         }
     }
 
     pub fn is_vertical(self) -> bool {
         self.step.0.x == self.step.1.x
+    }
+
+    pub fn is_horizontal(self) -> bool {
+        self.step.0.y == self.step.1.y
     }
 }
 pub fn is_vertical(pos: &(Vec3, Vec3)) -> bool {
@@ -79,6 +94,30 @@ pub fn is_vertical(pos: &(Vec3, Vec3)) -> bool {
 
 pub fn is_horizontal(pos: &(Vec3, Vec3)) -> bool {
     pos.0.y == pos.1.y
+}
+
+pub fn is_rising_diagonal(pos: &(Vec3, Vec3)) -> bool {
+    pos.0.y < pos.1.y && pos.0.x < pos.1.x || pos.0.y > pos.1.y && pos.0.x > pos.1.x
+}
+
+pub fn is_falling_diagonal(pos: &(Vec3, Vec3)) -> bool {
+    pos.0.y < pos.1.y && pos.0.x > pos.1.x || pos.0.y > pos.1.y && pos.0.x < pos.1.x
+}
+
+pub fn calc_signed_offset_x(step: &(Vec3, Vec3), offset: Vec3) -> f32 {
+    if (step.1.x - step.0.x).is_sign_positive() {
+        offset.x
+    } else {
+        -1.0 * offset.x
+    }
+}
+
+pub fn calc_signed_offset_y(step: &(Vec3, Vec3), offset: Vec3) -> f32 {
+    if (step.1.y - step.0.y).is_sign_positive() {
+        offset.y
+    } else {
+        -1.0 * offset.y
+    }
 }
 
 /// Create a Node for the whole window which will be used as reference for
@@ -132,11 +171,7 @@ pub fn spawn_move_path(
             || old_path_sprites.is_empty()
     }) {
         if is_horizontal(step) {
-            let signed_offset_x = if (step.1.x - step.0.x).is_sign_positive() {
-                offset.x
-            } else {
-                -1.0 * offset.x
-            };
+            let signed_offset_x = calc_signed_offset_x(step, offset);
             let transform_x = step.0.x + signed_offset_x;
             commands
                 .spawn(SpriteBundle {
@@ -159,11 +194,7 @@ pub fn spawn_move_path(
                 println!("spawning step {:?}", step);
             }
         } else if is_vertical(step) {
-            let signed_offset_y = if (step.1.y - step.0.y).is_sign_positive() {
-                offset.y
-            } else {
-                -1.0 * offset.y
-            };
+            let signed_offset_y = calc_signed_offset_y(step, offset);
             let transform_y = step.0.y + signed_offset_y;
             commands
                 .spawn(SpriteBundle {
@@ -185,6 +216,32 @@ pub fn spawn_move_path(
             if debug {
                 println!("spawning step {:?}", step);
             }
+        } else {
+            let signed_offset_x = calc_signed_offset_x(step, offset);
+            let transform_x = step.0.x + signed_offset_x;
+            let signed_offset_y = calc_signed_offset_y(step, offset);
+            let transform_y = step.0.y + signed_offset_y;
+
+            let rotation_radians = if is_rising_diagonal(step) {
+                -1.0 * PI / 4.0
+            } else {
+                PI / 4.0
+            };
+            commands
+                .spawn(SpriteBundle {
+                    sprite: Sprite {
+                        // TODO: Put this color in a const somewhere
+                        color: Color::rgb(0.25, 0.25, 0.5),
+                        custom_size: Some(Vec2::new(5.0, TILE_SIZE)),
+                        ..default()
+                    },
+                    transform: Transform::default()
+                        .with_rotation(Quat::from_rotation_z(rotation_radians))
+                        .with_translation(Vec3::new(transform_x, transform_y, offset.z)),
+                    ..default()
+                })
+                .insert(PathSprite { step: *step })
+                .set_parent(move_path_frame.frame_root);
         }
     }
 }

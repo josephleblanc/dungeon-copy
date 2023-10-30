@@ -8,6 +8,10 @@ pub struct PlayerAvailableMovement {
     pub can_move_right: bool,
     pub can_move_up: bool,
     pub can_move_down: bool,
+    pub can_move_up_right: bool,
+    pub can_move_up_left: bool,
+    pub can_move_down_right: bool,
+    pub can_move_down_left: bool,
 }
 
 impl PlayerAvailableMovement {
@@ -29,8 +33,24 @@ impl PlayerAvailableMovement {
             let new_move = Vec3::new(0.0, TILE_SIZE, 0.0);
             open_paths.push(current_node.to_new_pos(new_move, dest));
         }
+        if self.can_move_up_right {
+            let new_move = Vec3::new(TILE_SIZE, TILE_SIZE, 0.0);
+            open_paths.push(current_node.to_new_pos(new_move, dest));
+        }
+        if self.can_move_up_left {
+            let new_move = Vec3::new(TILE_SIZE.neg(), TILE_SIZE, 0.0);
+            open_paths.push(current_node.to_new_pos(new_move, dest));
+        }
         if self.can_move_down {
             let new_move = Vec3::new(0.0, TILE_SIZE.neg(), 0.0);
+            open_paths.push(current_node.to_new_pos(new_move, dest));
+        }
+        if self.can_move_down_right {
+            let new_move = Vec3::new(TILE_SIZE, TILE_SIZE.neg(), 0.0);
+            open_paths.push(current_node.to_new_pos(new_move, dest));
+        }
+        if self.can_move_down_left {
+            let new_move = Vec3::new(TILE_SIZE.neg(), TILE_SIZE.neg(), 0.0);
             open_paths.push(current_node.to_new_pos(new_move, dest));
         }
         if debug {
