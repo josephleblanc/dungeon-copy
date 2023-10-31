@@ -61,6 +61,7 @@ pub fn move_event_system(
                     MovePathAction::InsertOrActivate => {
                         let mut move_path = event.move_path.clone().unwrap();
                         move_path.set_active();
+                        move_path.set_traversing();
                         commands.insert_resource::<MovementPath>(move_path);
                         // }
                     }

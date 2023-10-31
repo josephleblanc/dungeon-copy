@@ -61,4 +61,25 @@ impl PlayerAvailableMovement {
         }
         open_paths
     }
+
+    pub fn new_all_true() -> Self {
+        PlayerAvailableMovement {
+            can_move_up: true,
+            can_move_down: true,
+            can_move_left: true,
+            can_move_right: true,
+            can_move_up_right: true,
+            can_move_up_left: true,
+            can_move_down_right: true,
+            can_move_down_left: true,
+        }
+    }
+
+    pub fn update_diagonals(&mut self) -> &mut Self {
+        self.can_move_up_right = self.can_move_up && self.can_move_right;
+        self.can_move_up_left = self.can_move_up && self.can_move_left;
+        self.can_move_down_right = self.can_move_down && self.can_move_right;
+        self.can_move_down_left = self.can_move_down && self.can_move_left;
+        self
+    }
 }

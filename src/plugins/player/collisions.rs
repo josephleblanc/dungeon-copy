@@ -22,16 +22,7 @@ pub fn wall_collision_check(
     player_position: Vec3,
     block_type_query: &Query<(&BlockType, &Transform), Without<PlayerComponent>>,
 ) -> PlayerAvailableMovement {
-    let mut player_available_movement = PlayerAvailableMovement {
-        can_move_up: true,
-        can_move_down: true,
-        can_move_left: true,
-        can_move_right: true,
-        can_move_up_right: true,
-        can_move_up_left: true,
-        can_move_down_right: true,
-        can_move_down_left: true,
-    };
+    let mut player_available_movement = PlayerAvailableMovement::new_all_true();
 
     let player_size = Vec2::new(PLAYER_SIZE_WIDTH, PLAYER_SIZE_HEIGHT);
 
@@ -67,14 +58,15 @@ pub fn wall_collision_check(
                 BlockType::WallRight => player_available_movement.can_move_right = false,
                 BlockType::None => {}
             }
-            player_available_movement.can_move_up_right =
-                player_available_movement.can_move_up && player_available_movement.can_move_right;
-            player_available_movement.can_move_up_left =
-                player_available_movement.can_move_up && player_available_movement.can_move_left;
-            player_available_movement.can_move_down_right =
-                player_available_movement.can_move_down && player_available_movement.can_move_right;
-            player_available_movement.can_move_down_left =
-                player_available_movement.can_move_down && player_available_movement.can_move_left;
+            player_available_movement.update_diagonals();
+            // player_available_movement.can_move_up_right =
+            //     player_available_movement.can_move_up && player_available_movement.can_move_right;
+            // player_available_movement.can_move_up_left =
+            //     player_available_movement.can_move_up && player_available_movement.can_move_left;
+            // player_available_movement.can_move_down_right =
+            //     player_available_movement.can_move_down && player_available_movement.can_move_right;
+            // player_available_movement.can_move_down_left =
+            //     player_available_movement.can_move_down && player_available_movement.can_move_left;
         }
     }
     player_available_movement

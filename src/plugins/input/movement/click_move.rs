@@ -123,7 +123,7 @@ pub fn check_path_conditions(
         && player_pos != focus_pos
         && map_grid.positions.as_slice().contains(&player_pos)
         && (if let Some(move_path) = movement_path {
-            move_path.is_traversing()
+            !move_path.is_traversing()
         } else {
             movement_path.is_none()
         })
@@ -150,8 +150,8 @@ pub fn handle_path(
                         let mut move_event: MovementPathEvent =
                             MovePathAction::InsertOrActivate.into();
                         let move_path = path_list.list_to_path();
-                        println!("move_path end: {}", move_path.end());
-                        println!("focused end: {}", path_list.focused.end());
+                        // println!("move_path end: {}", move_path.end());
+                        // println!("focused end: {}", path_list.focused.end());
                         move_event.set_move_path(move_path);
                         move_event_writer.send(move_event);
                     }
@@ -236,11 +236,14 @@ pub fn start_path_list(
             open_paths.paths = vec![start_node];
         }
 
-        let finished_path = find_path(open_paths, block_type_query, end).unwrap();
-
-        sprite_writer.send(PathSpriteEvent::spawn_move_path(finished_path.clone()));
-        commands
-            .insert_resource::<MovementPathList>(MovementPathList::new_from_path(finished_path));
+        if let Some(finished_path) = find_path(open_paths, block_type_query, end) {
+            sprite_writer.send(PathSpriteEvent::spawn_move_path(finished_path.clone()));
+            if !finished_path.path.is_empty() {
+                commands.insert_resource::<MovementPathList>(MovementPathList::new_from_path(
+                    finished_path,
+                ));
+            }
+        }
     }
 }
 
@@ -279,12 +282,12 @@ pub fn add_path(
                     path: vec![start],
                 };
                 open_paths.paths = vec![start_node];
-                let new_path = find_path(open_paths, block_type_query, end).unwrap();
-
-                path_list.set_focused(new_path.clone());
-                let mut total_path = path_list.clone().list_to_path();
-                total_path.join(path_list.focused.clone());
-                sprite_writer.send(PathSpriteEvent::spawn_move_path(total_path.clone()));
+                if let Some(new_path) = find_path(open_paths, block_type_query, end) {
+                    path_list.set_focused(new_path.clone());
+                    let mut total_path = path_list.clone().list_to_path();
+                    total_path.join(path_list.focused.clone());
+                    sprite_writer.send(PathSpriteEvent::spawn_move_path(total_path.clone()));
+                }
             }
         }
     }
@@ -300,7 +303,10 @@ fn find_path(
     if debug {
         println!("debug | find_path | start find_path");
     }
+
+    let mut max_loops = 1000;
     while open_paths.paths.iter().any(|node| node.open) {
+        max_loops -= 1;
         let closest = open_paths
             .paths
             .iter_mut()
@@ -316,6 +322,8 @@ fn find_path(
                 .rev()
                 .collect();
             return Some(MovementPath::new_inactive(queue));
+        } else if max_loops == 0 {
+            break;
         }
         let possible_paths =
             wall_collision_check(closest.pos, &block_type_query).open_nodes(closest, end);
