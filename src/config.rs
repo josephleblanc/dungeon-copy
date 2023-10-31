@@ -25,4 +25,4 @@ pub const LIST_ROOM_FILE: &str = "new_list_room.txt";
 pub const TILE_SIZE: f32 = 64.0;
 
 // Game data
-pub const DATA_FILE: &str = "data.json";
+pub const DATA_FILE: &str = "data.ron";

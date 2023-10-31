@@ -1,11 +1,19 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::InspectorOptions;
 
+use crate::components::attributes::AttributeBundle;
+use crate::components::attributes::Strength;
 use crate::resources::game_data::GameData;
 use crate::resources::hero::hero_class::HeroClass;
 // use crate::resources::hero::power::Power;
 // use crate::resources::hero::stats::Stats;
 // use crate::resources::upgrade::Upgrade;
+
+#[derive(Bundle)]
+pub struct PlayerBundle {
+    pub player_component: PlayerComponent,
+    pub attributes: AttributeBundle,
+}
 
 #[derive(Component, InspectorOptions)]
 pub struct PlayerComponent {

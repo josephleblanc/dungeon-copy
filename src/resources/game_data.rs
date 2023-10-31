@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
-use std::io::prelude::*;
+use std::io::BufReader;
 
 use crate::config::DATA_FILE;
 use crate::resources::hero::hero_class::HeroClass;
@@ -21,17 +21,21 @@ pub struct GameData {
     // monsters: [Monster; 10],
 }
 
+impl Default for GameData {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl GameData {
     pub fn new() -> Self {
-        let data = match File::open(DATA_FILE) {
-            Ok(mut file) => {
-                let mut contents = String::new();
-                file.read_to_string(&mut contents).unwrap();
-                serde_json::from_str(&contents).expect("JSON was not well-formatted")
+        match File::open(DATA_FILE) {
+            Ok(file) => {
+                let reader = BufReader::new(file);
+                ron::de::from_reader(reader).unwrap()
             }
             Err(err) => panic!("Can't find language file: {}", err),
-        };
-        data
+        }
     }
 
     /// Searcher GameData for the initial/base Hero info.

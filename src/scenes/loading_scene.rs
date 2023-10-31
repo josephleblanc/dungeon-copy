@@ -1,20 +1,23 @@
 use bevy::prelude::*;
 
 use crate::config::*;
-use crate::materials::ingame::InGameMaterials;
 use crate::scenes::SceneState;
 
 use crate::materials::dungeon::DungeonMaterials;
 use crate::materials::font::FontMaterials;
 use crate::materials::heroes::HeroesMaterials;
 use crate::materials::icon::IconMaterials;
+use crate::materials::ingame::InGameMaterials;
 use crate::materials::map_ui::MapUiMaterials;
 use crate::materials::menu_box::MenuBoxMaterials;
+use crate::materials::monsters::MonstersMaterials;
 use crate::materials::scenes::ScenesMaterials;
+
 use crate::resources::dictionary::Dictionary;
 use crate::resources::dungeon::rooms::Rooms;
 use crate::resources::game_data::GameData;
 use crate::resources::language::Language;
+use crate::resources::monster::MonsterLibrary;
 
 const LOADING_TEXT_FONT_SIZE: f32 = 30.0;
 const TEXT_FONT_SIZE: f32 = 40.0;
@@ -294,6 +297,9 @@ fn load_materials(mut commands: Commands, asset_server: Res<AssetServer>) {
         map_ui: MapUiMaterials {
             grid_select_box: asset_server.load("ingame/map_ui/grid_select_box.png"),
         },
+        monsters_materials: MonstersMaterials {
+            training_dummy: asset_server.load("monsters/sprites/big_demon.png"),
+        },
     };
 
     commands.insert_resource(font_materials);
@@ -304,4 +310,5 @@ fn load_materials(mut commands: Commands, asset_server: Res<AssetServer>) {
 fn load_data(mut commands: Commands) {
     commands.insert_resource(GameData::new());
     commands.insert_resource(Rooms::new());
+    commands.insert_resource(MonsterLibrary::new())
 }

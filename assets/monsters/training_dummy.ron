@@ -1,0 +1,9 @@
+MonsterStats(
+  monster: TrainingDummy,
+  hp: (50),
+  attributes: (
+    strength: (10),
+    dexterity: Dexterity(14)
+  ),
+  armor_class: ArmorClass(14)
+)

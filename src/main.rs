@@ -59,6 +59,7 @@ fn main() {
         .add_plugins(plugins::input::InputHandlePlugin)
         .add_plugins(plugins::game_ui::IngameUiPlugin)
         .add_plugins(plugins::interact::InteractionPlugin)
+        .add_plugins(plugins::monster::MonsterPlugin)
         .add_plugins(DebugPlugin)
         .run();
 }

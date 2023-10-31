@@ -5,4 +5,5 @@ pub mod icon;
 pub mod ingame;
 pub mod map_ui;
 pub mod menu_box;
+pub mod monsters;
 pub mod scenes;

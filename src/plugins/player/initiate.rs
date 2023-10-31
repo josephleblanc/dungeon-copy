@@ -36,10 +36,13 @@ pub fn initiate_player(
 ) {
     let class = profile.hero_class.clone();
     let gender = profile.gender.clone();
+    let hero = game_data.get_hero(class.clone());
 
     // let skill = game_data.get_skill(class.clone());
 
     let player = PlayerComponent::new(class.clone(), game_data.clone());
+    let player_attributes = hero.attributes;
+    let player_bab = hero.base_attack_bonus;
 
     let hero_tileset = ingame_materials
         .heroes_materials
@@ -82,6 +85,8 @@ pub fn initiate_player(
             });
         })
         .insert(player)
+        .insert(player_attributes)
+        .insert(player_bab)
         .insert(PlayerAnimation::new())
         // .insert(PlayerListEffectsComponent::new(
         //     game_data.get_player_list_effects_information(),

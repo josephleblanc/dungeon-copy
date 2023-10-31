@@ -1,0 +1,28 @@
+GameData(
+  heroes: (
+    (
+      hero_class: Fighter,
+      stats: (
+        health_points: 3.0,
+        speed: 5.0,
+      ),
+      attributes: (
+        strength: ( 16 ),
+        dexterity: ( 13 ),
+      ),
+      base_attack_bonus: (1)
+    ),
+    (
+      hero_class: Wizard,
+      stats: (
+        health_points: 3.0,
+        speed: 5.0,
+      ),
+      attributes: (
+        strength: ( 9 ),
+        dexterity: ( 14 ),
+      ),
+      base_attack_bonus: (1)
+    ),
+  )
+)
