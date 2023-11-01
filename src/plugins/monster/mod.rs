@@ -2,7 +2,7 @@ use crate::scenes::SceneState;
 use bevy::prelude::*;
 
 pub mod animation;
-pub mod collision;
+pub mod collisions;
 pub mod spawn;
 
 pub struct MonsterPlugin;

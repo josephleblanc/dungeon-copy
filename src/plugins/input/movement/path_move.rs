@@ -62,6 +62,11 @@ impl MovementPath {
         end
     }
 
+    pub fn start(&self) -> Vec3 {
+        let (start, _) = *self.path.last().unwrap();
+        start
+    }
+
     pub fn join(&mut self, other: Self) {
         self.path.extend_from_slice(other.path.as_slice())
     }

@@ -1,8 +1,9 @@
 use crate::config::TILE_SIZE;
 use crate::plugins::monster::animation::MonsterAnimationComponent;
-use crate::plugins::monster::collision::MonsterBox;
+use crate::plugins::monster::collisions::MonsterBox;
 use crate::resources::monster::MonsterLibrary;
 use bevy::prelude::*;
+use bevy::sprite::Anchor;
 
 use crate::materials::ingame::InGameMaterials;
 use crate::resources::animation_state::AnimationState;
@@ -29,13 +30,14 @@ pub fn spawn_training_dummy(
     let origin_height = 36.0;
 
     let x_spawn_pos = TILE_SIZE + TILE_SIZE / 2.0;
-    let y_spawn_pos = TILE_SIZE + TILE_SIZE / 2.0;
+    let y_spawn_pos = -TILE_SIZE;
 
     commands
         .spawn(SpriteSheetBundle {
             texture_atlas: texture_atlas_handle,
             sprite: TextureAtlasSprite {
                 custom_size: Some(Vec2::new(origin_width * 3.5, origin_height * 3.5)),
+                anchor: Anchor::BottomCenter,
                 ..Default::default()
             },
             transform: Transform {

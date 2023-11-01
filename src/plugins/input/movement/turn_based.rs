@@ -31,19 +31,19 @@ pub fn turn_based_movement(
     let player_available_movement = wall_collision_check(player_position, &block_type_query);
 
     if !movement.moving && movement.target.is_none() {
-        if keyboard_input.pressed(KeyCode::W) && player_available_movement.can_move_up {
+        if keyboard_input.pressed(KeyCode::W) && player_available_movement.can_move_up() {
             delta.y += TILE_SIZE;
         }
 
-        if keyboard_input.pressed(KeyCode::S) && player_available_movement.can_move_down {
+        if keyboard_input.pressed(KeyCode::S) && player_available_movement.can_move_down() {
             delta.y -= TILE_SIZE;
         }
 
-        if keyboard_input.pressed(KeyCode::A) && player_available_movement.can_move_left {
+        if keyboard_input.pressed(KeyCode::A) && player_available_movement.can_move_left() {
             delta.x -= TILE_SIZE;
         }
 
-        if keyboard_input.pressed(KeyCode::D) && player_available_movement.can_move_right {
+        if keyboard_input.pressed(KeyCode::D) && player_available_movement.can_move_right() {
             delta.x += TILE_SIZE;
         }
         if delta != Vec3::ZERO {

@@ -1,3 +1,5 @@
+use crate::config::TILE_SIZE;
+use crate::plugins::monster::collisions::monster_collision_check;
 use std::ops::Deref;
 use std::ops::DerefMut;
 
@@ -16,6 +18,7 @@ use crate::plugins::input::movement::PlayerComponent;
 use crate::plugins::interact::InteractingPos;
 use crate::plugins::player::collisions::wall_collision_check;
 use crate::resources::dungeon::block_type::BlockType;
+use crate::resources::monster::Monster;
 
 use super::map::MapGrid;
 
@@ -35,13 +38,11 @@ impl MovementPathList {
     /// MovementPathList will have a `shortest` and `focused` of clones of the
     /// new path.
     pub fn new_from_path(path: MovementPath) -> Self {
-        let (_, end) = *path.path.first().unwrap();
-        let (start, _) = *path.path.last().unwrap();
         MovementPathList {
             list: vec![path.clone()],
             focused: path.clone(),
-            start,
-            end,
+            start: path.start(),
+            end: path.end(),
             displayed: false,
             active: false,
             move_ready: false,
@@ -85,7 +86,8 @@ impl MovementPathList {
 #[derive(Clone, Debug)]
 pub struct MoveNode {
     pub pos: Vec3,
-    pub dist: f32,
+    pub target_dist: f32,
+    pub travel_dist: f32,
     pub open: bool,
     pub path: Vec<Vec3>,
 }
@@ -94,9 +96,11 @@ impl MoveNode {
     pub fn to_new_pos(&self, step: Vec3, dest: Vec3) -> MoveNode {
         let mut path: Vec<Vec3> = self.path.clone();
         path.push(self.pos + step);
+
         MoveNode {
             pos: self.pos + step,
-            dist: (self.pos + step).distance(dest),
+            target_dist: (self.pos + step).distance(dest),
+            travel_dist: self.travel_dist + step.length(),
             open: true,
             path,
         }
@@ -142,7 +146,9 @@ pub fn handle_path(
     if **path_ready {
         if let Some(mut path_list) = path_list {
             if button.just_pressed(MouseButton::Left) {
-                if focus_pos == path_list.focused.end().truncate() {
+                if !path_list.focused.path.is_empty()
+                    && focus_pos == path_list.focused.end().truncate()
+                {
                     if !(path_list.end == path_list.focused.end()) || !path_list.active {
                         path_list.active = true;
                         path_list.add_focused();
@@ -209,6 +215,7 @@ pub fn start_path_list(
     mut commands: Commands,
     player_query: Query<(&PlayerComponent, &Transform)>,
     block_type_query: Query<(&BlockType, &Transform), Without<PlayerComponent>>,
+    monster_query: Query<(&Monster, &Transform), Without<PlayerComponent>>,
     interacting_pos: Res<InteractingPos>,
     mut open_paths: ResMut<PathNodes>,
     mut sprite_writer: EventWriter<PathSpriteEvent>,
@@ -227,7 +234,8 @@ pub fn start_path_list(
 
         let start_node = MoveNode {
             pos: start,
-            dist: start.distance(end),
+            target_dist: start.distance(end),
+            travel_dist: 0.0,
             open: true,
             path: vec![start],
         };
@@ -236,7 +244,7 @@ pub fn start_path_list(
             open_paths.paths = vec![start_node];
         }
 
-        if let Some(finished_path) = find_path(open_paths, block_type_query, end) {
+        if let Some(finished_path) = find_path(open_paths, block_type_query, monster_query, end) {
             sprite_writer.send(PathSpriteEvent::spawn_move_path(finished_path.clone()));
             if !finished_path.path.is_empty() {
                 commands.insert_resource::<MovementPathList>(MovementPathList::new_from_path(
@@ -250,6 +258,7 @@ pub fn start_path_list(
 pub fn add_path(
     mut commands: Commands,
     block_type_query: Query<(&BlockType, &Transform), Without<PlayerComponent>>,
+    monster_query: Query<(&Monster, &Transform), Without<PlayerComponent>>,
     mut open_paths: ResMut<PathNodes>,
     mut path_list: Option<ResMut<MovementPathList>>,
     mut event_reader: EventReader<PathListEvent>,
@@ -263,10 +272,10 @@ pub fn add_path(
     // Also see if there is a way to get rid of the clone
 
     open_paths.reset();
-    let debug = true;
-    if debug {
-        println!("debug | add_path start");
-    }
+    let debug = false;
+    // if debug {
+    //     println!("debug | add_path start");
+    // }
     if let Some(action) = event_reader.into_iter().find_map(|event| event.action) {
         if action == PathListAction::AddPath {
             if let Some(mut path_list) = path_list {
@@ -277,12 +286,14 @@ pub fn add_path(
                 }
                 let start_node = MoveNode {
                     pos: start,
-                    dist: start.distance(end),
+                    target_dist: start.distance(end),
+                    travel_dist: 0.0,
                     open: true,
                     path: vec![start],
                 };
                 open_paths.paths = vec![start_node];
-                if let Some(new_path) = find_path(open_paths, block_type_query, end) {
+                if let Some(new_path) = find_path(open_paths, block_type_query, monster_query, end)
+                {
                     path_list.set_focused(new_path.clone());
                     let mut total_path = path_list.clone().list_to_path();
                     total_path.join(path_list.focused.clone());
@@ -297,6 +308,7 @@ fn find_path(
     mut open_paths: ResMut<'_, PathNodes>,
     // mut event_writer: EventWriter<'_, MovementPathEvent>,
     block_type_query: Query<'_, '_, (&BlockType, &Transform), Without<PlayerComponent>>,
+    monster_query: Query<'_, '_, (&Monster, &Transform), Without<PlayerComponent>>,
     end: Vec3,
 ) -> Option<MovementPath> {
     let debug = false;
@@ -311,9 +323,11 @@ fn find_path(
             .paths
             .iter_mut()
             .filter(|node| node.open)
-            .min_by(|x, y| x.dist.total_cmp(&y.dist))
+            .min_by(|x, y| {
+                (x.target_dist + x.travel_dist).total_cmp(&(y.target_dist + y.travel_dist))
+            })
             .unwrap();
-        if closest.dist == 0.0 {
+        if closest.target_dist == 0.0 {
             let queue: Vec<(Vec3, Vec3)> = closest
                 .path
                 .clone()
@@ -323,10 +337,26 @@ fn find_path(
                 .collect();
             return Some(MovementPath::new_inactive(queue));
         } else if max_loops == 0 {
+            println!("max_loops reached");
             break;
         }
-        let possible_paths =
-            wall_collision_check(closest.pos, &block_type_query).open_nodes(closest, end);
+        let mut wall_check = wall_collision_check(closest.pos, &block_type_query);
+        let monster_check = monster_collision_check(closest.pos, &monster_query);
+        if debug {
+            println!(
+                "debug | find_path | wall_check: \n\t{:?}",
+                wall_check.clone()
+            );
+            println!(
+                "debug | find_path | monster_check: \n\t{:?}",
+                monster_check.clone()
+            );
+            println!(
+                "debug | find_path | merged wall_check and monster_check: \n\t{:?}",
+                wall_check.merge(monster_check)
+            );
+        }
+        let possible_paths = wall_check.merge(monster_check).open_nodes(closest, end);
         closest.open = false;
 
         open_paths.paths.extend_from_slice(&possible_paths);

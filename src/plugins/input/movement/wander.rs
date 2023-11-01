@@ -27,19 +27,19 @@ pub fn wander_movement_system(
 
     let player_available_movement = wall_collision_check(player_position, &block_type_query);
 
-    if keyboard_input.pressed(KeyCode::W) && player_available_movement.can_move_up {
+    if keyboard_input.pressed(KeyCode::W) && player_available_movement.can_move_up() {
         delta.y += player_stats.speed * TILE_SIZE * time.delta_seconds();
     }
 
-    if keyboard_input.pressed(KeyCode::S) && player_available_movement.can_move_down {
+    if keyboard_input.pressed(KeyCode::S) && player_available_movement.can_move_down() {
         delta.y -= player_stats.speed * TILE_SIZE * time.delta_seconds();
     }
 
-    if keyboard_input.pressed(KeyCode::A) && player_available_movement.can_move_left {
+    if keyboard_input.pressed(KeyCode::A) && player_available_movement.can_move_left() {
         delta.x -= player_stats.speed * TILE_SIZE * time.delta_seconds();
     }
 
-    if keyboard_input.pressed(KeyCode::D) && player_available_movement.can_move_right {
+    if keyboard_input.pressed(KeyCode::D) && player_available_movement.can_move_right() {
         delta.x += player_stats.speed * TILE_SIZE * time.delta_seconds();
     }
 
