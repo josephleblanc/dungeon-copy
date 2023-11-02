@@ -1,0 +1,14 @@
+Armory({
+  Longsword: Weapon(
+      attack_bonus: 0,
+      damage_bonus: 0,
+      damage_dice_range: D8,
+      crit_threat_range: ( 20, 20 ),
+      reach: ( 5 ),
+      crit_multiplier: 3,
+      melee: true,
+      thrown: false,
+      racial_group: None,
+      martial_group: Martial
+    )
+})

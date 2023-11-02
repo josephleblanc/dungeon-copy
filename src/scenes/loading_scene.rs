@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
 use crate::config::*;
+use crate::resources::equipment::Armory;
 use crate::scenes::SceneState;
 
 use crate::materials::dungeon::DungeonMaterials;
@@ -310,5 +311,6 @@ fn load_materials(mut commands: Commands, asset_server: Res<AssetServer>) {
 fn load_data(mut commands: Commands) {
     commands.insert_resource(GameData::new());
     commands.insert_resource(Rooms::new());
-    commands.insert_resource(MonsterLibrary::new())
+    commands.insert_resource(MonsterLibrary::new());
+    commands.insert_resource(Armory::new());
 }

@@ -1,6 +1,8 @@
 pub mod animation_state;
+pub mod dice;
 pub mod dictionary;
 pub mod dungeon;
+pub mod equipment;
 pub mod game_data;
 pub mod game_mode;
 pub mod glossary;
