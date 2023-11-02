@@ -1,4 +1,5 @@
 use crate::config::TILE_SIZE;
+use crate::plugins::interact::{Interactable, InteractingType};
 use crate::plugins::monster::animation::MonsterAnimationComponent;
 use crate::plugins::monster::collisions::MonsterBox;
 use crate::resources::monster::MonsterLibrary;
@@ -32,6 +33,11 @@ pub fn spawn_training_dummy(
     let x_spawn_pos = TILE_SIZE + TILE_SIZE / 2.0;
     let y_spawn_pos = -TILE_SIZE;
 
+    let interactable_box_lower =
+        Vec2::new(x_spawn_pos - TILE_SIZE / 2.0, y_spawn_pos - TILE_SIZE / 2.0);
+    let interactable_box_upper =
+        Vec2::new(x_spawn_pos + TILE_SIZE / 2.0, y_spawn_pos + TILE_SIZE / 2.0);
+
     commands
         .spawn(SpriteSheetBundle {
             texture_atlas: texture_atlas_handle,
@@ -56,6 +62,11 @@ pub fn spawn_training_dummy(
             animation_state: AnimationState::Idle,
             animation_timer: Timer::from_seconds(0.1, TimerMode::Repeating),
         })
+        .insert(Interactable::new_from_trans(
+            interactable_box_lower,
+            interactable_box_upper,
+            InteractingType::Enemy,
+        ))
         .insert(Name::new(component_name));
 }
 

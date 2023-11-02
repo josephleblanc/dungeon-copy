@@ -1,4 +1,6 @@
 use crate::config::TILE_SIZE;
+use crate::plugins::interact::InteractingPosEvent;
+use crate::plugins::interact::InteractingType;
 use crate::plugins::monster::collisions::monster_collision_check;
 use std::ops::Deref;
 use std::ops::DerefMut;
@@ -121,7 +123,7 @@ pub fn check_path_conditions(
 ) {
     let player_pos = player_query.get_single().unwrap().1.translation.truncate();
     let focus_pos = interacting_pos.pos;
-    **path_ready = interacting_pos.active
+    **path_ready = interacting_pos.interacting_type == InteractingType::MapGrid
         && **movement_mode == MovementMode::TurnBasedMovement
         && !movement.moving
         && player_pos != focus_pos
@@ -136,8 +138,10 @@ pub fn check_path_conditions(
 pub fn handle_path(
     mut path_list: Option<ResMut<MovementPathList>>,
     button: Res<Input<MouseButton>>,
+
     mut list_event_writer: EventWriter<PathListEvent>,
     mut move_event_writer: EventWriter<MovementPathEvent>,
+    mut interacting_pos_reader: EventReader<InteractingPosEvent>,
 
     interacting_pos: Res<InteractingPos>,
     path_ready: Res<PathConditions>,
@@ -148,25 +152,22 @@ pub fn handle_path(
             if button.just_pressed(MouseButton::Left) {
                 if !path_list.focused.path.is_empty()
                     && focus_pos == path_list.focused.end().truncate()
+                    && !(path_list.end == path_list.focused.end())
+                    || !path_list.active
                 {
-                    if !(path_list.end == path_list.focused.end()) || !path_list.active {
-                        path_list.active = true;
-                        path_list.add_focused();
-                    } else {
-                        let mut move_event: MovementPathEvent =
-                            MovePathAction::InsertOrActivate.into();
-                        let move_path = path_list.list_to_path();
-                        // println!("move_path end: {}", move_path.end());
-                        // println!("focused end: {}", path_list.focused.end());
-                        move_event.set_move_path(move_path);
-                        move_event_writer.send(move_event);
-                    }
+                    path_list.active = true;
+                    path_list.add_focused();
+                } else {
+                    let mut move_event: MovementPathEvent = MovePathAction::InsertOrActivate.into();
+                    let move_path = path_list.list_to_path();
+                    move_event.set_move_path(move_path);
+                    move_event_writer.send(move_event);
                 }
             } else if button.just_pressed(MouseButton::Right) {
                 list_event_writer.send(PathListAction::Remove.into());
                 move_event_writer.send(MovePathAction::Remove.into());
             } else {
-                if interacting_pos.is_changed() {
+                if !interacting_pos_reader.is_empty() {
                     if path_list.active {
                         list_event_writer.send(PathListAction::AddPath.into());
                     } else {

@@ -37,16 +37,15 @@ pub struct InteractingPos {
     pub pos: Vec2,
     pub active: bool,
     pub interacting_type: InteractingType,
-    pub entity: Option<Entity>,
 }
 
 #[derive(Component, Reflect, Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum InteractingType {
+    PlayerCharacter,
+    Enemy,
+    MapGrid,
     #[default]
     None,
-    MapGrid,
-    Enemy,
-    PlayerCharacter,
 }
 
 impl InteractingType {
@@ -222,7 +221,7 @@ impl BoundingBox {
     }
 }
 
-#[derive(Event, Clone, Copy, Debug)]
+#[derive(Event, Clone, Copy)]
 pub struct InteractingPosEvent {
     pub pos: Vec2,
     pub interacting_type: InteractingType,
@@ -257,61 +256,39 @@ impl From<Vec2> for InteractingPosEvent {
 
 pub fn interact_system(
     window_query: Query<&Window>,
-    mut interactable_query: Query<(Entity, &mut Interactable)>,
+    mut interactable_query: Query<&mut Interactable>,
     mut interacting_pos: ResMut<InteractingPos>,
     mut event_writer: EventWriter<InteractingPosEvent>,
 ) {
-    let debug = true;
     for window in window_query.iter() {
         if let Some(cursor_pos) = window.cursor_position() {
             let mut highest_priority_event: Option<InteractingPosEvent> = None;
-            for (entity, mut interactable) in interactable_query.iter_mut() {
+            for mut interactable in interactable_query.iter_mut() {
                 let is_interacting = interactable.bound_wf.contains(cursor_pos);
                 interactable.focused = is_interacting;
 
-                if is_interacting
-                    && (interacting_pos.entity.is_none()
-                        || interacting_pos.entity.unwrap() != entity)
-                {
-                    // interacting_pos.pos = interactable.center;
+                if is_interacting && interacting_pos.pos != interactable.center {
+                    interacting_pos.pos = interactable.center;
                     // TODO: make sure this is actually doing something.
                     interacting_pos.active = true;
                     ////////////////////////////////////////////////////
-                    if highest_priority_event.is_some() {
-                        if highest_priority_event.unwrap().interacting_type
-                            < interactable.interacting_type
-                        {
-                            highest_priority_event = Some(InteractingPosEvent::new(
-                                interactable.center,
-                                // interacting_pos.pos,
+                    if let Some(mut event) = highest_priority_event {
+                        if interactable.interacting_type > event.interacting_type {
+                            event = InteractingPosEvent::new(
+                                interacting_pos.pos,
                                 interactable.interacting_type,
-                            ));
+                            );
                         }
                     } else {
                         highest_priority_event = Some(InteractingPosEvent::new(
-                            interactable.center,
-                            // interacting_pos.pos,
+                            interacting_pos.pos,
                             interactable.interacting_type,
                         ));
                     }
                 }
             }
             if let Some(event) = highest_priority_event {
-                if event.pos != interacting_pos.pos {
-                    if debug {
-                        println!(
-                        "interact | interact_system | sending event with interacting_type: \n{:#?}",
-                        event.interacting_type
-                    );
-                    }
-                    // println!(
-                    //     "event.pos: {}, interacting_pos.pos: {}",
-                    //     event.pos, interacting_pos.pos
-                    // );
-                    interacting_pos.pos = event.pos;
-                    interacting_pos.interacting_type = event.interacting_type;
-                    event_writer.send(event);
-                }
+                event_writer.send(event);
             }
         }
     }

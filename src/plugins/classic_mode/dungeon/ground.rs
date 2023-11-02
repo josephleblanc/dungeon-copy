@@ -6,7 +6,7 @@ use crate::materials::ingame::InGameMaterials;
 use crate::plugins::classic_mode::dungeon::{TOTAL_TILE_HEIGHT, TOTAL_TILE_WIDTH};
 use crate::plugins::classic_mode::ClassicModeData;
 use crate::plugins::input::movement::map::MapGrid;
-use crate::plugins::interact::Interactable;
+use crate::plugins::interact::{Interactable, InteractingType};
 use crate::resources::dungeon::grid_square::GridSquare;
 use crate::resources::dungeon::ground::Ground;
 use crate::resources::dungeon::layer::Layer;
@@ -72,7 +72,11 @@ pub fn ground(
                             })
                             .insert(Layer)
                             .insert(GridSquare)
-                            .insert(Interactable::new_from_trans(box_lower_tr, box_upper_tr))
+                            .insert(Interactable::new_from_trans(
+                                box_lower_tr,
+                                box_upper_tr,
+                                InteractingType::MapGrid,
+                            ))
                             .insert(Name::new(format!("Layer ({}, {})", x, y)));
                     }
                 }

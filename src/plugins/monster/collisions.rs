@@ -17,7 +17,7 @@ pub fn monster_collision_check(
     player_position: Vec3,
     monster_query: &Query<(&Monster, &Transform), Without<PlayerComponent>>,
 ) -> PlayerAvailableMovement {
-    let debug = true;
+    let debug = false;
     let mut player_available_movement = PlayerAvailableMovement::new_all_true();
     let player_size = Vec2::new(PLAYER_SIZE_WIDTH, PLAYER_SIZE_HEIGHT);
 

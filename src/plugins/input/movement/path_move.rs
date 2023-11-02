@@ -57,14 +57,11 @@ impl MovementPath {
     }
 
     pub fn end(&self) -> Vec3 {
-        let end = self.path.first().unwrap().1;
-        println!("MovementPath::end() = {}", end);
-        end
+        self.path.first().unwrap().1
     }
 
     pub fn start(&self) -> Vec3 {
-        let (start, _) = *self.path.last().unwrap();
-        start
+        self.path.last().unwrap().0
     }
 
     pub fn join(&mut self, other: Self) {
