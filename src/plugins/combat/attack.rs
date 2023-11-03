@@ -9,16 +9,19 @@ use crate::{
 };
 
 use super::{
+    armor_class::ACBonusEvent,
     attack_modifiers::{AttackModifier, AttackModifierEvent, AttackModifierList},
     bonus::BonusType,
 };
 
 #[derive(Clone, Event)]
-pub struct AttackRollEvent {
-    base_attack_bonus: BaseAttackBonus,
+pub struct AttackBonusEvent {
     pub attacker: Entity,
     pub defender: Entity,
 }
+
+#[derive(Event)]
+pub struct StartAttack;
 
 #[derive(Clone, Event)]
 pub struct AttackBonusSumEvent {
@@ -27,25 +30,12 @@ pub struct AttackBonusSumEvent {
     defender: Entity,
 }
 
-impl AttackRollEvent {
-    pub fn new(base_attack_bonus: BaseAttackBonus, attacker: Entity, defender: Entity) -> Self {
-        Self {
-            base_attack_bonus,
-            attacker,
-            defender,
-        }
-    }
-}
-
 #[derive(Clone, Event)]
 pub struct AttackRollComplete();
 
-#[derive(Event)]
-pub struct StartAttack;
-
 pub fn check_attack_conditions(
     interacting_pos: Res<InteractingPos>,
-    mut event_writer: EventWriter<StartAttack>,
+    mut attack_event_writer: EventWriter<StartAttack>,
     button: Res<Input<MouseButton>>,
 ) {
     if interacting_pos.interacting_type == InteractingType::Enemy
@@ -53,26 +43,29 @@ pub fn check_attack_conditions(
         && button.just_pressed(MouseButton::Left)
     {
         // TODO: Check if target is in range
-        event_writer.send(StartAttack);
+        attack_event_writer.send(StartAttack);
     }
 }
 
+/// start_attack runs when the conditions for an attack have been met in `check_attack_conditions`.
+/// Then it sends two events, one to start the systems calculating the total of the attack modifiers,
+/// another to the systems calculating the ac of the defender.
+/// There are multiple systems which check whether each modifier should be applied to ac and attack,
+/// and then send an event listened to by `sum_attack_modifiers`.
 pub fn start_attack(
     mut start_attack_events: EventReader<StartAttack>,
-    mut attack_roll_event: EventWriter<AttackRollEvent>,
-    query_player: Query<(Entity, &BaseAttackBonus), (With<ActionPriority>)>,
+    mut attack_event_writer: EventWriter<AttackBonusEvent>,
+    mut ac_event_writer: EventWriter<ACBonusEvent>,
+    query_player: Query<Entity, With<ActionPriority>>,
     interacting_pos: Res<InteractingPos>,
 ) {
     if !start_attack_events.is_empty() {
         start_attack_events.clear();
-        let enemy_entity = interacting_pos.entity.unwrap();
-        let (attacking_player_entity, base_attack_bonus) = query_player.get_single().unwrap();
-        let event = AttackRollEvent {
-            base_attack_bonus: *base_attack_bonus,
-            attacker: attacking_player_entity,
-            defender: enemy_entity,
-        };
-        attack_roll_event.send(event);
+
+        let attacker = query_player.get_single().unwrap();
+        let defender = interacting_pos.entity.unwrap();
+        attack_event_writer.send(AttackBonusEvent { attacker, defender });
+        ac_event_writer.send(ACBonusEvent { attacker, defender });
     }
 }
 

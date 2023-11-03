@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 
+use crate::plugins::combat::bonus::BonusSource;
 use crate::{
     components::{
         attributes::{Attribute, Strength},
@@ -8,14 +9,14 @@ use crate::{
     plugins::{combat::bonus::BonusType, player::control::ActionPriority},
 };
 
-use super::attack::AttackRollEvent;
+use super::attack::AttackBonusEvent;
 
 // TODO: Add a corresponding trait for this, then impl it for all the modifiers,
 // and use that to make the systems to track them.
 #[derive(Copy, Clone, Debug)]
 pub struct AttackModifier {
     pub val: isize,
-    pub source: AttackModifierSource,
+    pub source: BonusSource,
     pub bonus_type: BonusType,
     pub attacker: Entity,
     pub defender: Entity,
@@ -49,14 +50,6 @@ impl From<AttackModifier> for AttackModifierEvent {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
-pub enum AttackModifierSource {
-    Strength,
-    Dexterity,
-    WeaponFocus,
-    // more here
-}
-
 #[derive(Event, Copy, Clone, Deref, DerefMut)]
 pub struct AttackModifierEvent(AttackModifier);
 
@@ -67,7 +60,7 @@ impl From<AttackModifierEvent> for AttackModifier {
 }
 
 pub fn add_strength(
-    mut attack_roll_event: EventReader<AttackRollEvent>,
+    mut attack_roll_event: EventReader<AttackBonusEvent>,
     mut event_writer: EventWriter<AttackModifierEvent>,
     query_attacker: Query<&Strength, With<ActionPriority>>,
 ) {
@@ -75,7 +68,7 @@ pub fn add_strength(
         if let Ok(strength) = query_attacker.get_single() {
             let mut attack_modifier = AttackModifier {
                 val: 0,
-                source: AttackModifierSource::Strength,
+                source: BonusSource::Strength,
                 bonus_type: BonusType::Untyped,
                 attacker: attack_roll.attacker,
                 defender: attack_roll.defender,
@@ -88,7 +81,7 @@ pub fn add_strength(
 }
 
 pub fn add_weapon_focus(
-    mut attack_roll_event: EventReader<AttackRollEvent>,
+    mut attack_roll_event: EventReader<AttackBonusEvent>,
     mut event_writer: EventWriter<AttackModifierEvent>,
     query_attacker: Query<&WeaponFocus, With<ActionPriority>>,
 ) {

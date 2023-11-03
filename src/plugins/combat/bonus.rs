@@ -19,3 +19,11 @@ impl BonusType {
         [BonusType::Morale, BonusType::Untyped]
     }
 }
+
+#[derive(Copy, Clone, Debug)]
+pub enum BonusSource {
+    Strength,
+    Dexterity,
+    WeaponFocus,
+    // more here
+}
