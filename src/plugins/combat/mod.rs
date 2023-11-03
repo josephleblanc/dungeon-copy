@@ -1,13 +1,13 @@
 use bevy::prelude::*;
 
 use self::{
-    ac_modifier::ACModifierEvent,
+    ac_modifier::ACModEvent,
     armor_class::{ACBonusEvent, ACBonusSumEvent},
     attack::{
         check_attack_conditions, start_attack, sum_attack_modifier, AttackBonusEvent,
         AttackBonusSumEvent, AttackRollEvent, StartAttack,
     },
-    attack_modifier::AttackModifierEvent,
+    attack_modifier::AttackModEvent,
 };
 use crate::plugins::combat::armor_class::sum_ac_modifiers;
 use crate::plugins::combat::attack::attack_roll;
@@ -19,6 +19,8 @@ pub mod armor_class;
 pub mod attack;
 pub mod attack_modifier;
 pub mod bonus;
+pub mod critical_threat;
+pub mod critical_threat_modifier;
 pub mod damage;
 pub mod damage_modifier;
 
@@ -28,10 +30,10 @@ impl Plugin for CombatPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<StartAttack>()
             .add_event::<ACBonusEvent>()
-            .add_event::<ACModifierEvent>()
+            .add_event::<ACModEvent>()
             .add_event::<ACBonusSumEvent>()
             .add_event::<AttackBonusEvent>()
-            .add_event::<AttackModifierEvent>()
+            .add_event::<AttackModEvent>()
             .add_event::<AttackBonusSumEvent>()
             .add_event::<AttackRollEvent>();
 
@@ -44,7 +46,7 @@ impl Plugin for CombatPlugin {
                 (
                     // This is where all of the systems that listen for AttackBonusEvent should go.
                     // This way they can run in parallel, and all of the events they emit as
-                    // `AttackModifierEvent` can be added together in the attack_modifier_sum system
+                    // `AttackModEvent` can be added together in the attack_modifier_sum system
                     // that runs next.
                     attack_modifier::add_strength,
                     attack_modifier::add_weapon_focus,
@@ -52,7 +54,7 @@ impl Plugin for CombatPlugin {
                     .run_if(on_event::<AttackBonusEvent>()),
                 // This is where all of the systems that listen for `ACBonusEvent` should go. These
                 // are all systems that modify the AC of the attacked creature or player. This way
-                // they can all run in parallel, and each of the `ACModifierEvent`s they send can be
+                // they can all run in parallel, and each of the `ACModEvent`s they send can be
                 // summed together in `sum_ac_modifiers` below.
                 ac_modifier::add_dexterity.run_if(on_event::<ACBonusEvent>()),
                 // sum_ac_modifiers should run after all of the systems in ac_modifier, e.g.

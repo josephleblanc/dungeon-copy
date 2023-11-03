@@ -11,7 +11,7 @@ use crate::{
 
 use super::{
     armor_class::{ACBonusEvent, ACBonusSumEvent},
-    attack_modifier::{AttackModifier, AttackModifierEvent, AttackModifierList},
+    attack_modifier::{AttackMod, AttackModEvent, AttackModList},
     bonus::BonusType,
 };
 
@@ -97,7 +97,7 @@ pub fn start_attack(
 }
 
 /// `sum_attack_modifier` adds together all of the modifiers in the `attack_modifier` mod. It
-/// listens for the event `AttackModifierEvent`, which should have been sent out by each of the
+/// listens for the event `AttackModEvent`, which should have been sent out by each of the
 /// systems deciding whether a modifier should be applied to the attack.
 /// Because this is a system which listens for an event which is sent out by many systems, it is
 /// important to use explicit system scheduling to ensure all of the systems in `attack_modifier`
@@ -105,11 +105,11 @@ pub fn start_attack(
 /// which prompted the modifier system to run, and could prompt a `panic` or logical error when
 /// they are attempted to be summed with the modifiers from another attack.
 pub fn sum_attack_modifier(
-    mut atk_mod_events: EventReader<AttackModifierEvent>,
+    mut atk_mod_events: EventReader<AttackModEvent>,
     attacker_query: Query<Entity, With<ActionPriority>>,
     mut atk_mod_finished: EventWriter<AttackBonusSumEvent>,
 ) {
-    let atk_mod_list: AttackModifierList = atk_mod_events
+    let atk_mod_list: AttackModList = atk_mod_events
         .into_iter()
         .map(|&event| event.into())
         .collect();
@@ -133,14 +133,15 @@ pub fn sum_attack_modifier(
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 /// AttackOutcome is the enum which describes the outcome of an attack roll, with modifiers
 /// applied, against a valid target.
+/// attack_roll --> AttackRollEvent --> Crit_threat_modifer::*
 pub enum AttackOutcome {
-    CriticalHit,
+    CritHit,
     Hit,
     Miss,
-    CriticalMiss,
+    CritMiss,
 }
 
 #[derive(Debug, Event, Copy, Clone)]
@@ -148,18 +149,19 @@ pub enum AttackOutcome {
 /// against a valid target. This event is listened to by `start_damage`, which is the gatekeeper
 /// for the systems which calculate the attack's damage.
 pub struct AttackRollEvent {
-    attacker: Entity,
-    defender: Entity,
-    raw_attack_roll: usize,
-    total_attack_modifier: isize,
-    total_defender_ac: isize,
-    attack_outcome: AttackOutcome,
+    pub attacker: Entity,
+    pub defender: Entity,
+    pub attack_roll_raw: usize,
+    pub attack_roll_total: isize,
+    pub total_attack_modifier: isize,
+    pub total_defender_ac: isize,
+    pub attack_outcome: AttackOutcome,
 }
 
 /// `attack_roll` is the system which sums all of the attack modifiers and armor class modifiers,
 /// rolls the attack die, and then determines the outcome of the attack. An attack can `Hit`, `Miss`,
-/// but can also `CriticalHit` or `CriticalMiss`.
-/// If the attack is a `Hit` or a `CriticalHit`, the `damage::start_damage` system will start
+/// but can also `CritHit` or `CritMiss`.
+/// If the attack is a `Hit` or a `CritHit`, the `damage::start_damage` system will start
 /// calculating the damage of the attack.
 // TODO: Decide how to handle the conclusion of the attack as a whole.
 pub fn attack_roll(
@@ -182,15 +184,15 @@ pub fn attack_roll(
         let (attacker, attacker_bab) = attacker_query.get(atk_event.attacker).unwrap();
 
         let mut rng = rand::thread_rng();
-        let raw_attack_roll = Dice::D20.roll_once(&mut rng);
+        let attack_roll_raw = Dice::D20.roll_once(&mut rng);
         let total_attack_modifier = atk_event.total_attack_bonus + **attacker_bab;
         let total_defender_ac = 10 + ac_event.total_ac_bonus;
 
-        let attack_roll_total: isize = raw_attack_roll as isize + total_attack_modifier;
-        let attack_outcome = if raw_attack_roll == 20 {
-            AttackOutcome::CriticalHit
-        } else if raw_attack_roll == 1 {
-            AttackOutcome::CriticalMiss
+        let attack_roll_total: isize = attack_roll_raw as isize + total_attack_modifier;
+        let attack_outcome = if attack_roll_raw == 20 {
+            AttackOutcome::CritHit
+        } else if attack_roll_raw == 1 {
+            AttackOutcome::CritMiss
         } else if total_defender_ac <= attack_roll_total {
             AttackOutcome::Hit
         } else {
@@ -201,14 +203,15 @@ pub fn attack_roll(
             attacker,
             defender,
             attack_outcome,
-            raw_attack_roll,
+            attack_roll_raw,
+            attack_roll_total,
             total_attack_modifier,
             total_defender_ac,
         });
 
         if debug {
             debug_attack_roll(
-                raw_attack_roll,
+                attack_roll_raw,
                 attacker_bab,
                 atk_event,
                 ac_event,

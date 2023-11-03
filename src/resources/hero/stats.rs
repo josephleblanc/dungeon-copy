@@ -7,7 +7,7 @@ pub struct Stats {
     pub speed: f32,
     // pub strength: f32,
     // pub intelligence: f32,
-    // pub critical_chance: f32,
+    // pub Crit_chance: f32,
     // pub dodge_chance: f32,
     // pub restore_chance: f32,
 }

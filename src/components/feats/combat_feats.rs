@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::plugins::combat::{
-    attack_modifier::AttackModifier,
+    attack_modifier::AttackMod,
     bonus::{BonusSource, BonusType},
 };
 
@@ -9,8 +9,8 @@ use crate::plugins::combat::{
 pub struct WeaponFocus(usize);
 
 impl WeaponFocus {
-    pub fn to_atk_mod(self, attacker: Entity, defender: Entity) -> AttackModifier {
-        AttackModifier {
+    pub fn to_atk_mod(self, attacker: Entity, defender: Entity) -> AttackMod {
+        AttackMod {
             val: *self as isize,
             source: BonusSource::WeaponFocus,
             bonus_type: BonusType::Untyped,

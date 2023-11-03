@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::plugins::player::control::ActionPriority;
 
-use super::ac_modifier::{ACModifierEvent, ACModifierList};
+use super::ac_modifier::{ACModEvent, ACModList};
 
 #[derive(Clone, Event)]
 pub struct ACBonusEvent {
@@ -20,12 +20,12 @@ pub struct ACBonusSumEvent {
 /// Collects the various AC modifiers from the systems which manage those modifiers and send out
 /// events with their individual bonuses.
 pub fn sum_ac_modifiers(
-    mut ac_mod_events: EventReader<ACModifierEvent>,
+    mut ac_mod_events: EventReader<ACModEvent>,
     attacker_query: Query<Entity, With<ActionPriority>>,
     mut ac_mod_finished: EventWriter<ACBonusSumEvent>,
 ) {
     let debug = true;
-    let ac_mod_list: ACModifierList = ac_mod_events
+    let ac_mod_list: ACModList = ac_mod_events
         .into_iter()
         .map(|&event| event.into())
         .collect();

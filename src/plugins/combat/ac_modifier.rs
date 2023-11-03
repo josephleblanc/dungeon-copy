@@ -7,7 +7,7 @@ use crate::plugins::combat::bonus::BonusSource;
 use crate::plugins::combat::bonus::BonusType;
 
 #[derive(Copy, Clone, Debug)]
-pub struct ACModifier {
+pub struct ACMod {
     pub val: isize,
     pub source: BonusSource,
     pub bonus_type: BonusType,
@@ -15,7 +15,7 @@ pub struct ACModifier {
     pub defender: Entity,
 }
 
-impl ACModifier {
+impl ACMod {
     pub fn add_attribute_bonus<T>(&mut self, attribute: T)
     where
         T: Attribute,
@@ -25,36 +25,36 @@ impl ACModifier {
     }
 }
 
-impl From<ACModifier> for usize {
-    fn from(value: ACModifier) -> Self {
+impl From<ACMod> for usize {
+    fn from(value: ACMod) -> Self {
         value.val as usize
     }
 }
 
-impl From<ACModifier> for isize {
-    fn from(value: ACModifier) -> Self {
+impl From<ACMod> for isize {
+    fn from(value: ACMod) -> Self {
         value.val
     }
 }
 
-impl From<ACModifier> for ACModifierEvent {
-    fn from(value: ACModifier) -> Self {
-        ACModifierEvent(value)
+impl From<ACMod> for ACModEvent {
+    fn from(value: ACMod) -> Self {
+        ACModEvent(value)
     }
 }
 
 #[derive(Event, Copy, Clone, Deref, DerefMut)]
-pub struct ACModifierEvent(ACModifier);
+pub struct ACModEvent(ACMod);
 
-impl From<ACModifierEvent> for ACModifier {
-    fn from(value: ACModifierEvent) -> Self {
+impl From<ACModEvent> for ACMod {
+    fn from(value: ACModEvent) -> Self {
         value.0
     }
 }
 
 pub fn add_dexterity(
     mut ac_event: EventReader<ACBonusEvent>,
-    mut event_writer: EventWriter<ACModifierEvent>,
+    mut event_writer: EventWriter<ACModEvent>,
     defender_query: Query<&Dexterity>,
 ) {
     let debug = true;
@@ -63,7 +63,7 @@ pub fn add_dexterity(
             println!("debug | ac_modifier::add_dexterity | start");
         }
         if let Ok(dexterity) = defender_query.get(ac.defender) {
-            let mut ac_modifier = ACModifier {
+            let mut ac_modifier = ACMod {
                 val: 0,
                 source: BonusSource::Dexterity,
                 bonus_type: BonusType::Untyped,
@@ -80,7 +80,7 @@ pub fn add_dexterity(
     }
 }
 
-fn debug_add_dexterity(ac_modifier: ACModifier) {
+fn debug_add_dexterity(ac_modifier: ACMod) {
     println!(
         "{:>6}|{:>28}| dexterity bonus added: {}",
         "", "", ac_modifier.val
@@ -88,14 +88,14 @@ fn debug_add_dexterity(ac_modifier: ACModifier) {
 }
 
 #[derive(Debug, Deref)]
-pub struct ACModifierList(Vec<ACModifier>);
+pub struct ACModList(Vec<ACMod>);
 
-impl ACModifierList {
-    fn new() -> ACModifierList {
-        ACModifierList(Vec::new())
+impl ACModList {
+    fn new() -> ACModList {
+        ACModList(Vec::new())
     }
 
-    fn add(&mut self, elem: ACModifier) {
+    fn add(&mut self, elem: ACMod) {
         self.0.push(elem);
     }
 
@@ -156,9 +156,9 @@ impl ACModifierList {
     }
 }
 
-impl FromIterator<ACModifier> for ACModifierList {
-    fn from_iter<I: IntoIterator<Item = ACModifier>>(iter: I) -> Self {
-        let mut c = ACModifierList::new();
+impl FromIterator<ACMod> for ACModList {
+    fn from_iter<I: IntoIterator<Item = ACMod>>(iter: I) -> Self {
+        let mut c = ACModList::new();
 
         for i in iter {
             c.add(i);

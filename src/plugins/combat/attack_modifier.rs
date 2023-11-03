@@ -14,7 +14,7 @@ use super::attack::AttackBonusEvent;
 // TODO: Add a corresponding trait for this, then impl it for all the modifiers,
 // and use that to make the systems to track them.
 #[derive(Copy, Clone, Debug)]
-pub struct AttackModifier {
+pub struct AttackMod {
     pub val: isize,
     pub source: BonusSource,
     pub bonus_type: BonusType,
@@ -22,7 +22,7 @@ pub struct AttackModifier {
     pub defender: Entity,
 }
 
-impl AttackModifier {
+impl AttackMod {
     pub fn add_attribute_bonus<T>(&mut self, attribute: T)
     where
         T: Attribute,
@@ -32,36 +32,36 @@ impl AttackModifier {
     }
 }
 
-impl From<AttackModifier> for usize {
-    fn from(value: AttackModifier) -> Self {
+impl From<AttackMod> for usize {
+    fn from(value: AttackMod) -> Self {
         value.val as usize
     }
 }
 
-impl From<AttackModifier> for isize {
-    fn from(value: AttackModifier) -> Self {
+impl From<AttackMod> for isize {
+    fn from(value: AttackMod) -> Self {
         value.val
     }
 }
 
-impl From<AttackModifier> for AttackModifierEvent {
-    fn from(value: AttackModifier) -> Self {
-        AttackModifierEvent(value)
+impl From<AttackMod> for AttackModEvent {
+    fn from(value: AttackMod) -> Self {
+        AttackModEvent(value)
     }
 }
 
 #[derive(Event, Copy, Clone, Deref, DerefMut)]
-pub struct AttackModifierEvent(AttackModifier);
+pub struct AttackModEvent(AttackMod);
 
-impl From<AttackModifierEvent> for AttackModifier {
-    fn from(value: AttackModifierEvent) -> Self {
+impl From<AttackModEvent> for AttackMod {
+    fn from(value: AttackModEvent) -> Self {
         value.0
     }
 }
 
 pub fn add_strength(
     mut attack_roll_event: EventReader<AttackBonusEvent>,
-    mut event_writer: EventWriter<AttackModifierEvent>,
+    mut event_writer: EventWriter<AttackModEvent>,
     query_attacker: Query<&Strength, With<ActionPriority>>,
 ) {
     let debug = true;
@@ -70,7 +70,7 @@ pub fn add_strength(
             println!("debug | attack_modifier::add_strength | start");
         }
         if let Ok(strength) = query_attacker.get_single() {
-            let mut attack_modifier = AttackModifier {
+            let mut attack_modifier = AttackMod {
                 val: 0,
                 source: BonusSource::Strength,
                 bonus_type: BonusType::Untyped,
@@ -87,7 +87,7 @@ pub fn add_strength(
     }
 }
 
-fn debug_add_strength(attack_modifier: AttackModifier) {
+fn debug_add_strength(attack_modifier: AttackMod) {
     println!(
         "{:>6}|{:>32}| strength bonus added: {}",
         "", "", attack_modifier.val
@@ -96,7 +96,7 @@ fn debug_add_strength(attack_modifier: AttackModifier) {
 
 pub fn add_weapon_focus(
     mut attack_roll_event: EventReader<AttackBonusEvent>,
-    mut event_writer: EventWriter<AttackModifierEvent>,
+    mut event_writer: EventWriter<AttackModEvent>,
     query_attacker: Query<&WeaponFocus, With<ActionPriority>>,
 ) {
     let debug = true;
@@ -114,7 +114,7 @@ pub fn add_weapon_focus(
     }
 }
 
-fn debug_add_weapon_focus(attack_modifier: AttackModifier) {
+fn debug_add_weapon_focus(attack_modifier: AttackMod) {
     println!(
         "{:>6}|{:>36}| weapon_focus bonus added: {}",
         "", "", attack_modifier.val
@@ -122,14 +122,14 @@ fn debug_add_weapon_focus(attack_modifier: AttackModifier) {
 }
 
 #[derive(Debug, Deref)]
-pub struct AttackModifierList(Vec<AttackModifier>);
+pub struct AttackModList(Vec<AttackMod>);
 
-impl AttackModifierList {
-    fn new() -> AttackModifierList {
-        AttackModifierList(Vec::new())
+impl AttackModList {
+    fn new() -> AttackModList {
+        AttackModList(Vec::new())
     }
 
-    fn add(&mut self, elem: AttackModifier) {
+    fn add(&mut self, elem: AttackMod) {
         self.0.push(elem);
     }
 
@@ -209,9 +209,9 @@ fn debug_sum_stackable(bonus_type: BonusType, total: isize) {
     );
 }
 
-impl FromIterator<AttackModifier> for AttackModifierList {
-    fn from_iter<I: IntoIterator<Item = AttackModifier>>(iter: I) -> Self {
-        let mut c = AttackModifierList::new();
+impl FromIterator<AttackMod> for AttackModList {
+    fn from_iter<I: IntoIterator<Item = AttackMod>>(iter: I) -> Self {
+        let mut c = AttackModList::new();
 
         for i in iter {
             c.add(i);
