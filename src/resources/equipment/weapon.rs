@@ -11,11 +11,11 @@ pub enum WeaponName {
     Longsword,
 }
 
-#[derive(Serialize, Deserialize, PartialEq)]
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct Weapon {
     attack_bonus: isize,
     damage_bonus: isize,
-    damage_dice_range: Dice,
+    base_damage_dice: Dice,
     crit_threat_range: [usize; 2],
     reach: Reach,
     crit_multiplier: isize,
@@ -23,18 +23,42 @@ pub struct Weapon {
     thrown: bool,
     racial_group: Option<RacialWeapon>,
     martial_group: Proficiency,
+    weapon_damage_types: WeaponDamageTypes,
+    weapon_groups: Option<Vec<WeaponGroup>>,
 }
 
-#[derive(Serialize, Deserialize, Eq, PartialEq, Hash)]
+#[derive(Serialize, Deserialize, Eq, PartialEq, Clone)]
+/// The types of damage this weapon can do.
+pub struct WeaponDamageTypes(Vec<DamageType>);
+
+#[derive(Serialize, Deserialize, Eq, PartialEq, Copy, Clone)]
+/// The types of damage, e.g. Slashing, Piercing, etc.
+pub enum DamageType {
+    Slashing,
+    Piercing,
+    Blunt,
+}
+
+/// The `WeaponGroup` of a weapon is used for class features like Fighter's
+/// Weapon Mastery, and some feats.
+#[derive(Serialize, Deserialize, Eq, PartialEq, Copy, Clone)]
+pub enum WeaponGroup {
+    HeavyBlades,
+    // more here
+}
+
+#[derive(Serialize, Deserialize, Eq, PartialEq, Hash, Copy, Clone)]
 // TODO: fill out the possible racial weapon values
 /// Placeholder for now
+/// The racial weapon group with which the weapon is associated.
+/// For example, Elves gain proficiency in a group of weapons (Longsword, Longbow, etc)
 pub enum RacialWeapon {
     Elf,
     Orc,
     // More here
 }
 
-#[derive(Serialize, Deserialize, Eq, PartialEq, Hash)]
+#[derive(Serialize, Deserialize, Eq, PartialEq, Hash, Copy, Clone)]
 pub enum Proficiency {
     Simple,
     Martial,

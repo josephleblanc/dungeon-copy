@@ -13,6 +13,8 @@ use crate::materials::ingame::InGameMaterials;
 use crate::plugins::player::{PLAYER_SIZE_HEIGHT, PLAYER_SIZE_WIDTH};
 use crate::resources::game_data::GameData;
 use crate::resources::profile::Profile;
+
+use super::control::ActionPriority;
 // use crate::resources::upgrade::upgrade_controller::UpgradeController;
 
 const PLAYER_ORIGIN_SIZE_WIDTH: f32 = 16.0;
@@ -87,6 +89,7 @@ pub fn initiate_player(
         .insert(player)
         .insert(player_attributes)
         .insert(player_bab)
+        .insert(ActionPriority)
         .insert(PlayerAnimation::new())
         // .insert(PlayerListEffectsComponent::new(
         //     game_data.get_player_list_effects_information(),
