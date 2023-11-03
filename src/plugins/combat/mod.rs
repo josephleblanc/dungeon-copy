@@ -49,7 +49,9 @@ impl Plugin for CombatPlugin {
                 )
                     // .after(start_attack)
                     .run_if(on_event::<AttackBonusEvent>()),
-                (sum_attack_modifiers, sum_ac_modifiers)
+                ac_modifier::add_dexterity.run_if(on_event::<ACBonusEvent>()),
+                sum_ac_modifiers.after(ac_modifier::add_dexterity),
+                sum_attack_modifiers
                     .after(attack_modifiers::add_strength)
                     .after(attack_modifiers::add_weapon_focus),
                 attack_roll

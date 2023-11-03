@@ -149,6 +149,24 @@ pub fn attack_roll(
 
         let mut rng = rand::thread_rng();
         let attack_roll = Dice::D20.roll_once(&mut rng);
+        println!("      |                     | D20 roll: {}", attack_roll);
+        println!("      |                     | BAB: {}", **attacker_bab);
+        println!(
+            "      |                     | summed attack modifiers: {}",
+            atk_event.total_attack_bonus
+        );
+        println!(
+            "      |                     | attack bonus total: {}",
+            atk_event.total_attack_bonus + **attacker_bab
+        );
+        println!(
+            "      |                     | defender AC bonus: {}",
+            ac_event.total_ac_bonus
+        );
+        println!(
+            "      |                     | defender AC total: {}",
+            10 + ac_event.total_ac_bonus
+        );
 
         let attack_roll_total: isize =
             attack_roll as isize + atk_event.total_attack_bonus + **attacker_bab;
@@ -161,6 +179,14 @@ pub fn attack_roll(
         } else {
             AttackOutcome::Miss
         };
+        println!(
+            "      |                     | total attack roll with bonuses: {}",
+            attack_roll_total
+        );
+        println!(
+            "      |                     | attack outcome: {:?}",
+            attack_outcome
+        );
 
         attack_roll_event_writer.send(AttackRollEvent {
             attacker,

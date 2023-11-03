@@ -56,10 +56,11 @@ impl From<ACModifierEvent> for ACModifier {
 pub fn add_dexterity(
     mut ac_event: EventReader<ACBonusEvent>,
     mut event_writer: EventWriter<ACModifierEvent>,
-    query_attacker: Query<&Dexterity, With<ActionPriority>>,
+    defender_query: Query<&Dexterity>,
 ) {
     for ac in ac_event.iter() {
-        if let Ok(dexterity) = query_attacker.get_single() {
+        println!("debug | ac_modifier::add_dexterity | start");
+        if let Ok(dexterity) = defender_query.get(ac.defender) {
             let mut ac_modifier = ACModifier {
                 val: 0,
                 source: BonusSource::Dexterity,
@@ -68,6 +69,10 @@ pub fn add_dexterity(
                 defender: ac.defender,
             };
             ac_modifier.add_attribute_bonus(*dexterity);
+            println!(
+                "{:>6}|{:>28}| dexterity bonus added: {}",
+                "", "", ac_modifier.val
+            );
 
             event_writer.send(ac_modifier.into());
         }
@@ -102,7 +107,7 @@ impl ACModifierList {
     /// type. Examples of non-stackable types are Size, Morale, and Strength.
     fn sum_non_stackable(&self) -> isize {
         let mut total = 0;
-        for bonus_type in BonusType::stackable() {
+        for bonus_type in BonusType::non_stackable() {
             if let Some(highest_modifier) = self
                 .iter()
                 .filter(|ac_mod| ac_mod.bonus_type == bonus_type)
@@ -131,9 +136,10 @@ impl ACModifierList {
     }
 
     pub fn verified_defender(&self) -> Option<Entity> {
-        if self
-            .iter()
-            .any(|ac_mod| ac_mod.defender != self[0].attacker)
+        if self.is_empty()
+            || self
+                .iter()
+                .any(|ac_mod| ac_mod.defender != self[0].defender)
         {
             None
         } else {

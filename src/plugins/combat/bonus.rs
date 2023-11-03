@@ -15,8 +15,8 @@ impl BonusType {
         [BonusType::Dodge, BonusType::Untyped]
     }
 
-    pub fn non_stackable() -> [BonusType; 2] {
-        [BonusType::Morale, BonusType::Untyped]
+    pub fn non_stackable() -> [BonusType; 1] {
+        [BonusType::Morale]
     }
 }
 

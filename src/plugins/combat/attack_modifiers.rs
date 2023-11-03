@@ -75,6 +75,10 @@ pub fn add_strength(
                 defender: attack_roll.defender,
             };
             attack_modifier.add_attribute_bonus(*strength);
+            println!(
+                "{:>6}|{:>32}| strength bonus added: {}",
+                "", "", attack_modifier.val
+            );
 
             event_writer.send(attack_modifier.into());
         }
@@ -92,6 +96,10 @@ pub fn add_weapon_focus(
             let attack_modifier =
                 weapon_focus.to_atk_mod(attack_roll.attacker, attack_roll.defender);
 
+            println!(
+                "{:>6}|{:>36}| weapon_focus bonus added: {}",
+                "", "", attack_modifier.val
+            );
             event_writer.send(attack_modifier.into());
         }
     }
@@ -116,19 +124,27 @@ impl AttackModifierList {
                 .iter()
                 .filter(|atk_mod| atk_mod.bonus_type == bonus_type)
                 .fold(0, |acc, x| acc + x.val);
+            println!(
+                "debug | attack_modifiers::sum_stackable| bonus type: {:?}, total: {}",
+                bonus_type, total
+            );
         }
         total
     }
 
     fn sum_non_stackable(&self) -> isize {
         let mut total = 0;
-        for bonus_type in BonusType::stackable() {
+        for bonus_type in BonusType::non_stackable() {
             if let Some(highest_modifier) = self
                 .iter()
                 .filter(|atk_mod| atk_mod.bonus_type == bonus_type)
                 .max_by(|x, y| x.val.cmp(&y.val))
             {
                 total += highest_modifier.val;
+                println!(
+                    "debug | attack_modifiers::sum_non_stackable| bonus type: {:?}, total: {}",
+                    bonus_type, total
+                );
             }
         }
         total
