@@ -64,8 +64,11 @@ pub fn add_strength(
     mut event_writer: EventWriter<AttackModifierEvent>,
     query_attacker: Query<&Strength, With<ActionPriority>>,
 ) {
+    let debug = true;
     for attack_roll in attack_roll_event.iter() {
-        println!("debug | attack_modifiers::add_strength | start");
+        if debug {
+            println!("debug | attack_modifier::add_strength | start");
+        }
         if let Ok(strength) = query_attacker.get_single() {
             let mut attack_modifier = AttackModifier {
                 val: 0,
@@ -75,14 +78,20 @@ pub fn add_strength(
                 defender: attack_roll.defender,
             };
             attack_modifier.add_attribute_bonus(*strength);
-            println!(
-                "{:>6}|{:>32}| strength bonus added: {}",
-                "", "", attack_modifier.val
-            );
+            if debug {
+                debug_add_strength(attack_modifier);
+            }
 
             event_writer.send(attack_modifier.into());
         }
     }
+}
+
+fn debug_add_strength(attack_modifier: AttackModifier) {
+    println!(
+        "{:>6}|{:>32}| strength bonus added: {}",
+        "", "", attack_modifier.val
+    );
 }
 
 pub fn add_weapon_focus(
@@ -90,19 +99,26 @@ pub fn add_weapon_focus(
     mut event_writer: EventWriter<AttackModifierEvent>,
     query_attacker: Query<&WeaponFocus, With<ActionPriority>>,
 ) {
+    let debug = true;
     for attack_roll in attack_roll_event.iter() {
-        println!("debug | attack_modifiers::add_weapon_focus | start");
+        println!("debug | attack_modifier::add_weapon_focus | start");
         if let Ok(weapon_focus) = query_attacker.get_single() {
             let attack_modifier =
                 weapon_focus.to_atk_mod(attack_roll.attacker, attack_roll.defender);
 
-            println!(
-                "{:>6}|{:>36}| weapon_focus bonus added: {}",
-                "", "", attack_modifier.val
-            );
+            if debug {
+                debug_add_weapon_focus(attack_modifier);
+            }
             event_writer.send(attack_modifier.into());
         }
     }
+}
+
+fn debug_add_weapon_focus(attack_modifier: AttackModifier) {
+    println!(
+        "{:>6}|{:>36}| weapon_focus bonus added: {}",
+        "", "", attack_modifier.val
+    );
 }
 
 #[derive(Debug, Deref)]
@@ -118,21 +134,22 @@ impl AttackModifierList {
     }
 
     fn sum_stackable(&self) -> isize {
+        let debug = true;
         let mut total = 0;
         for bonus_type in BonusType::stackable() {
             total += self
                 .iter()
                 .filter(|atk_mod| atk_mod.bonus_type == bonus_type)
                 .fold(0, |acc, x| acc + x.val);
-            println!(
-                "debug | attack_modifiers::sum_stackable| bonus type: {:?}, total: {}",
-                bonus_type, total
-            );
+            if debug {
+                debug_sum_stackable(bonus_type, total);
+            }
         }
         total
     }
 
     fn sum_non_stackable(&self) -> isize {
+        let debug = true;
         let mut total = 0;
         for bonus_type in BonusType::non_stackable() {
             if let Some(highest_modifier) = self
@@ -141,10 +158,9 @@ impl AttackModifierList {
                 .max_by(|x, y| x.val.cmp(&y.val))
             {
                 total += highest_modifier.val;
-                println!(
-                    "debug | attack_modifiers::sum_non_stackable| bonus type: {:?}, total: {}",
-                    bonus_type, total
-                );
+                if debug {
+                    debug_sum_non_stackable(bonus_type, total);
+                }
             }
         }
         total
@@ -177,6 +193,20 @@ impl AttackModifierList {
             Some(self[0].defender)
         }
     }
+}
+
+fn debug_sum_non_stackable(bonus_type: BonusType, total: isize) {
+    println!(
+        "debug | attack_modifier::sum_non_stackable| bonus type: {:?}, total: {}",
+        bonus_type, total
+    );
+}
+
+fn debug_sum_stackable(bonus_type: BonusType, total: isize) {
+    println!(
+        "debug | attack_modifier::sum_stackable| bonus type: {:?}, total: {}",
+        bonus_type, total
+    );
 }
 
 impl FromIterator<AttackModifier> for AttackModifierList {

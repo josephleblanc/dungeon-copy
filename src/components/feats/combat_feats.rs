@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::plugins::combat::{
-    attack_modifiers::AttackModifier,
+    attack_modifier::AttackModifier,
     bonus::{BonusSource, BonusType},
 };
 

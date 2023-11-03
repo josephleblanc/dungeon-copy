@@ -24,13 +24,16 @@ pub fn sum_ac_modifiers(
     attacker_query: Query<Entity, With<ActionPriority>>,
     mut ac_mod_finished: EventWriter<ACBonusSumEvent>,
 ) {
+    let debug = true;
     let ac_mod_list: ACModifierList = ac_mod_events
         .into_iter()
         .map(|&event| event.into())
         .collect();
     if !ac_mod_list.is_empty() {
         if let Ok(attacker_entity) = attacker_query.get_single() {
-            println!("debug | armor_class::sum_ac_modifiers | start");
+            if debug {
+                println!("debug | armor_class::sum_ac_modifiers | start");
+            }
             let attacker = ac_mod_list.verified_attacker().unwrap();
             let defender = ac_mod_list.verified_defender().unwrap();
             let sum_event = ACBonusSumEvent {

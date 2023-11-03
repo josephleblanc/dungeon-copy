@@ -5,7 +5,6 @@ use crate::components::attributes::Dexterity;
 use crate::plugins::combat::armor_class::ACBonusEvent;
 use crate::plugins::combat::bonus::BonusSource;
 use crate::plugins::combat::bonus::BonusType;
-use crate::plugins::player::control::ActionPriority;
 
 #[derive(Copy, Clone, Debug)]
 pub struct ACModifier {
@@ -58,8 +57,11 @@ pub fn add_dexterity(
     mut event_writer: EventWriter<ACModifierEvent>,
     defender_query: Query<&Dexterity>,
 ) {
+    let debug = true;
     for ac in ac_event.iter() {
-        println!("debug | ac_modifier::add_dexterity | start");
+        if debug {
+            println!("debug | ac_modifier::add_dexterity | start");
+        }
         if let Ok(dexterity) = defender_query.get(ac.defender) {
             let mut ac_modifier = ACModifier {
                 val: 0,
@@ -69,14 +71,20 @@ pub fn add_dexterity(
                 defender: ac.defender,
             };
             ac_modifier.add_attribute_bonus(*dexterity);
-            println!(
-                "{:>6}|{:>28}| dexterity bonus added: {}",
-                "", "", ac_modifier.val
-            );
+            if debug {
+                debug_add_dexterity(ac_modifier);
+            }
 
             event_writer.send(ac_modifier.into());
         }
     }
+}
+
+fn debug_add_dexterity(ac_modifier: ACModifier) {
+    println!(
+        "{:>6}|{:>28}| dexterity bonus added: {}",
+        "", "", ac_modifier.val
+    );
 }
 
 #[derive(Debug, Deref)]
