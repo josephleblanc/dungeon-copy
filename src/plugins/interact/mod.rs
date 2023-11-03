@@ -226,13 +226,15 @@ impl BoundingBox {
 pub struct InteractingPosEvent {
     pub pos: Vec2,
     pub interacting_type: InteractingType,
+    pub entity: Option<Entity>,
 }
 
 impl InteractingPosEvent {
-    pub fn new(pos: Vec2, interacting_type: InteractingType) -> Self {
+    pub fn new(pos: Vec2, interacting_type: InteractingType, entity: Option<Entity>) -> Self {
         Self {
             pos,
             interacting_type,
+            entity,
         }
     }
 }
@@ -251,6 +253,7 @@ impl From<Vec2> for InteractingPosEvent {
         Self {
             pos: value,
             interacting_type: InteractingType::None,
+            entity: None,
         }
     }
 }
@@ -285,6 +288,7 @@ pub fn interact_system(
                                 interactable.center,
                                 // interacting_pos.pos,
                                 interactable.interacting_type,
+                                Some(entity),
                             ));
                         }
                     } else {
@@ -292,6 +296,7 @@ pub fn interact_system(
                             interactable.center,
                             // interacting_pos.pos,
                             interactable.interacting_type,
+                            Some(entity),
                         ));
                     }
                 }
@@ -310,12 +315,25 @@ pub fn interact_system(
                     // );
                     interacting_pos.pos = event.pos;
                     interacting_pos.interacting_type = event.interacting_type;
+                    interacting_pos.entity = event.entity;
                     event_writer.send(event);
                 }
             }
         }
     }
 }
+
+// pub fn interacting_entity(
+//     mut enemy_query: Query<(Entity, &Interactable)>,
+//     mut interacting_pos: ResMut<InteractingPos>,
+//     mut event_writer: EventWriter<InteractingPosEvent>,
+// ) {
+//     for event in event_writer.iter() {
+//         if event.interacting_type == InteractingType::Enemy {
+//             if let Some(entity, interactable) = enemy_query.get(event.)
+//         }
+//     }
+// }
 
 fn cleanup(mut commands: Commands) {
     commands.remove_resource::<InteractingPos>();

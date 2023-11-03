@@ -119,9 +119,10 @@ impl ACModifierList {
     }
 
     pub fn verified_attacker(&self) -> Option<Entity> {
-        if self
-            .iter()
-            .any(|ac_mod| ac_mod.attacker != self[0].attacker)
+        if self.is_empty()
+            || self
+                .iter()
+                .any(|ac_mod| ac_mod.attacker != self[0].attacker)
         {
             None
         } else {

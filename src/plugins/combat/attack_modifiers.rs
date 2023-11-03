@@ -65,6 +65,7 @@ pub fn add_strength(
     query_attacker: Query<&Strength, With<ActionPriority>>,
 ) {
     for attack_roll in attack_roll_event.iter() {
+        println!("debug | attack_modifiers::add_strength | start");
         if let Ok(strength) = query_attacker.get_single() {
             let mut attack_modifier = AttackModifier {
                 val: 0,
@@ -86,6 +87,7 @@ pub fn add_weapon_focus(
     query_attacker: Query<&WeaponFocus, With<ActionPriority>>,
 ) {
     for attack_roll in attack_roll_event.iter() {
+        println!("debug | attack_modifiers::add_weapon_focus | start");
         if let Ok(weapon_focus) = query_attacker.get_single() {
             let attack_modifier =
                 weapon_focus.to_atk_mod(attack_roll.attacker, attack_roll.defender);
@@ -137,9 +139,10 @@ impl AttackModifierList {
     }
 
     pub fn verified_attacker(&self) -> Option<Entity> {
-        if self
-            .iter()
-            .any(|atk_mod| atk_mod.attacker != self[0].attacker)
+        if self.is_empty()
+            || self
+                .iter()
+                .any(|atk_mod| atk_mod.attacker != self[0].attacker)
         {
             None
         } else {
@@ -148,9 +151,10 @@ impl AttackModifierList {
     }
 
     pub fn verified_defender(&self) -> Option<Entity> {
-        if self
-            .iter()
-            .any(|atk_mod| atk_mod.defender != self[0].attacker)
+        if self.is_empty()
+            || self
+                .iter()
+                .any(|atk_mod| atk_mod.defender != self[0].defender)
         {
             None
         } else {

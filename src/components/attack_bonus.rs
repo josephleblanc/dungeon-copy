@@ -6,7 +6,7 @@ use super::attributes::Attribute;
 #[derive(Component, Clone, Copy, Debug, Deref, DerefMut, Serialize, Deserialize)]
 pub struct AttackBonus(isize);
 
-#[derive(Component, Clone, Copy, Debug, Serialize, Deserialize)]
+#[derive(Component, Clone, Copy, Debug, Serialize, Deserialize, Deref)]
 pub struct BaseAttackBonus(isize);
 
 impl AttackBonus {
