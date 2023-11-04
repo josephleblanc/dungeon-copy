@@ -8,10 +8,15 @@ use self::{
         AttackBonusSumEvent, AttackRollEvent, StartAttack,
     },
     attack_modifier::AttackModEvent,
+    critical_range::{CritThreatModSumEvent, CritThreatRollEvent},
+    critical_range_modifier::CritThreatModEvent,
 };
 use crate::plugins::combat::armor_class::sum_ac_modifiers;
 use crate::plugins::combat::attack::attack_roll;
 use crate::plugins::combat::attack::debug_attack_roll_event;
+use crate::plugins::combat::critical_range::check_crit_range;
+use crate::plugins::combat::critical_range::debug_check_crit_range;
+use crate::plugins::combat::critical_range::sum_crit_range_mods;
 use crate::scenes::SceneState;
 
 pub mod ac_modifier;
@@ -19,8 +24,8 @@ pub mod armor_class;
 pub mod attack;
 pub mod attack_modifier;
 pub mod bonus;
-pub mod critical_threat;
-pub mod critical_threat_modifier;
+pub mod critical_range;
+pub mod critical_range_modifier;
 pub mod damage;
 pub mod damage_modifier;
 
@@ -29,13 +34,19 @@ pub struct CombatPlugin;
 impl Plugin for CombatPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<StartAttack>()
+            // AC-related Events
             .add_event::<ACBonusEvent>()
             .add_event::<ACModEvent>()
             .add_event::<ACBonusSumEvent>()
+            // Attack roll related events
             .add_event::<AttackBonusEvent>()
             .add_event::<AttackModEvent>()
             .add_event::<AttackBonusSumEvent>()
-            .add_event::<AttackRollEvent>();
+            .add_event::<AttackRollEvent>()
+            // Critical Threat related events
+            .add_event::<CritThreatModEvent>()
+            .add_event::<CritThreatModSumEvent>()
+            .add_event::<CritThreatRollEvent>();
 
         app.add_systems(
             Update,
@@ -72,6 +83,20 @@ impl Plugin for CombatPlugin {
                     .after(sum_attack_modifier)
                     .after(sum_ac_modifiers),
                 debug_attack_roll_event.after(attack_roll),
+                // The systems in critical_range_modifier listen for the `AttackRollEvent`
+                // produced by `attack_roll`, and check if any modifiers should be applied to the
+                // critical threat range.
+                (
+                    critical_range_modifier::base,
+                    critical_range_modifier::improved_critical,
+                )
+                    .after(attack_roll),
+                // Sums the modifiers checked for in the systems in crit_range_modifier
+                sum_crit_range_mods
+                    .after(critical_range_modifier::base)
+                    .after(critical_range_modifier::improved_critical),
+                check_crit_range.after(sum_crit_range_mods),
+                debug_check_crit_range.after(check_crit_range),
             )
                 .run_if(in_state(SceneState::InGameClassicMode)),
         );

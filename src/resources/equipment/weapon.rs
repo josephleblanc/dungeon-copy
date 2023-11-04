@@ -34,6 +34,10 @@ impl Weapon {
     pub fn crit_threat_range(&self) -> [usize; 2] {
         self.crit_threat_range
     }
+
+    pub fn crit_threat_lower(&self) -> usize {
+        self.crit_threat_range[1] - self.crit_threat_range[0] + 1
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]

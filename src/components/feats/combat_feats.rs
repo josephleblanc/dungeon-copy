@@ -4,7 +4,7 @@ use crate::{
     plugins::combat::{
         attack_modifier::AttackMod,
         bonus::{BonusSource, BonusType},
-        critical_threat_modifier::{CritThreatBonusSource, CritThreatBonusType, CritThreatMod},
+        critical_range_modifier::{CritThreatBonusSource, CritThreatBonusType, CritThreatMod},
     },
     resources::equipment::weapon::{Weapon, WeaponName},
 };
@@ -66,7 +66,7 @@ impl ImprovedCritical {
         Self { weapons }
     }
 
-    pub fn to_crit_threat_mod(
+    pub fn to_crit_range_mod(
         &self,
         attacker: Entity,
         defender: Entity,
@@ -74,7 +74,7 @@ impl ImprovedCritical {
     ) -> Option<CritThreatMod> {
         if self.as_slice().contains(&weapon.weapon_name) {
             let original_range = weapon.crit_threat_range();
-            let crit_range_n = original_range[1] - original_range[0];
+            let crit_range_n = original_range[1] - original_range[0] + 1;
             let bonus_type: CritThreatBonusType = self.into();
             let source: CritThreatBonusSource = self.into();
             Some(CritThreatMod {
@@ -83,6 +83,7 @@ impl ImprovedCritical {
                 bonus_type,
                 attacker,
                 defender,
+                attacker_weapon: weapon.clone(),
             })
         } else {
             None

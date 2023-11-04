@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 
+use crate::components::creature::Creature;
 use crate::plugins::item::equipment::weapon::EquippedWeapons;
 use crate::resources::dice::Dice;
 use crate::resources::equipment::weapon::Weapon;
@@ -188,7 +189,7 @@ pub fn attack_roll(
     mut atk_mod_finished: EventReader<AttackBonusSumEvent>,
     mut attack_roll_event_writer: EventWriter<AttackRollEvent>,
     attacker_query: Query<(Entity, &BaseAttackBonus), With<ActionPriority>>,
-    defender_query: Query<Entity, With<ArmorClass>>,
+    defender_query: Query<Entity, With<Creature>>,
 ) {
     for (ac_event, atk_event) in ac_mod_finished
         .into_iter()
@@ -219,7 +220,7 @@ pub fn attack_roll(
         };
 
         let attacker_weapon: Option<Weapon> =
-            if &ac_event.attacker_weapon == &atk_event.attacker_weapon {
+            if ac_event.attacker_weapon == atk_event.attacker_weapon {
                 Some(ac_event.attacker_weapon.clone())
             } else {
                 None

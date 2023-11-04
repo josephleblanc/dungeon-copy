@@ -5,5 +5,5 @@ MonsterStats(
     strength: (10),
     dexterity: Dexterity(14)
   ),
-  armor_class: ArmorClass(14)
+  label: Creature
 )
