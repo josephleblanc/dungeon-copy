@@ -3,7 +3,7 @@
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
 
-use crate::components::feats::combat_feats::WeaponFocus;
+use crate::components::feats::combat_feats::{ImprovedCritical, WeaponFocus};
 // use crate::components::invinsible_cooldown::InvisibleCooldownComponent;
 use crate::components::player::PlayerComponent;
 use crate::components::player_animation::PlayerAnimation;
@@ -52,6 +52,8 @@ pub fn initiate_player(
         main_hand: longsword,
         off_hand: vec![],
     };
+
+    let improved_critical = ImprovedCritical::new(vec![WeaponName::Longsword]);
 
     // let skill = game_data.get_skill(class.clone());
 
@@ -104,6 +106,7 @@ pub fn initiate_player(
         .insert(player_bab)
         .insert(weapon_focus)
         .insert(equipped_weapons)
+        .insert(improved_critical)
         .insert(ActionPriority)
         .insert(PlayerAnimation::new())
         // .insert(PlayerListEffectsComponent::new(

@@ -30,6 +30,12 @@ pub struct Weapon {
     weapon_groups: Option<Vec<WeaponGroup>>,
 }
 
+impl Weapon {
+    pub fn crit_threat_range(&self) -> [usize; 2] {
+        self.crit_threat_range
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
 /// The types of damage this weapon can do.
 pub struct WeaponDamageTypes(Vec<DamageType>);
