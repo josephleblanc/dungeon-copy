@@ -1,10 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{
-    components::armor_class::ArmorClass,
-    plugins::player::control::ActionPriority,
-    resources::{dice::Dice, equipment::weapon::Weapon},
-};
+use crate::{plugins::player::control::ActionPriority, resources::equipment::weapon::Weapon};
 
 use super::{
     attack::AttackRollEvent,

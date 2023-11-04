@@ -161,6 +161,9 @@ impl FromIterator<CritThreatMod> for CritThreatModList {
     }
 }
 
+/// Adds the base critical threat range for the weapon used in an attack.
+/// This system exists to make sure `critical_range::sum_crit_range_mods` has at least one
+/// `CritThreatModEvent` to receive and run.
 pub fn base(
     mut attack_roll_reader: EventReader<AttackRollEvent>,
     attacker_query: Query<Entity, With<ActionPriority>>,
@@ -183,10 +186,11 @@ pub fn base(
     }
 }
 
+/// Adds the weapon crit threat range increase for the `combat_feats::ImprovedCritical` feat.
+/// This will only run if the attacker entity has the `ImporovedCritical` feat as a component.
 pub fn improved_critical(
     mut attack_roll_reader: EventReader<AttackRollEvent>,
     attacker_query: Query<&ImprovedCritical, With<ActionPriority>>,
-    defender_query: Query<Entity, With<Creature>>,
     mut crit_mod_writer: EventWriter<CritThreatModEvent>,
 ) {
     for roll_hit_event in attack_roll_reader

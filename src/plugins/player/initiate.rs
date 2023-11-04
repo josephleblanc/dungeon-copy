@@ -3,6 +3,7 @@
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
 
+use crate::components::creature::Creature;
 use crate::components::feats::combat_feats::{ImprovedCritical, WeaponFocus};
 // use crate::components::invinsible_cooldown::InvisibleCooldownComponent;
 use crate::components::player::PlayerComponent;
@@ -107,6 +108,7 @@ pub fn initiate_player(
         .insert(weapon_focus)
         .insert(equipped_weapons)
         .insert(improved_critical)
+        .insert(Creature)
         .insert(ActionPriority)
         .insert(PlayerAnimation::new())
         // .insert(PlayerListEffectsComponent::new(

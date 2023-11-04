@@ -24,6 +24,8 @@ pub mod armor_class;
 pub mod attack;
 pub mod attack_modifier;
 pub mod bonus;
+pub mod crit_multiplier;
+pub mod crit_multiplier_modifier;
 pub mod critical_range;
 pub mod critical_range_modifier;
 pub mod damage;

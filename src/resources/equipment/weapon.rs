@@ -19,7 +19,7 @@ pub struct Weapon {
     base_damage_dice: Dice,
     crit_threat_range: [usize; 2],
     reach: Reach,
-    crit_multiplier: isize,
+    crit_multiplier: u8,
     melee: bool,
     thrown: bool,
     // TODO: maybe change this to an array with bool values to make Weapon `Copy`
