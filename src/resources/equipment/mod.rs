@@ -10,7 +10,7 @@ pub mod weapon;
 
 pub const WEAPON_DATA: &str = "assets/equipment/weapons/weapon_data.ron";
 
-#[derive(Resource, Serialize, Deserialize)]
+#[derive(Deref, DerefMut, Resource, Serialize, Deserialize)]
 pub struct Armory(HashMap<WeaponName, Weapon>);
 
 impl Armory {

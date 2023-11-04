@@ -5,5 +5,6 @@ pub mod debug;
 pub mod game_ui;
 pub mod input;
 pub mod interact;
+pub mod item;
 pub mod monster;
 pub mod player;

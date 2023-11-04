@@ -5,14 +5,16 @@ use crate::components::attributes::Dexterity;
 use crate::plugins::combat::armor_class::ACBonusEvent;
 use crate::plugins::combat::bonus::BonusSource;
 use crate::plugins::combat::bonus::BonusType;
+use crate::resources::equipment::weapon::Weapon;
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct ACMod {
     pub val: isize,
     pub source: BonusSource,
     pub bonus_type: BonusType,
     pub attacker: Entity,
     pub defender: Entity,
+    pub attacker_weapon: Weapon,
 }
 
 impl ACMod {
@@ -43,7 +45,7 @@ impl From<ACMod> for ACModEvent {
     }
 }
 
-#[derive(Event, Copy, Clone, Deref, DerefMut)]
+#[derive(Event, Clone, Deref, DerefMut)]
 pub struct ACModEvent(ACMod);
 
 impl From<ACModEvent> for ACMod {
@@ -58,7 +60,8 @@ pub fn add_dexterity(
     defender_query: Query<&Dexterity>,
 ) {
     let debug = true;
-    for ac in ac_event.iter() {
+    // TODO: This could be .into_iter().next() to avoid the clone. Mess around with it.
+    for ac in ac_event.into_iter() {
         if debug {
             println!("debug | ac_modifier::add_dexterity | start");
         }
@@ -69,10 +72,11 @@ pub fn add_dexterity(
                 bonus_type: BonusType::Untyped,
                 attacker: ac.attacker,
                 defender: ac.defender,
+                attacker_weapon: ac.attacker_weapon.clone(),
             };
             ac_modifier.add_attribute_bonus(*dexterity);
             if debug {
-                debug_add_dexterity(ac_modifier);
+                debug_add_dexterity(ac_modifier.clone());
             }
 
             event_writer.send(ac_modifier.into());
@@ -152,6 +156,18 @@ impl ACModList {
             None
         } else {
             Some(self[0].defender)
+        }
+    }
+
+    pub fn verified_weapon(&self) -> Option<Weapon> {
+        if self.is_empty()
+            || self
+                .iter()
+                .any(|atk_mod| atk_mod.attacker_weapon != self[0].attacker_weapon)
+        {
+            None
+        } else {
+            Some(self[0].attacker_weapon.clone())
         }
     }
 }

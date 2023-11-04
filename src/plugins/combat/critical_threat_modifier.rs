@@ -25,7 +25,7 @@ pub fn start(
     defender_query: Query<Entity, With<ArmorClass>>,
     mut crit_mod_writer: EventWriter<CritThreatModEvent>,
 ) {
-    for &roll_hit_event in attack_roll_reader
+    for roll_hit_event in attack_roll_reader
         .iter()
         .filter(|roll| roll.attack_outcome == AttackOutcome::Hit)
     {}

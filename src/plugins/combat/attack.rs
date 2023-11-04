@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 
+use crate::plugins::item::equipment::weapon::EquippedWeapons;
 use crate::resources::dice::Dice;
+use crate::resources::equipment::weapon::Weapon;
 use crate::{
     components::{armor_class::ArmorClass, attack_bonus::BaseAttackBonus, player::PlayerComponent},
     plugins::{
@@ -27,6 +29,7 @@ use super::{
 pub struct AttackBonusEvent {
     pub attacker: Entity,
     pub defender: Entity,
+    pub attacker_weapon: Weapon,
 }
 
 #[derive(Event)]
@@ -40,6 +43,7 @@ pub struct AttackBonusSumEvent {
     attacker: Entity,
     total_attack_bonus: isize,
     defender: Entity,
+    pub attacker_weapon: Weapon,
 }
 
 /// This is where the attack roll process begins. Once all of the conditions have been met this
@@ -78,7 +82,7 @@ pub fn start_attack(
     mut start_attack_events: EventReader<StartAttack>,
     mut attack_event_writer: EventWriter<AttackBonusEvent>,
     mut ac_event_writer: EventWriter<ACBonusEvent>,
-    query_player: Query<Entity, With<ActionPriority>>,
+    query_attacker: Query<(Entity, &EquippedWeapons), With<ActionPriority>>,
     interacting_pos: Res<InteractingPos>,
 ) {
     let debug = true;
@@ -89,10 +93,22 @@ pub fn start_attack(
             println!("debug | attack::start_attack | start");
         }
 
-        let attacker = query_player.get_single().unwrap();
+        let (attacker, equipped_weapons) = query_attacker.get_single().unwrap();
+        // TODO: Once I set up a different system to start the attacks (like prompting the attack
+        // with a button), change `attacker_weapon` to instead use a value sent by the event that
+        // prompts `start_attack`.
+        let attacker_weapon = equipped_weapons.main_hand.clone();
         let defender = interacting_pos.entity.unwrap();
-        attack_event_writer.send(AttackBonusEvent { attacker, defender });
-        ac_event_writer.send(ACBonusEvent { attacker, defender });
+        attack_event_writer.send(AttackBonusEvent {
+            attacker,
+            defender,
+            attacker_weapon: attacker_weapon.clone(),
+        });
+        ac_event_writer.send(ACBonusEvent {
+            attacker,
+            defender,
+            attacker_weapon,
+        });
     }
 }
 
@@ -111,17 +127,19 @@ pub fn sum_attack_modifier(
 ) {
     let atk_mod_list: AttackModList = atk_mod_events
         .into_iter()
-        .map(|&event| event.into())
+        .map(|event| (**event).clone())
         .collect();
     if !atk_mod_list.is_empty() {
         println!("debug | attack::sum_attack_modifier | start");
         if let Ok(attacker_entity) = attacker_query.get_single() {
             let attacker = atk_mod_list.verified_attacker().unwrap();
             let defender = atk_mod_list.verified_defender().unwrap();
+            let attacker_weapon = atk_mod_list.verified_weapon().unwrap();
             let sum_event = AttackBonusSumEvent {
                 attacker,
                 defender,
                 total_attack_bonus: atk_mod_list.sum_all(),
+                attacker_weapon,
             };
 
             if attacker == attacker_entity {
@@ -144,7 +162,7 @@ pub enum AttackOutcome {
     CritMiss,
 }
 
-#[derive(Debug, Event, Copy, Clone)]
+#[derive(Debug, Event, Clone)]
 /// AttackRollEvent is the event sent out by `attack_roll`, and includes the outcome of an attack
 /// against a valid target. This event is listened to by `start_damage`, which is the gatekeeper
 /// for the systems which calculate the attack's damage.
@@ -156,6 +174,7 @@ pub struct AttackRollEvent {
     pub total_attack_modifier: isize,
     pub total_defender_ac: isize,
     pub attack_outcome: AttackOutcome,
+    pub attacker_weapon: Weapon,
 }
 
 /// `attack_roll` is the system which sums all of the attack modifiers and armor class modifiers,
@@ -199,15 +218,12 @@ pub fn attack_roll(
             AttackOutcome::Miss
         };
 
-        attack_roll_event_writer.send(AttackRollEvent {
-            attacker,
-            defender,
-            attack_outcome,
-            attack_roll_raw,
-            attack_roll_total,
-            total_attack_modifier,
-            total_defender_ac,
-        });
+        let attacker_weapon: Option<Weapon> =
+            if &ac_event.attacker_weapon == &atk_event.attacker_weapon {
+                Some(ac_event.attacker_weapon.clone())
+            } else {
+                None
+            };
 
         if debug {
             debug_attack_roll(
@@ -217,8 +233,20 @@ pub fn attack_roll(
                 ac_event,
                 attack_roll_total,
                 attack_outcome,
+                attacker_weapon.clone().unwrap(),
             );
         }
+
+        attack_roll_event_writer.send(AttackRollEvent {
+            attacker,
+            defender,
+            attack_outcome,
+            attack_roll_raw,
+            attack_roll_total,
+            total_attack_modifier,
+            total_defender_ac,
+            attacker_weapon: attacker_weapon.unwrap(),
+        });
     }
 }
 
@@ -229,6 +257,7 @@ fn debug_attack_roll(
     ac_event: &ACBonusSumEvent,
     attack_roll_total: isize,
     attack_outcome: AttackOutcome,
+    attacker_weapon: Weapon,
 ) {
     println!("      |                     | D20 roll: {}", attack_roll);
     println!("      |                     | BAB: {}", **attacker_bab);
@@ -255,6 +284,10 @@ fn debug_attack_roll(
     println!(
         "      |                     | attack outcome: {:?}",
         attack_outcome
+    );
+    println!(
+        "      |                     | attacker_weapon: {:?}",
+        attacker_weapon
     );
 }
 

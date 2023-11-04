@@ -1,5 +1,6 @@
 Armory({
   Longsword: Weapon(
+      weapon_name: Longsword,
       attack_bonus: 0,
       damage_bonus: 0,
       base_damage_dice: D8,

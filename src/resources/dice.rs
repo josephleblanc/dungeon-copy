@@ -5,7 +5,7 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::ops::Range;
 
-#[derive(Copy, Clone, Serialize, Deserialize, PartialOrd, Ord, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialOrd, Ord, Eq, PartialEq)]
 pub enum Dice {
     D2,
     D3,

@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
 use crate::plugins::combat::bonus::BonusSource;
+use crate::resources::equipment::weapon::Weapon;
 use crate::{
     components::{
         attributes::{Attribute, Strength},
@@ -13,13 +14,14 @@ use super::attack::AttackBonusEvent;
 
 // TODO: Add a corresponding trait for this, then impl it for all the modifiers,
 // and use that to make the systems to track them.
-#[derive(Copy, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct AttackMod {
     pub val: isize,
     pub source: BonusSource,
     pub bonus_type: BonusType,
     pub attacker: Entity,
     pub defender: Entity,
+    pub attacker_weapon: Weapon,
 }
 
 impl AttackMod {
@@ -50,7 +52,7 @@ impl From<AttackMod> for AttackModEvent {
     }
 }
 
-#[derive(Event, Copy, Clone, Deref, DerefMut)]
+#[derive(Event, Clone, Deref, DerefMut)]
 pub struct AttackModEvent(AttackMod);
 
 impl From<AttackModEvent> for AttackMod {
@@ -76,10 +78,11 @@ pub fn add_strength(
                 bonus_type: BonusType::Untyped,
                 attacker: attack_roll.attacker,
                 defender: attack_roll.defender,
+                attacker_weapon: attack_roll.attacker_weapon.clone(),
             };
             attack_modifier.add_attribute_bonus(*strength);
             if debug {
-                debug_add_strength(attack_modifier);
+                debug_add_strength(attack_modifier.clone());
             }
 
             event_writer.send(attack_modifier.into());
@@ -103,13 +106,18 @@ pub fn add_weapon_focus(
     for attack_roll in attack_roll_event.iter() {
         println!("debug | attack_modifier::add_weapon_focus | start");
         if let Ok(weapon_focus) = query_attacker.get_single() {
-            let attack_modifier =
-                weapon_focus.to_atk_mod(attack_roll.attacker, attack_roll.defender);
+            if weapon_focus.contains(&attack_roll.attacker_weapon.weapon_name) {
+                let attack_modifier = weapon_focus.clone().to_atk_mod(
+                    attack_roll.attacker,
+                    attack_roll.defender,
+                    attack_roll.attacker_weapon.clone(),
+                );
 
-            if debug {
-                debug_add_weapon_focus(attack_modifier);
+                if debug {
+                    debug_add_weapon_focus(attack_modifier.clone());
+                }
+                event_writer.send(attack_modifier.into());
             }
-            event_writer.send(attack_modifier.into());
         }
     }
 }
@@ -191,6 +199,18 @@ impl AttackModList {
             None
         } else {
             Some(self[0].defender)
+        }
+    }
+
+    pub fn verified_weapon(&self) -> Option<Weapon> {
+        if self.is_empty()
+            || self
+                .iter()
+                .any(|atk_mod| atk_mod.attacker_weapon != self[0].attacker_weapon)
+        {
+            None
+        } else {
+            Some(self[0].attacker_weapon.clone())
         }
     }
 }

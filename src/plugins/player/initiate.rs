@@ -3,14 +3,18 @@
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
 
+use crate::components::feats::combat_feats::WeaponFocus;
 // use crate::components::invinsible_cooldown::InvisibleCooldownComponent;
 use crate::components::player::PlayerComponent;
 use crate::components::player_animation::PlayerAnimation;
 // use crate::components::player_list_effects::PlayerListEffectsComponent;
 // use crate::components::skill::SkillComponent;
 use crate::materials::ingame::InGameMaterials;
+use crate::plugins::item::equipment::weapon::EquippedWeapons;
 // use crate::plugins::player::PlayerEntity;
 use crate::plugins::player::{PLAYER_SIZE_HEIGHT, PLAYER_SIZE_WIDTH};
+use crate::resources::equipment::weapon::WeaponName;
+use crate::resources::equipment::Armory;
 use crate::resources::game_data::GameData;
 use crate::resources::profile::Profile;
 
@@ -35,10 +39,19 @@ pub fn initiate_player(
     game_data: Res<GameData>,
     mut commands: Commands,
     profile: Res<Profile>,
+    armory: Res<Armory>,
 ) {
     let class = profile.hero_class.clone();
     let gender = profile.gender.clone();
     let hero = game_data.get_hero(class.clone());
+
+    let longsword = armory.get(&WeaponName::Longsword).unwrap().clone();
+    let weapon_focus = WeaponFocus::new(1, vec![longsword.weapon_name]);
+
+    let equipped_weapons = EquippedWeapons {
+        main_hand: longsword,
+        off_hand: vec![],
+    };
 
     // let skill = game_data.get_skill(class.clone());
 
@@ -89,6 +102,8 @@ pub fn initiate_player(
         .insert(player)
         .insert(player_attributes)
         .insert(player_bab)
+        .insert(weapon_focus)
+        .insert(equipped_weapons)
         .insert(ActionPriority)
         .insert(PlayerAnimation::new())
         // .insert(PlayerListEffectsComponent::new(
