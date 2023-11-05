@@ -49,15 +49,24 @@ pub struct AttackBonusSumEvent {
 }
 
 #[derive(Copy, Clone)]
+/// `StartAttackDataEvent` includes only those entities which are used in the attack, and
+/// data which is only known at the time the attack is made, that is:
+/// - `WeaponSlot`: Whether the attack is using main hand or off hand, or is two-handed, or is a
+///     primary or secondary natural attack.
+/// - `IterativeAttack`: If the character has more than +5 attack bonus and is using a weapon,
+///     which of the iterative attack bonuses to apply.
+/// When the attack/crit/damage systems need to know, e.g., what weapon type is used in the attack,
+/// they can query the entity to find the relevent components, if they exist.
 pub struct StartAttackData {
     weapon_slot: WeaponSlot,
     iterative_attack: IterativeAttack,
-    is_two_handed: bool,
     attacker: Entity,
     defender: Entity,
 }
 
 #[derive(Copy, Clone, Deref, DerefMut, Event)]
+/// `StartAttackDataEvent` is used to send the entities which are used in the attack to the
+/// attack/crit/damage systems.
 pub struct StartAttackDataEvent(StartAttackData);
 
 /// This is where the attack roll process begins. Once all of the conditions have been met this
@@ -102,7 +111,6 @@ pub fn check_attack_conditions(
             // The enum in `iterative_attack` should be supplied by the system which prompts the
             // attack.
             iterative_attack: IterativeAttack::First,
-            is_two_handed: false,
             attacker: attacker_entity,
             defender: interacting_pos.entity.unwrap(),
         };

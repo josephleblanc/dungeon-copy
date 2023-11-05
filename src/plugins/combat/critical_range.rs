@@ -33,7 +33,7 @@ pub fn sum_crit_range_mods(
     let debug = true;
     let crit_range_mod_list: CritThreatModList = crit_range_mods_reader
         .into_iter()
-        .map(|event| (**event).clone())
+        .map(|event| (**event))
         .collect();
     if !crit_range_mod_list.is_empty() {
         if debug {
