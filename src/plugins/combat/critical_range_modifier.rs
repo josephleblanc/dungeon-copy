@@ -8,20 +8,25 @@ use crate::{
 
 use super::attack::{AttackOutcome, AttackRollEvent};
 
-#[derive(Clone, Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct CritThreatMod {
     pub val: usize,
     pub source: CritThreatBonusSource,
     pub bonus_type: CritThreatBonusType,
     pub attacker: Entity,
     pub defender: Entity,
-    pub attacker_weapon: Weapon,
+    pub attacker_weapon: Entity,
 }
 
 impl CritThreatMod {
-    pub fn base(attacker: Entity, defender: Entity, attacker_weapon: Weapon) -> Self {
+    pub fn base(
+        attacker: Entity,
+        defender: Entity,
+        attacker_weapon: Entity,
+        attacker_weapon_stats: &Weapon,
+    ) -> Self {
         Self {
-            val: attacker_weapon.crit_threat_lower(),
+            val: attacker_weapon_stats.crit_threat_lower(),
             source: CritThreatBonusSource::default(),
             bonus_type: CritThreatBonusType::default(),
             attacker,
@@ -51,7 +56,7 @@ impl CritThreatBonusType {
     }
 }
 
-#[derive(Event, Clone, Deref, DerefMut)]
+#[derive(Event, Clone, Copy, Deref, DerefMut)]
 pub struct CritThreatModEvent(CritThreatMod);
 
 #[derive(Debug, Deref)]
@@ -129,7 +134,7 @@ impl CritThreatModList {
         }
     }
 
-    pub fn verified_weapon(&self) -> Option<Weapon> {
+    pub fn verified_weapon(&self) -> Option<Entity> {
         if self.is_empty()
             || self
                 .iter()
@@ -168,6 +173,7 @@ pub fn base(
     mut attack_roll_reader: EventReader<AttackRollEvent>,
     attacker_query: Query<Entity, With<ActionPriority>>,
     defender_query: Query<Entity, With<Creature>>,
+    weapon_query: Query<&Weapon>,
     mut crit_mod_writer: EventWriter<CritThreatModEvent>,
 ) {
     for roll_hit_event in attack_roll_reader
@@ -177,11 +183,13 @@ pub fn base(
         println!("debug | critical_range_mod::base | start base");
         let attacker = attacker_query.get(roll_hit_event.attacker).unwrap();
         let defender = defender_query.get(roll_hit_event.defender).unwrap();
+        let weapon = weapon_query.get(roll_hit_event.attacker_weapon).unwrap();
 
         crit_mod_writer.send(CritThreatModEvent(CritThreatMod::base(
             attacker,
             defender,
-            roll_hit_event.attacker_weapon.clone(),
+            roll_hit_event.attacker_weapon,
+            weapon,
         )));
     }
 }
@@ -189,8 +197,9 @@ pub fn base(
 /// Adds the weapon crit threat range increase for the `combat_feats::ImprovedCritical` feat.
 /// This will only run if the attacker entity has the `ImporovedCritical` feat as a component.
 pub fn improved_critical(
-    mut attack_roll_reader: EventReader<AttackRollEvent>,
     attacker_query: Query<&ImprovedCritical, With<ActionPriority>>,
+    weapon_query: Query<&Weapon>,
+    mut attack_roll_reader: EventReader<AttackRollEvent>,
     mut crit_mod_writer: EventWriter<CritThreatModEvent>,
 ) {
     for roll_hit_event in attack_roll_reader
@@ -198,11 +207,13 @@ pub fn improved_critical(
         .filter(|roll| roll.attack_outcome == AttackOutcome::Hit)
     {
         println!("debug | critical_range_mod::base | start improved_critical");
+        let weapon = weapon_query.get(roll_hit_event.attacker_weapon).unwrap();
         if let Ok(improved_critical) = attacker_query.get(roll_hit_event.attacker) {
             if let Some(modifier) = improved_critical.to_crit_range_mod(
                 roll_hit_event.attacker,
                 roll_hit_event.defender,
-                &roll_hit_event.attacker_weapon,
+                roll_hit_event.attacker_weapon,
+                weapon,
             ) {
                 crit_mod_writer.send(CritThreatModEvent(modifier));
             }

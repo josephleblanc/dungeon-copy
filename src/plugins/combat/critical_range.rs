@@ -7,12 +7,12 @@ use super::{
     critical_range_modifier::{CritThreatModEvent, CritThreatModList},
 };
 
-#[derive(Clone, Event)]
+#[derive(Copy, Clone, Event)]
 pub struct CritThreatModSumEvent {
     attacker: Entity,
     total_crit_range: [usize; 2],
     defender: Entity,
-    pub attacker_weapon: Weapon,
+    pub attacker_weapon: Entity,
 }
 
 impl CritThreatModSumEvent {

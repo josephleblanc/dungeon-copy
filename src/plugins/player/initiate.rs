@@ -14,7 +14,7 @@ use crate::materials::ingame::InGameMaterials;
 use crate::plugins::item::equipment::weapon::EquippedWeapons;
 // use crate::plugins::player::PlayerEntity;
 use crate::plugins::player::{PLAYER_SIZE_HEIGHT, PLAYER_SIZE_WIDTH};
-use crate::resources::equipment::weapon::WeaponName;
+use crate::resources::equipment::weapon::{WeaponBundle, WeaponName};
 use crate::resources::equipment::Armory;
 use crate::resources::game_data::GameData;
 use crate::resources::profile::Profile;
@@ -49,11 +49,6 @@ pub fn initiate_player(
     let longsword = armory.get(&WeaponName::Longsword).unwrap().clone();
     let weapon_focus = WeaponFocus::new(1, vec![longsword.weapon_name]);
 
-    let equipped_weapons = EquippedWeapons {
-        main_hand: longsword,
-        off_hand: vec![],
-    };
-
     let improved_critical = ImprovedCritical::new(vec![WeaponName::Longsword]);
 
     // let skill = game_data.get_skill(class.clone());
@@ -77,7 +72,8 @@ pub fn initiate_player(
 
     let texture_atlas_handle = texture_atlases.add(texture_atlas);
 
-    let entity = commands
+    let mut weapon_entity: Option<Entity> = None;
+    let player_entity = commands
         .spawn(SpriteSheetBundle {
             texture_atlas: texture_atlas_handle,
             sprite: TextureAtlasSprite {
@@ -102,23 +98,21 @@ pub fn initiate_player(
                 ..default()
             });
         })
+        .with_children(|builder| {
+            weapon_entity = Some(builder.spawn(WeaponBundle { weapon: longsword }).id());
+        })
         .insert(player)
         .insert(player_attributes)
         .insert(player_bab)
         .insert(weapon_focus)
-        .insert(equipped_weapons)
         .insert(improved_critical)
+        .insert(EquippedWeapons {
+            main_hand: weapon_entity.unwrap(),
+            off_hand: vec![],
+        })
         .insert(Creature)
         .insert(ActionPriority)
         .insert(PlayerAnimation::new())
-        // .insert(PlayerListEffectsComponent::new(
-        //     game_data.get_player_list_effects_information(),
-        // ))
-        // .insert(SkillComponent::new(skill))
-        // .insert(InvisibleCooldownComponent {
-        //     hurt_duration: Timer::new(Duration::from_secs(0), TimerMode::Once),
-        //     duration: Timer::new(Duration::from_secs_f32(0.5), TimerMode::Once),
-        // })
         .insert(Name::new("Player"))
         .id();
 
@@ -127,5 +121,7 @@ pub fn initiate_player(
     // resource to exist. If there is only ever one Player, then it could just
     // as easily be a component on the player entity, which can be queried for
     // when needed.
-    commands.insert_resource(PlayerEntity { entity });
+    commands.insert_resource(PlayerEntity {
+        entity: player_entity,
+    });
 }

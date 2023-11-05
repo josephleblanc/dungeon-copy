@@ -14,14 +14,14 @@ use super::attack::AttackBonusEvent;
 
 // TODO: Add a corresponding trait for this, then impl it for all the modifiers,
 // and use that to make the systems to track them.
-#[derive(Clone, Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct AttackMod {
     pub val: isize,
     pub source: BonusSource,
     pub bonus_type: BonusType,
     pub attacker: Entity,
     pub defender: Entity,
-    pub attacker_weapon: Weapon,
+    pub attacker_weapon: Entity,
 }
 
 impl AttackMod {
@@ -101,12 +101,16 @@ pub fn add_weapon_focus(
     mut attack_roll_event: EventReader<AttackBonusEvent>,
     mut event_writer: EventWriter<AttackModEvent>,
     query_attacker: Query<&WeaponFocus, With<ActionPriority>>,
+    query_weapon: Query<&Weapon>,
 ) {
     let debug = true;
     for attack_roll in attack_roll_event.iter() {
         println!("debug | attack_modifier::add_weapon_focus | start");
-        if let Ok(weapon_focus) = query_attacker.get_single() {
-            if weapon_focus.contains(&attack_roll.attacker_weapon.weapon_name) {
+        if let (Ok(weapon_focus), Ok(weapon)) = (
+            query_attacker.get_single(),
+            query_weapon.get(attack_roll.attacker_weapon),
+        ) {
+            if weapon_focus.contains(&weapon.weapon_name) {
                 let attack_modifier = weapon_focus.clone().to_atk_mod(
                     attack_roll.attacker,
                     attack_roll.defender,
@@ -202,7 +206,7 @@ impl AttackModList {
         }
     }
 
-    pub fn verified_weapon(&self) -> Option<Weapon> {
+    pub fn verified_weapon(&self) -> Option<Entity> {
         if self.is_empty()
             || self
                 .iter()
@@ -210,7 +214,7 @@ impl AttackModList {
         {
             None
         } else {
-            Some(self[0].attacker_weapon.clone())
+            Some(self[0].attacker_weapon)
         }
     }
 }

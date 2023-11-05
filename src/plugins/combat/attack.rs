@@ -31,7 +31,7 @@ use super::{
 pub struct AttackBonusEvent {
     pub attacker: Entity,
     pub defender: Entity,
-    pub attacker_weapon: Weapon,
+    pub attacker_weapon: Entity,
 }
 
 #[derive(Event)]
@@ -40,12 +40,12 @@ pub struct AttackBonusEvent {
 /// damage systems to run without causing a `panic`.
 pub struct StartAttack;
 
-#[derive(Clone, Event)]
+#[derive(Copy, Clone, Event)]
 pub struct AttackBonusSumEvent {
     attacker: Entity,
     total_attack_bonus: isize,
     defender: Entity,
-    pub attacker_weapon: Weapon,
+    pub attacker_weapon: Entity,
 }
 
 #[derive(Copy, Clone)]
@@ -72,7 +72,7 @@ pub fn check_attack_conditions(
 
     // TODO: Move the below arguments into the system which prompts the attack, once it has been
     // created.
-    attacker_query: Query<( Entity, EquippedWeapons ), With<ActionPriority>>,
+    attacker_query: Query<(Entity, &EquippedWeapons), With<ActionPriority>>,
     mut attack_data_writer: EventWriter<StartAttackDataEvent>,
 ) {
     let debug = true;
@@ -92,24 +92,22 @@ pub fn check_attack_conditions(
 
         // TODO: Only for testing, change values when moving to another system that will prompt an
         // attack.
+        let (attacker_entity, equipped_weapon_entity) = attacker_query.get_single().unwrap();
         let start_attack_data = StartAttackData {
             weapon_slot: WeaponSlot {
-                slot: WeaponSlotName::Primary,
-                weapon_name: WeaponName::Longsword,
-                entity: 
+                // The enum in `slot` should be be supplied by the system which prompts the attack.
+                slot: WeaponSlotName::MainHand,
+                entity: equipped_weapon_entity.main_hand,
             },
+            // The enum in `iterative_attack` should be supplied by the system which prompts the
+            // attack.
             iterative_attack: IterativeAttack::First,
             is_two_handed: false,
-            attacker: attacker_query.get_single().unwrap(),
+            attacker: attacker_entity,
             defender: interacting_pos.entity.unwrap(),
         };
-        attack_data_writer.send(start_attack_data);
+        attack_data_writer.send(StartAttackDataEvent(start_attack_data));
     }
-}
-pub struct WeaponSlot {
-    slot: WeaponSlotName,
-    weapon_name: WeaponName,
-    entity: Entity,
 }
 
 /// start_attack runs when the conditions for an attack have been met in `check_attack_conditions`.
@@ -141,7 +139,7 @@ pub fn start_attack(
         attack_event_writer.send(AttackBonusEvent {
             attacker,
             defender,
-            attacker_weapon: attacker_weapon.clone(),
+            attacker_weapon,
         });
         ac_event_writer.send(ACBonusEvent {
             attacker,
@@ -201,7 +199,7 @@ pub enum AttackOutcome {
     CritMiss,
 }
 
-#[derive(Debug, Event, Clone)]
+#[derive(Debug, Event, Copy, Clone)]
 /// AttackRollEvent is the event sent out by `attack_roll`, and includes the outcome of an attack
 /// against a valid target. This event is listened to by `start_damage`, which is the gatekeeper
 /// for the systems which calculate the attack's damage.
@@ -213,7 +211,7 @@ pub struct AttackRollEvent {
     pub total_attack_modifier: isize,
     pub total_defender_ac: isize,
     pub attack_outcome: AttackOutcome,
-    pub attacker_weapon: Weapon,
+    pub attacker_weapon: Entity,
 }
 
 /// `attack_roll` is the system which sums all of the attack modifiers and armor class modifiers,
@@ -257,9 +255,9 @@ pub fn attack_roll(
             AttackOutcome::Miss
         };
 
-        let attacker_weapon: Option<Weapon> =
+        let attacker_weapon: Option<Entity> =
             if ac_event.attacker_weapon == atk_event.attacker_weapon {
-                Some(ac_event.attacker_weapon.clone())
+                Some(ac_event.attacker_weapon)
             } else {
                 None
             };
@@ -296,7 +294,7 @@ fn debug_attack_roll(
     ac_event: &ACBonusSumEvent,
     attack_roll_total: isize,
     attack_outcome: AttackOutcome,
-    attacker_weapon: Weapon,
+    attacker_weapon: Entity,
 ) {
     println!("      |                     | D20 roll: {}", attack_roll);
     println!("      |                     | BAB: {}", **attacker_bab);

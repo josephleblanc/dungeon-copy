@@ -7,14 +7,14 @@ use crate::plugins::combat::bonus::BonusSource;
 use crate::plugins::combat::bonus::BonusType;
 use crate::resources::equipment::weapon::Weapon;
 
-#[derive(Clone, Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct ACMod {
     pub val: isize,
     pub source: BonusSource,
     pub bonus_type: BonusType,
     pub attacker: Entity,
     pub defender: Entity,
-    pub attacker_weapon: Weapon,
+    pub attacker_weapon: Entity,
 }
 
 impl ACMod {
@@ -159,7 +159,7 @@ impl ACModList {
         }
     }
 
-    pub fn verified_weapon(&self) -> Option<Weapon> {
+    pub fn verified_weapon(&self) -> Option<Entity> {
         if self.is_empty()
             || self
                 .iter()
@@ -167,7 +167,7 @@ impl ACModList {
         {
             None
         } else {
-            Some(self[0].attacker_weapon.clone())
+            Some(self[0].attacker_weapon)
         }
     }
 }

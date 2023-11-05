@@ -27,7 +27,7 @@ impl WeaponFocus {
         &self,
         attacker: Entity,
         defender: Entity,
-        attacker_weapon: Weapon,
+        attacker_weapon: Entity,
     ) -> AttackMod {
         AttackMod {
             val: self.bonus(),
@@ -70,6 +70,7 @@ impl ImprovedCritical {
         &self,
         attacker: Entity,
         defender: Entity,
+        attacker_weapon: Entity,
         weapon: &Weapon,
     ) -> Option<CritThreatMod> {
         if self.as_slice().contains(&weapon.weapon_name) {
@@ -83,7 +84,7 @@ impl ImprovedCritical {
                 bonus_type,
                 attacker,
                 defender,
-                attacker_weapon: weapon.clone(),
+                attacker_weapon,
             })
         } else {
             None

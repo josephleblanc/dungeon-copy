@@ -5,6 +5,7 @@ use crate::resources::equipment::weapon::WeaponName;
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize)]
 pub enum WeaponSlotName {
+    TwoHanded,
     MainHand,
     OffHand,
     NaturalPrimary,
@@ -13,7 +14,6 @@ pub enum WeaponSlotName {
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize)]
 pub struct WeaponSlot {
-    slot: WeaponSlotName,
-    weapon_name: WeaponName,
-    entity: Entity,
+    pub slot: WeaponSlotName,
+    pub entity: Entity,
 }

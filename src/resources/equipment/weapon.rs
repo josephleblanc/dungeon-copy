@@ -11,7 +11,7 @@ pub enum WeaponName {
     Longsword,
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[derive(Component, Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct Weapon {
     pub weapon_name: WeaponName,
     attack_bonus: isize,
@@ -88,4 +88,10 @@ impl Reach {
     pub fn to_pixels(self) -> f32 {
         (*self / 5_usize) as f32 * TILE_SIZE
     }
+}
+
+#[derive(Bundle)]
+pub struct WeaponBundle {
+    pub weapon: Weapon,
+    // more here, e.g. enchantments
 }

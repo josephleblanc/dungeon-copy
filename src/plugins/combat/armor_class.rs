@@ -4,19 +4,19 @@ use crate::{plugins::player::control::ActionPriority, resources::equipment::weap
 
 use super::ac_modifier::{ACModEvent, ACModList};
 
-#[derive(Clone, Event)]
+#[derive(Copy, Clone, Event)]
 pub struct ACBonusEvent {
     pub attacker: Entity,
     pub defender: Entity,
-    pub attacker_weapon: Weapon,
+    pub attacker_weapon: Entity,
 }
 
-#[derive(Clone, Event)]
+#[derive(Copy, Clone, Event)]
 pub struct ACBonusSumEvent {
     pub attacker: Entity,
     pub defender: Entity,
     pub total_ac_bonus: isize,
-    pub attacker_weapon: Weapon,
+    pub attacker_weapon: Entity,
 }
 
 /// Collects the various AC modifiers from the systems which manage those modifiers and send out
