@@ -3,9 +3,11 @@ use bevy::prelude::*;
 use crate::scenes::SceneState;
 
 pub mod animation;
+pub mod attacks;
 mod cleanup;
 pub mod collisions;
 pub mod control;
+pub mod equipment;
 pub mod initiate;
 
 pub struct PlayerPlugin;

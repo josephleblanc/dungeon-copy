@@ -40,7 +40,7 @@ impl CritMultiplierSource {
     // This is currently a vec, because when adding new sources it is possible to forget that they
     // have a limit, or include them in the wrong list. If all possible sources get implemented at
     // some point, then it will be possible to return and change this to an array.
-    // TODO: Turn this into an array someday
+    // TODO: Turn this into an array someday, see above note ^
     pub fn vec_sorted_by_limit() -> Vec<CritMultiplierSource> {
         let mut sorted_by_limit = [CritMultiplierSource::MythicImprovedCritical];
         let mut has_limit: Vec<CritMultiplierSource> = sorted_by_limit

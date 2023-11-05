@@ -2,8 +2,10 @@ use bevy::prelude::*;
 
 use crate::components::creature::Creature;
 use crate::plugins::item::equipment::weapon::EquippedWeapons;
+use crate::plugins::player::attacks::IterativeAttack;
+use crate::plugins::player::equipment::{WeaponSlot, WeaponSlotName};
 use crate::resources::dice::Dice;
-use crate::resources::equipment::weapon::Weapon;
+use crate::resources::equipment::weapon::{Weapon, WeaponName};
 use crate::{
     components::{armor_class::ArmorClass, attack_bonus::BaseAttackBonus, player::PlayerComponent},
     plugins::{
@@ -19,7 +21,6 @@ use super::{
 };
 
 #[derive(Clone, Event)]
-
 /// AttackBonusEvent is sent by `start_attack` and listened for by all of the systems in the
 /// `attack_modifier` mod. This event is the signal for all of the systems which check to see if
 /// they can apply an attack modifier to an attack should be run.
@@ -47,6 +48,18 @@ pub struct AttackBonusSumEvent {
     pub attacker_weapon: Weapon,
 }
 
+#[derive(Copy, Clone)]
+pub struct StartAttackData {
+    weapon_slot: WeaponSlot,
+    iterative_attack: IterativeAttack,
+    is_two_handed: bool,
+    attacker: Entity,
+    defender: Entity,
+}
+
+#[derive(Copy, Clone, Deref, DerefMut, Event)]
+pub struct StartAttackDataEvent(StartAttackData);
+
 /// This is where the attack roll process begins. Once all of the conditions have been met this
 /// function will send an event that lets `start_attack` begin.
 /// Any conditions that must be met for an attack to begin should be put here, along with anything
@@ -56,6 +69,11 @@ pub fn check_attack_conditions(
     interacting_pos: Res<InteractingPos>,
     mut attack_event_writer: EventWriter<StartAttack>,
     button: Res<Input<MouseButton>>,
+
+    // TODO: Move the below arguments into the system which prompts the attack, once it has been
+    // created.
+    attacker_query: Query<( Entity, EquippedWeapons ), With<ActionPriority>>,
+    mut attack_data_writer: EventWriter<StartAttackDataEvent>,
 ) {
     let debug = true;
     if debug && button.just_pressed(MouseButton::Left) {
@@ -71,7 +89,27 @@ pub fn check_attack_conditions(
     {
         // TODO: Check if target is in range
         attack_event_writer.send(StartAttack);
+
+        // TODO: Only for testing, change values when moving to another system that will prompt an
+        // attack.
+        let start_attack_data = StartAttackData {
+            weapon_slot: WeaponSlot {
+                slot: WeaponSlotName::Primary,
+                weapon_name: WeaponName::Longsword,
+                entity: 
+            },
+            iterative_attack: IterativeAttack::First,
+            is_two_handed: false,
+            attacker: attacker_query.get_single().unwrap(),
+            defender: interacting_pos.entity.unwrap(),
+        };
+        attack_data_writer.send(start_attack_data);
     }
+}
+pub struct WeaponSlot {
+    slot: WeaponSlotName,
+    weapon_name: WeaponName,
+    entity: Entity,
 }
 
 /// start_attack runs when the conditions for an attack have been met in `check_attack_conditions`.
