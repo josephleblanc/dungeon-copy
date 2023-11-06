@@ -8,11 +8,11 @@ more than the defender's armor class (AC) value with its own bonuses. Sounds
 relatively simple to implement, right? Well, it would be simple to implement,
 if that is all there were to it. However, there are a number of complicating
 factors to consider.
-1.) Critical threat range.
-2.) Critical multiplier.
-3.) Defender Armor Class
-4.) Highly specific modifiers to critical threat range, critical multiplier,
-attack bonus, and armor class.
+1. Critical threat range.
+2. Critical multiplier.
+3. Defender Armor Class
+4. Highly specific modifiers to critical threat range, critical multiplier,
+  attack bonus, and armor class.
 ### 1. Critical Threat Range
 Critical threat range is a range from a lower bound up to 20, and defines the
 set of values for which an attack *may* be a critical. If the d20 attack roll
@@ -48,13 +48,15 @@ modifier checks could remain low as more modifiers are added.
 ## Implementing the attack using Events, Query, and explicit system ordering
 Bevy provides three great tools to allow the attack system to run with as many
 parallel processes as possible. 
-1.) `Event`s can be used to send the output of one system to another.
-2.) `Query` can be used to request the data required for each modifier, and
-because each modifier only requires immutable references, multiple modifier
-systems can access the same data at the same time.
-3.) Explicit system ordering ensures that any system which requires the events
-from another system will run after that system, but can also run in parallel
-with other systems in the same `SystemSet`.
+1. `Event` can be used to send the output of one system to another. Because
+  each `Event` is read every frame, and `Event`s are cleared when read, the
+  `Event`s from previous frames will not be carried forward to produce errors.
+2. `Query` can be used to request the data required for each modifier, and
+  because each modifier only requires immutable references, multiple modifier
+  systems can access the same data at the same time.
+3. Explicit system ordering ensures that any system which requires the events
+  from another system will run after that system, but can also run in parallel
+  with other systems in the same `SystemSet`.
 
 The mind map below shows how the attack is handled:
 [Mindmap of the attack plugin](/readme_mindmaps/attack_system.pdf)
