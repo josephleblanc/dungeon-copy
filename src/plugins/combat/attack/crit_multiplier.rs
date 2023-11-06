@@ -24,15 +24,15 @@ impl CritMultiplier {
     pub fn size(self) -> usize {
         let (size, _) = CritMultiplier::iterator()
             .enumerate()
-            .find(|(i, val)| self == **val)
+            .find(|(_i, val)| self == **val)
             .unwrap();
-        size as usize
+        size
     }
     pub fn add(self, other: Self) -> Self {
         let index = self.size() + other.size();
         let (_, crit) = CritMultiplier::iterator()
             .enumerate()
-            .find(|(i, val)| index == *i)
+            .find(|(i, _val)| index == *i)
             .unwrap();
         *crit
     }

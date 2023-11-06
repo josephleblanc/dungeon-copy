@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use std::ops::Deref;
 
 use crate::components::attack_bonus::BaseAttackBonus;
 use crate::plugins::combat::bonus::BonusSource;
@@ -68,7 +67,7 @@ pub fn base_attack_bonus(
     bab_query: Query<&BaseAttackBonus>,
     mut event_writer: EventWriter<AttackModEvent>,
 ) {
-    let debug = true;
+    let debug = false;
     for (attack_data, _) in attack_data_event.iter().zip(attack_bonus_event.iter()) {
         if debug {
             println!("debug | attack_modifier::add_strength | start");
@@ -101,8 +100,8 @@ pub fn add_strength(
     mut event_writer: EventWriter<AttackModEvent>,
     query_attacker: Query<&Strength, With<ActionPriority>>,
 ) {
-    let debug = true;
-    for (attack_data, attack_bonus) in attack_data_event.iter().zip(attack_bonus_event.iter()) {
+    let debug = false;
+    for (attack_data, _attack_bonus) in attack_data_event.iter().zip(attack_bonus_event.iter()) {
         if debug {
             println!("debug | attack_modifier::add_strength | start");
         }
@@ -115,7 +114,7 @@ pub fn add_strength(
             };
             attack_modifier.add_attribute_bonus(*strength);
             if debug {
-                debug_add_strength(attack_modifier.clone());
+                debug_add_strength(attack_modifier);
             }
 
             event_writer.send(attack_modifier.into());
@@ -137,8 +136,8 @@ pub fn add_weapon_focus(
     query_attacker: Query<&WeaponFocus, With<ActionPriority>>,
     query_weapon: Query<&Weapon>,
 ) {
-    let debug = true;
-    for (attack_data, bonus_event) in attack_data_event.iter().zip(attack_bonus_event.iter()) {
+    let debug = false;
+    for (attack_data, _bonus_event) in attack_data_event.iter().zip(attack_bonus_event.iter()) {
         println!("debug | attack_modifier::add_weapon_focus | start");
         if let Ok(weapon_focus) = query_attacker.get(attack_data.attacker) {
             let weapon = query_weapon.get(attack_data.weapon_slot.entity).unwrap();
@@ -146,7 +145,7 @@ pub fn add_weapon_focus(
                 let attack_modifier = weapon_focus.clone().to_atk_mod(**attack_data);
 
                 if debug {
-                    debug_add_weapon_focus(attack_modifier.clone());
+                    debug_add_weapon_focus(attack_modifier);
                 }
                 event_writer.send(attack_modifier.into());
             }
@@ -174,7 +173,7 @@ impl AttackModList {
     }
 
     fn sum_stackable(&self) -> isize {
-        let debug = true;
+        let debug = false;
         let mut total = 0;
         for bonus_type in BonusType::stackable() {
             total += self
@@ -189,7 +188,7 @@ impl AttackModList {
     }
 
     fn sum_non_stackable(&self) -> isize {
-        let debug = true;
+        let debug = false;
         let mut total = 0;
         for bonus_type in BonusType::non_stackable() {
             if let Some(highest_modifier) = self

@@ -1,14 +1,15 @@
 use bevy::prelude::*;
 
-use crate::components::creature::Creature;
+use self::armor_class::sum_ac_modifiers;
+use self::attack_roll::{sum_attack_modifier, AttackBonusEvent, AttackBonusSumEvent};
+use self::critical_range::{sum_crit_range_mods, CritThreatModSumEvent};
 use crate::plugins::item::equipment::weapon::EquippedWeapons;
 use crate::plugins::player::attacks::IterativeAttack;
 use crate::plugins::player::equipment::{WeaponSlot, WeaponSlotName};
 use crate::resources::dice::Dice;
-use crate::resources::equipment::weapon::{Weapon, WeaponName};
 use crate::scenes::SceneState;
 use crate::{
-    components::{armor_class::ArmorClass, attack_bonus::BaseAttackBonus, player::PlayerComponent},
+    components::attack_bonus::BaseAttackBonus,
     plugins::{
         interact::{InteractingPos, InteractingType},
         player::control::ActionPriority,
@@ -26,13 +27,7 @@ pub mod critical_range_modifier;
 pub mod damage;
 pub mod damage_modifier;
 
-use crate::plugins::combat::{
-    attack::{
-        armor_class::{ACBonusEvent, ACBonusSumEvent},
-        attack_roll_modifier::{AttackMod, AttackModEvent, AttackModList},
-    },
-    bonus::BonusType,
-};
+use crate::plugins::combat::attack::armor_class::{ACBonusEvent, ACBonusSumEvent};
 
 #[derive(Clone, Hash, Debug, PartialEq, Eq, SystemSet)]
 pub struct AttackRollModifier;
@@ -98,12 +93,6 @@ impl Plugin for AttackPlugin {
     }
 }
 
-use self::armor_class::sum_ac_modifiers;
-use self::attack_roll::{sum_attack_modifier, AttackBonusEvent, AttackBonusSumEvent};
-use self::crit_multiplier::CritMultiplier;
-use self::critical_range::{sum_crit_range_mods, CritThreatModSumEvent};
-use self::critical_range_modifier::CritThreatModEvent;
-
 #[derive(Event)]
 /// This event is sent by `check_attack_conditions` and listened to by `start_attack`. This
 /// singleton event is the signal that all of the conditions have been met for the attack roll and
@@ -146,7 +135,7 @@ pub fn check_attack_conditions(
     attacker_query: Query<(Entity, &EquippedWeapons), With<ActionPriority>>,
     mut attack_data_writer: EventWriter<AttackDataEvent>,
 ) {
-    let debug = true;
+    let debug = false;
     if debug && button.just_pressed(MouseButton::Left) {
         println!(
             "debug | check_attack_conditions | \
@@ -190,7 +179,7 @@ pub fn start_attack(
     mut attack_event_writer: EventWriter<AttackBonusEvent>,
     mut ac_event_writer: EventWriter<ACBonusEvent>,
 ) {
-    let debug = true;
+    let debug = false;
     if !start_attack_events.is_empty() {
         start_attack_events.clear();
 
@@ -230,45 +219,6 @@ pub struct CompleteAttack {
     roll_total: isize,
     defender_ac: isize,
     attack_data: AttackData,
-}
-
-pub fn debug_events(
-    mut attack_data_event: EventReader<AttackDataEvent>,
-    mut ac_mod_finished: EventReader<ACBonusSumEvent>,
-    mut atk_mod_finished: EventReader<AttackBonusSumEvent>,
-    mut crit_range_mod_finished: EventReader<CritThreatModSumEvent>,
-) {
-    for event in attack_data_event.into_iter() {
-        println!("attack_data: {:?}", event);
-    }
-    for event in ac_mod_finished.into_iter() {
-        println!("ac_mod_finished: {:?}", **event);
-    }
-    for event in atk_mod_finished.into_iter() {
-        println!("atk_mod_finished: {:?}", **event);
-    }
-    for event in crit_range_mod_finished.into_iter() {
-        println!("crit_range_mod_finished: {:?}", **event);
-    }
-}
-
-pub fn debug_events_iter(
-    mut attack_data_event: EventReader<AttackDataEvent>,
-    mut ac_mod_finished: EventReader<ACBonusSumEvent>,
-    mut atk_mod_finished: EventReader<AttackBonusSumEvent>,
-    mut crit_range_mod_finished: EventReader<CritThreatModSumEvent>,
-) {
-    for (((attack_data, ac_mod), atk_mod), crit_range_mod) in attack_data_event
-        .into_iter()
-        .zip(ac_mod_finished.into_iter())
-        .zip(atk_mod_finished.into_iter())
-        .zip(crit_range_mod_finished.into_iter())
-    {
-        println!("attack_data: {:?}", attack_data);
-        println!("ac_mod: {:?}", **ac_mod);
-        println!("attack_data: {:?}", **atk_mod);
-        println!("attack_data: {:?}", **crit_range_mod);
-    }
 }
 
 /// `complete_attack` is the system which takes the sums of the attack bonus, critical threat, and
@@ -349,7 +299,7 @@ pub fn evaluate_complete_attack(
 }
 
 pub fn debug_complete_attack_event(mut attack_roll_event_reader: EventReader<CompleteAttackEvent>) {
-    let debug = true;
+    let debug = false;
     if debug {
         for event in attack_roll_event_reader.iter() {
             println!("attack roll outcome: {:?}", event.outcome);

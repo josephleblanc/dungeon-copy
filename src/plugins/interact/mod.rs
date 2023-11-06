@@ -264,7 +264,7 @@ pub fn interact_system(
     mut interacting_pos: ResMut<InteractingPos>,
     mut event_writer: EventWriter<InteractingPosEvent>,
 ) {
-    let debug = true;
+    let debug = false;
     for window in window_query.iter() {
         if let Some(cursor_pos) = window.cursor_position() {
             let mut highest_priority_event: Option<InteractingPosEvent> = None;

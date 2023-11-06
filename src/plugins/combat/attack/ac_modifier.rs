@@ -58,9 +58,9 @@ pub fn add_dexterity(
     mut event_writer: EventWriter<ACModEvent>,
     defender_query: Query<&Dexterity>,
 ) {
-    let debug = true;
+    let debug = false;
     // TODO: This could be .into_iter().next() to avoid the clone. Mess around with it.
-    for (attack_data, ac) in attack_data_event.into_iter().zip(ac_event.into_iter()) {
+    for (attack_data, _ac) in attack_data_event.into_iter().zip(ac_event.into_iter()) {
         if debug {
             println!("debug | ac_modifier::add_dexterity | start");
         }
@@ -73,7 +73,7 @@ pub fn add_dexterity(
             };
             ac_modifier.add_attribute_bonus(*dexterity);
             if debug {
-                debug_add_dexterity(ac_modifier.clone());
+                debug_add_dexterity(ac_modifier);
             }
 
             event_writer.send(ac_modifier.into());

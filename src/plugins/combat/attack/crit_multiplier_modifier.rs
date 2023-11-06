@@ -1,5 +1,4 @@
 #![allow(dead_code)]
-use crate::resources::equipment::weapon::{Weapon, WeaponName};
 use bevy::prelude::*;
 use std::slice::Iter;
 
@@ -42,13 +41,13 @@ impl CritMultiplierSource {
     // some point, then it will be possible to return and change this to an array.
     // TODO: Turn this into an array someday, see above note ^
     pub fn vec_sorted_by_limit() -> Vec<CritMultiplierSource> {
-        let mut sorted_by_limit = [CritMultiplierSource::MythicImprovedCritical];
+        let sorted_by_limit = [CritMultiplierSource::MythicImprovedCritical];
         let mut has_limit: Vec<CritMultiplierSource> = sorted_by_limit
             .iter()
             .copied()
             .filter(|source| source.limit().is_some())
             .collect();
-        has_limit.sort_by(|x, y| x.limit().unwrap().cmp(&y.limit().unwrap()));
+        has_limit.sort_by_key(|x| x.limit().unwrap());
         has_limit
     }
 
@@ -60,6 +59,7 @@ impl CritMultiplierSource {
     }
 
     pub fn size(self) -> u8 {
+        #[allow(clippy::match_single_binding)]
         match self {
             _ => 1,
             // more here
@@ -77,7 +77,7 @@ impl CritMultiplierModList {
     }
 
     fn sum_with_limit(&self, base_crit: CritMultiplier) -> CritMultiplier {
-        let debug = true;
+        let debug = false;
         let mut sorting_vec: Vec<CritMultiplierMod> = (*self)
             .clone()
             .into_iter()
@@ -98,8 +98,8 @@ impl CritMultiplierModList {
     }
 
     fn sum_without_limit(&self, base_crit: CritMultiplier) -> CritMultiplier {
-        let debug = true;
-        let mut total: CritMultiplier = base_crit;
+        let debug = false;
+        let total: CritMultiplier = base_crit;
         (*self)
             .clone()
             .into_iter()

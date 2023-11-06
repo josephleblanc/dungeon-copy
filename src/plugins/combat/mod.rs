@@ -1,7 +1,5 @@
 use bevy::prelude::*;
 
-use crate::scenes::SceneState;
-
 use self::attack::AttackPlugin;
 
 pub mod attack;

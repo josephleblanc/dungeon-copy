@@ -65,7 +65,7 @@ impl CritThreatModList {
     // for one archetype of Swashbuckler (Inspired Blade). I'll implement this later.
     // TODO: Implement this
     // fn sum_stackable(&self) -> isize {
-    //     let debug = true;
+    //     let debug = false;
     //     let mut total = 0;
     //     for bonus_type in CritThreatBonusType::stackable() {
     //         total += self
@@ -83,7 +83,7 @@ impl CritThreatModList {
     // }
 
     pub fn sum_non_stackable(&self) -> usize {
-        let debug = true;
+        let debug = false;
         let mut total = 0;
         for bonus_type in CritThreatBonusType::non_stackable() {
             if let Some(highest_modifier) = self
