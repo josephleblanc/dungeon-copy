@@ -2,9 +2,12 @@ use bevy::prelude::*;
 
 use crate::{
     plugins::combat::{
-        attack_modifier::AttackMod,
+        attack::{
+            attack_roll_modifier::AttackMod,
+            critical_range_modifier::{CritThreatBonusSource, CritThreatBonusType, CritThreatMod},
+            AttackData,
+        },
         bonus::{BonusSource, BonusType},
-        critical_range_modifier::{CritThreatBonusSource, CritThreatBonusType, CritThreatMod},
     },
     resources::equipment::weapon::{Weapon, WeaponName},
 };
@@ -23,19 +26,12 @@ impl WeaponFocus {
         self.val as isize
     }
 
-    pub fn to_atk_mod(
-        &self,
-        attacker: Entity,
-        defender: Entity,
-        attacker_weapon: Entity,
-    ) -> AttackMod {
+    pub fn to_atk_mod(&self, attack_data: AttackData) -> AttackMod {
         AttackMod {
             val: self.bonus(),
             source: BonusSource::WeaponFocus,
             bonus_type: BonusType::Untyped,
-            attacker,
-            defender,
-            attacker_weapon,
+            attack_data,
         }
     }
 
@@ -68,9 +64,7 @@ impl ImprovedCritical {
 
     pub fn to_crit_range_mod(
         &self,
-        attacker: Entity,
-        defender: Entity,
-        attacker_weapon: Entity,
+        attack_data: AttackData,
         weapon: &Weapon,
     ) -> Option<CritThreatMod> {
         if self.as_slice().contains(&weapon.weapon_name) {
@@ -82,9 +76,7 @@ impl ImprovedCritical {
                 val: crit_range_n,
                 source,
                 bonus_type,
-                attacker,
-                defender,
-                attacker_weapon,
+                attack_data,
             })
         } else {
             None

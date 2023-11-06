@@ -25,5 +25,5 @@ pub enum BonusSource {
     Strength,
     Dexterity,
     WeaponFocus,
-    // more here
+    BaseAttackBonus, // more here
 }

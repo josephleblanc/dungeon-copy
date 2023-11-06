@@ -1,5 +1,7 @@
 use bevy::prelude::*;
+use std::ops::Deref;
 
+use crate::components::attack_bonus::BaseAttackBonus;
 use crate::plugins::combat::bonus::BonusSource;
 use crate::resources::equipment::weapon::Weapon;
 use crate::{
@@ -10,7 +12,8 @@ use crate::{
     plugins::{combat::bonus::BonusType, player::control::ActionPriority},
 };
 
-use super::attack::AttackBonusEvent;
+use super::attack_roll::AttackBonusEvent;
+use super::{AttackData, AttackDataEvent};
 
 // TODO: Add a corresponding trait for this, then impl it for all the modifiers,
 // and use that to make the systems to track them.
@@ -19,9 +22,7 @@ pub struct AttackMod {
     pub val: isize,
     pub source: BonusSource,
     pub bonus_type: BonusType,
-    pub attacker: Entity,
-    pub defender: Entity,
-    pub attacker_weapon: Entity,
+    pub attack_data: AttackData,
 }
 
 impl AttackMod {
@@ -61,13 +62,47 @@ impl From<AttackModEvent> for AttackMod {
     }
 }
 
+pub fn base_attack_bonus(
+    mut attack_data_event: EventReader<AttackDataEvent>,
+    mut attack_bonus_event: EventReader<AttackBonusEvent>,
+    bab_query: Query<&BaseAttackBonus>,
+    mut event_writer: EventWriter<AttackModEvent>,
+) {
+    let debug = true;
+    for (attack_data, _) in attack_data_event.iter().zip(attack_bonus_event.iter()) {
+        if debug {
+            println!("debug | attack_modifier::add_strength | start");
+        }
+        let attacker_bab = bab_query.get(attack_data.attacker).unwrap();
+        let attack_modifier = AttackMod {
+            val: **attacker_bab,
+            source: BonusSource::Strength,
+            bonus_type: BonusType::Untyped,
+            attack_data: **attack_data,
+        };
+        if debug {
+            debug_base_attack_bonus(attack_modifier);
+        }
+
+        event_writer.send(attack_modifier.into());
+    }
+}
+
+fn debug_base_attack_bonus(attack_modifier: AttackMod) {
+    println!(
+        "{:>6}|{:>31}| attacker_bab: {}",
+        " ", " ", attack_modifier.val
+    );
+}
+
 pub fn add_strength(
-    mut attack_roll_event: EventReader<AttackBonusEvent>,
+    mut attack_data_event: EventReader<AttackDataEvent>,
+    mut attack_bonus_event: EventReader<AttackBonusEvent>,
     mut event_writer: EventWriter<AttackModEvent>,
     query_attacker: Query<&Strength, With<ActionPriority>>,
 ) {
     let debug = true;
-    for attack_roll in attack_roll_event.iter() {
+    for (attack_data, attack_bonus) in attack_data_event.iter().zip(attack_bonus_event.iter()) {
         if debug {
             println!("debug | attack_modifier::add_strength | start");
         }
@@ -76,9 +111,7 @@ pub fn add_strength(
                 val: 0,
                 source: BonusSource::Strength,
                 bonus_type: BonusType::Untyped,
-                attacker: attack_roll.attacker,
-                defender: attack_roll.defender,
-                attacker_weapon: attack_roll.attacker_weapon.clone(),
+                attack_data: **attack_data,
             };
             attack_modifier.add_attribute_bonus(*strength);
             if debug {
@@ -98,24 +131,19 @@ fn debug_add_strength(attack_modifier: AttackMod) {
 }
 
 pub fn add_weapon_focus(
-    mut attack_roll_event: EventReader<AttackBonusEvent>,
+    mut attack_data_event: EventReader<AttackDataEvent>,
+    mut attack_bonus_event: EventReader<AttackBonusEvent>,
     mut event_writer: EventWriter<AttackModEvent>,
     query_attacker: Query<&WeaponFocus, With<ActionPriority>>,
     query_weapon: Query<&Weapon>,
 ) {
     let debug = true;
-    for attack_roll in attack_roll_event.iter() {
+    for (attack_data, bonus_event) in attack_data_event.iter().zip(attack_bonus_event.iter()) {
         println!("debug | attack_modifier::add_weapon_focus | start");
-        if let (Ok(weapon_focus), Ok(weapon)) = (
-            query_attacker.get_single(),
-            query_weapon.get(attack_roll.attacker_weapon),
-        ) {
+        if let Ok(weapon_focus) = query_attacker.get(attack_data.attacker) {
+            let weapon = query_weapon.get(attack_data.weapon_slot.entity).unwrap();
             if weapon_focus.contains(&weapon.weapon_name) {
-                let attack_modifier = weapon_focus.clone().to_atk_mod(
-                    attack_roll.attacker,
-                    attack_roll.defender,
-                    attack_roll.attacker_weapon.clone(),
-                );
+                let attack_modifier = weapon_focus.clone().to_atk_mod(**attack_data);
 
                 if debug {
                     debug_add_weapon_focus(attack_modifier.clone());
@@ -182,41 +210,56 @@ impl AttackModList {
         self.sum_stackable() + self.sum_non_stackable()
     }
 
-    pub fn verified_attacker(&self) -> Option<Entity> {
-        if self.is_empty()
-            || self
-                .iter()
-                .any(|atk_mod| atk_mod.attacker != self[0].attacker)
+    pub fn verified_data(&self) -> Result<AttackData, &'static str> {
+        if self.is_empty() {
+            Err("Attempted to verify an empty list of AttackMods. \
+                AttackModList must have at least one element")
+        } else if self
+            .iter()
+            .any(|atk_mod| atk_mod.attack_data != self[0].attack_data)
         {
-            None
+            Err("Mismatched data in AttackModList")
         } else {
-            Some(self[0].attacker)
+            Ok(self[0].attack_data)
         }
     }
 
-    pub fn verified_defender(&self) -> Option<Entity> {
-        if self.is_empty()
-            || self
-                .iter()
-                .any(|atk_mod| atk_mod.defender != self[0].defender)
-        {
-            None
-        } else {
-            Some(self[0].defender)
-        }
-    }
-
-    pub fn verified_weapon(&self) -> Option<Entity> {
-        if self.is_empty()
-            || self
-                .iter()
-                .any(|atk_mod| atk_mod.attacker_weapon != self[0].attacker_weapon)
-        {
-            None
-        } else {
-            Some(self[0].attacker_weapon)
-        }
-    }
+    // TODO: Delete these once I feel good about the refactor
+    // pub fn verified_attacker(&self) -> Option<Entity> {
+    //     if self.is_empty()
+    //         || self
+    //             .iter()
+    //             .any(|atk_mod| atk_mod.attacker != self[0].attacker)
+    //     {
+    //         None
+    //     } else {
+    //         Some(self[0].attacker)
+    //     }
+    // }
+    //
+    // pub fn verified_defender(&self) -> Option<Entity> {
+    //     if self.is_empty()
+    //         || self
+    //             .iter()
+    //             .any(|atk_mod| atk_mod.defender != self[0].defender)
+    //     {
+    //         None
+    //     } else {
+    //         Some(self[0].defender)
+    //     }
+    // }
+    //
+    // pub fn verified_weapon(&self) -> Option<Entity> {
+    //     if self.is_empty()
+    //         || self
+    //             .iter()
+    //             .any(|atk_mod| atk_mod.attacker_weapon != self[0].attacker_weapon)
+    //     {
+    //         None
+    //     } else {
+    //         Some(self[0].attacker_weapon)
+    //     }
+    // }
 }
 
 fn debug_sum_non_stackable(bonus_type: BonusType, total: isize) {

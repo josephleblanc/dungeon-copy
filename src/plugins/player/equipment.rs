@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::resources::equipment::weapon::WeaponName;
 
-#[derive(Copy, Clone, Debug, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub enum WeaponSlotName {
     TwoHanded,
     MainHand,
@@ -12,7 +12,7 @@ pub enum WeaponSlotName {
     NaturalSecondary,
 }
 
-#[derive(Copy, Clone, Debug, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct WeaponSlot {
     pub slot: WeaponSlotName,
     pub entity: Entity,

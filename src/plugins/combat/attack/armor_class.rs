@@ -1,22 +1,24 @@
 use bevy::prelude::*;
 
-use crate::{plugins::player::control::ActionPriority, resources::equipment::weapon::Weapon};
+use crate::plugins::player::control::ActionPriority;
 
-use super::ac_modifier::{ACModEvent, ACModList};
-
-#[derive(Copy, Clone, Event)]
-pub struct ACBonusEvent {
-    pub attacker: Entity,
-    pub defender: Entity,
-    pub attacker_weapon: Entity,
-}
+use super::{
+    ac_modifier::{ACModEvent, ACModList},
+    AttackData,
+};
 
 #[derive(Copy, Clone, Event)]
+pub struct ACBonusEvent;
+// pub attacker: Entity,
+// pub defender: Entity,
+// pub attack_data: AttackData,
+// }
+
+#[derive(Copy, Clone, Event, Deref)]
 pub struct ACBonusSumEvent {
-    pub attacker: Entity,
-    pub defender: Entity,
+    pub attack_data: AttackData,
+    #[deref]
     pub total_ac_bonus: isize,
-    pub attacker_weapon: Entity,
 }
 
 /// Collects the various AC modifiers from the systems which manage those modifiers and send out
@@ -36,21 +38,17 @@ pub fn sum_ac_modifiers(
             if debug {
                 println!("debug | armor_class::sum_ac_modifiers | start");
             }
-            let attacker = ac_mod_list.verified_attacker().unwrap();
-            let defender = ac_mod_list.verified_defender().unwrap();
-            let attacker_weapon = ac_mod_list.verified_weapon().unwrap();
+            let attack_data = ac_mod_list.verified_data().unwrap();
             let sum_event = ACBonusSumEvent {
-                attacker,
-                defender,
+                attack_data,
                 total_ac_bonus: ac_mod_list.sum_all(),
-                attacker_weapon,
             };
 
-            if attacker == attacker_entity {
-                ac_mod_finished.send(sum_event);
-            } else {
-                panic!("Attacking entity does not have ActionPriority");
-            }
+            // if attacker == attacker_entity {
+            ac_mod_finished.send(sum_event);
+            // } else {
+            //     panic!("Attacking entity does not have ActionPriority");
+            // }
         }
     }
 }

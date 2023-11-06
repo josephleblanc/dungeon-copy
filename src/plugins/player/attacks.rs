@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum IterativeAttack {
     First,
     Second,

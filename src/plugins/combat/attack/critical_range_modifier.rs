@@ -1,37 +1,27 @@
 use bevy::prelude::*;
 
 use crate::{
-    components::{creature::Creature, feats::combat_feats::ImprovedCritical},
-    plugins::player::control::ActionPriority,
+    components::feats::combat_feats::ImprovedCritical, plugins::player::control::ActionPriority,
     resources::equipment::weapon::Weapon,
 };
 
-use super::attack::{AttackOutcome, AttackRollEvent};
+use crate::plugins::combat::attack::{AttackData, AttackDataEvent};
 
 #[derive(Copy, Clone, Debug)]
 pub struct CritThreatMod {
     pub val: usize,
     pub source: CritThreatBonusSource,
     pub bonus_type: CritThreatBonusType,
-    pub attacker: Entity,
-    pub defender: Entity,
-    pub attacker_weapon: Entity,
+    pub attack_data: AttackData,
 }
 
 impl CritThreatMod {
-    pub fn base(
-        attacker: Entity,
-        defender: Entity,
-        attacker_weapon: Entity,
-        attacker_weapon_stats: &Weapon,
-    ) -> Self {
+    pub fn base(attack_data: AttackData, attacker_weapon_stats: &Weapon) -> Self {
         Self {
             val: attacker_weapon_stats.crit_threat_lower(),
             source: CritThreatBonusSource::default(),
             bonus_type: CritThreatBonusType::default(),
-            attacker,
-            defender,
-            attacker_weapon,
+            attack_data,
         }
     }
 }
@@ -110,41 +100,55 @@ impl CritThreatModList {
         total
     }
 
-    pub fn verified_attacker(&self) -> Option<Entity> {
-        if self.is_empty()
-            || self
-                .iter()
-                .any(|atk_mod| atk_mod.attacker != self[0].attacker)
+    pub fn verified_data(&self) -> Result<AttackData, &'static str> {
+        if self.is_empty() {
+            Err("Attempted to verify an empty list of CritThreatModList. \
+                CritThreatModList must have at least one element")
+        } else if self
+            .iter()
+            .any(|crit_threat_mod| crit_threat_mod.attack_data != self[0].attack_data)
         {
-            None
+            Err("Mismatched data in CritThreatModList")
         } else {
-            Some(self[0].attacker)
+            Ok(self[0].attack_data)
         }
     }
 
-    pub fn verified_defender(&self) -> Option<Entity> {
-        if self.is_empty()
-            || self
-                .iter()
-                .any(|atk_mod| atk_mod.defender != self[0].defender)
-        {
-            None
-        } else {
-            Some(self[0].defender)
-        }
-    }
-
-    pub fn verified_weapon(&self) -> Option<Entity> {
-        if self.is_empty()
-            || self
-                .iter()
-                .any(|atk_mod| atk_mod.attacker_weapon != self[0].attacker_weapon)
-        {
-            None
-        } else {
-            Some(self[0].attacker_weapon.clone())
-        }
-    }
+    // pub fn verified_attacker(&self) -> Option<Entity> {
+    //     if self.is_empty()
+    //         || self
+    //             .iter()
+    //             .any(|atk_mod| atk_mod.attacker != self[0].attacker)
+    //     {
+    //         None
+    //     } else {
+    //         Some(self[0].attacker)
+    //     }
+    // }
+    //
+    // pub fn verified_defender(&self) -> Option<Entity> {
+    //     if self.is_empty()
+    //         || self
+    //             .iter()
+    //             .any(|atk_mod| atk_mod.defender != self[0].defender)
+    //     {
+    //         None
+    //     } else {
+    //         Some(self[0].defender)
+    //     }
+    // }
+    //
+    // pub fn verified_weapon(&self) -> Option<Entity> {
+    //     if self.is_empty()
+    //         || self
+    //             .iter()
+    //             .any(|atk_mod| atk_mod.attacker_weapon != self[0].attacker_weapon)
+    //     {
+    //         None
+    //     } else {
+    //         Some(self[0].attacker_weapon.clone())
+    //     }
+    // }
 }
 
 fn debug_sum_non_stackable(bonus_type: CritThreatBonusType, total: usize) {
@@ -170,25 +174,17 @@ impl FromIterator<CritThreatMod> for CritThreatModList {
 /// This system exists to make sure `critical_range::sum_crit_range_mods` has at least one
 /// `CritThreatModEvent` to receive and run.
 pub fn base(
-    mut attack_roll_reader: EventReader<AttackRollEvent>,
-    attacker_query: Query<Entity, With<ActionPriority>>,
-    defender_query: Query<Entity, With<Creature>>,
-    weapon_query: Query<&Weapon>,
+    mut attack_data_event: EventReader<AttackDataEvent>,
     mut crit_mod_writer: EventWriter<CritThreatModEvent>,
+    weapon_query: Query<&Weapon>,
 ) {
-    for roll_hit_event in attack_roll_reader
-        .iter()
-        .filter(|roll| roll.attack_outcome == AttackOutcome::Hit)
-    {
+    for attack_data in attack_data_event.into_iter() {
         println!("debug | critical_range_mod::base | start base");
-        let attacker = attacker_query.get(roll_hit_event.attacker).unwrap();
-        let defender = defender_query.get(roll_hit_event.defender).unwrap();
-        let weapon = weapon_query.get(roll_hit_event.attacker_weapon).unwrap();
+
+        let weapon = weapon_query.get(attack_data.weapon_slot.entity).unwrap();
 
         crit_mod_writer.send(CritThreatModEvent(CritThreatMod::base(
-            attacker,
-            defender,
-            roll_hit_event.attacker_weapon,
+            **attack_data,
             weapon,
         )));
     }
@@ -197,24 +193,16 @@ pub fn base(
 /// Adds the weapon crit threat range increase for the `combat_feats::ImprovedCritical` feat.
 /// This will only run if the attacker entity has the `ImporovedCritical` feat as a component.
 pub fn improved_critical(
+    mut attack_data_event: EventReader<AttackDataEvent>,
+    mut crit_mod_writer: EventWriter<CritThreatModEvent>,
     attacker_query: Query<&ImprovedCritical, With<ActionPriority>>,
     weapon_query: Query<&Weapon>,
-    mut attack_roll_reader: EventReader<AttackRollEvent>,
-    mut crit_mod_writer: EventWriter<CritThreatModEvent>,
 ) {
-    for roll_hit_event in attack_roll_reader
-        .iter()
-        .filter(|roll| roll.attack_outcome == AttackOutcome::Hit)
-    {
+    for attack_data in attack_data_event.iter() {
         println!("debug | critical_range_mod::base | start improved_critical");
-        let weapon = weapon_query.get(roll_hit_event.attacker_weapon).unwrap();
-        if let Ok(improved_critical) = attacker_query.get(roll_hit_event.attacker) {
-            if let Some(modifier) = improved_critical.to_crit_range_mod(
-                roll_hit_event.attacker,
-                roll_hit_event.defender,
-                roll_hit_event.attacker_weapon,
-                weapon,
-            ) {
+        let weapon = weapon_query.get(attack_data.weapon_slot.entity).unwrap();
+        if let Ok(improved_critical) = attacker_query.get(attack_data.attacker) {
+            if let Some(modifier) = improved_critical.to_crit_range_mod(**attack_data, weapon) {
                 crit_mod_writer.send(CritThreatModEvent(modifier));
             }
         }

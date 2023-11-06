@@ -1,20 +1,18 @@
 use bevy::prelude::*;
 
-use crate::components::attributes::Attribute;
-use crate::components::attributes::Dexterity;
-use crate::plugins::combat::armor_class::ACBonusEvent;
-use crate::plugins::combat::bonus::BonusSource;
-use crate::plugins::combat::bonus::BonusType;
-use crate::resources::equipment::weapon::Weapon;
+use crate::{
+    components::attributes::{Attribute, Dexterity},
+    plugins::combat::bonus::{BonusSource, BonusType},
+};
+
+use super::{armor_class::ACBonusEvent, AttackData, AttackDataEvent};
 
 #[derive(Copy, Clone, Debug)]
 pub struct ACMod {
     pub val: isize,
     pub source: BonusSource,
     pub bonus_type: BonusType,
-    pub attacker: Entity,
-    pub defender: Entity,
-    pub attacker_weapon: Entity,
+    pub attack_data: AttackData,
 }
 
 impl ACMod {
@@ -56,23 +54,22 @@ impl From<ACModEvent> for ACMod {
 
 pub fn add_dexterity(
     mut ac_event: EventReader<ACBonusEvent>,
+    mut attack_data_event: EventReader<AttackDataEvent>,
     mut event_writer: EventWriter<ACModEvent>,
     defender_query: Query<&Dexterity>,
 ) {
     let debug = true;
     // TODO: This could be .into_iter().next() to avoid the clone. Mess around with it.
-    for ac in ac_event.into_iter() {
+    for (attack_data, ac) in attack_data_event.into_iter().zip(ac_event.into_iter()) {
         if debug {
             println!("debug | ac_modifier::add_dexterity | start");
         }
-        if let Ok(dexterity) = defender_query.get(ac.defender) {
+        if let Ok(dexterity) = defender_query.get(attack_data.defender) {
             let mut ac_modifier = ACMod {
                 val: 0,
                 source: BonusSource::Dexterity,
                 bonus_type: BonusType::Untyped,
-                attacker: ac.attacker,
-                defender: ac.defender,
-                attacker_weapon: ac.attacker_weapon.clone(),
+                attack_data: **attack_data,
             };
             ac_modifier.add_attribute_bonus(*dexterity);
             if debug {
@@ -135,41 +132,57 @@ impl ACModList {
         self.sum_stackable() + self.sum_non_stackable()
     }
 
-    pub fn verified_attacker(&self) -> Option<Entity> {
-        if self.is_empty()
-            || self
-                .iter()
-                .any(|ac_mod| ac_mod.attacker != self[0].attacker)
+    /// The `verified_data` method goes through the list of ACMods and compares the attack_data of
+    /// each to ensure they are all from the same attack.
+    pub fn verified_data(&self) -> Result<AttackData, &'static str> {
+        if self.is_empty() {
+            Err("Attempted to verify an empty list of ACMods. \
+                ACModList must have at least one element")
+        } else if self
+            .iter()
+            .any(|ac_mod| ac_mod.attack_data != self[0].attack_data)
         {
-            None
+            Err("Mismatched data in ACModList")
         } else {
-            Some(self[0].attacker)
+            Ok(self[0].attack_data)
         }
     }
 
-    pub fn verified_defender(&self) -> Option<Entity> {
-        if self.is_empty()
-            || self
-                .iter()
-                .any(|ac_mod| ac_mod.defender != self[0].defender)
-        {
-            None
-        } else {
-            Some(self[0].defender)
-        }
-    }
-
-    pub fn verified_weapon(&self) -> Option<Entity> {
-        if self.is_empty()
-            || self
-                .iter()
-                .any(|atk_mod| atk_mod.attacker_weapon != self[0].attacker_weapon)
-        {
-            None
-        } else {
-            Some(self[0].attacker_weapon)
-        }
-    }
+    // pub fn verified_attacker(&self) -> Option<Entity> {
+    //     if self.is_empty()
+    //         || self
+    //             .iter()
+    //             .any(|ac_mod| ac_mod.attacker != self[0].attacker)
+    //     {
+    //         None
+    //     } else {
+    //         Some(self[0].attacker)
+    //     }
+    // }
+    //
+    // pub fn verified_defender(&self) -> Option<Entity> {
+    //     if self.is_empty()
+    //         || self
+    //             .iter()
+    //             .any(|ac_mod| ac_mod.defender != self[0].defender)
+    //     {
+    //         None
+    //     } else {
+    //         Some(self[0].defender)
+    //     }
+    // }
+    //
+    // pub fn verified_weapon(&self) -> Option<Entity> {
+    //     if self.is_empty()
+    //         || self
+    //             .iter()
+    //             .any(|atk_mod| atk_mod.attacker_weapon != self[0].attacker_weapon)
+    //     {
+    //         None
+    //     } else {
+    //         Some(self[0].attacker_weapon)
+    //     }
+    // }
 }
 
 impl FromIterator<ACMod> for ACModList {
