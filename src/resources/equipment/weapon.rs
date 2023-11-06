@@ -4,7 +4,10 @@ use std::ops::Range;
 use bevy::prelude::*;
 use rand::prelude::*;
 
-use crate::{config::TILE_SIZE, resources::dice::Dice};
+use crate::{
+    config::TILE_SIZE, plugins::combat::attack::crit_multiplier::CritMultiplier,
+    resources::dice::Dice,
+};
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Hash, Clone, Copy)]
 pub enum WeaponName {
@@ -19,7 +22,7 @@ pub struct Weapon {
     base_damage_dice: Dice,
     crit_threat_range: [usize; 2],
     reach: Reach,
-    crit_multiplier: u8,
+    pub crit_multiplier: CritMultiplier,
     melee: bool,
     thrown: bool,
     // TODO: maybe change this to an array with bool values to make Weapon `Copy`

@@ -1,7 +1,8 @@
 use bevy::prelude::*;
 
-use self::armor_class::sum_ac_modifiers;
+use self::armor_class::{sum_ac_modifiers, ACBonusEvent, ACBonusSumEvent};
 use self::attack_roll::{sum_attack_modifier, AttackBonusEvent, AttackBonusSumEvent};
+use self::crit_multiplier::{sum_crit_multiplier, CritMultiplier, CritMultiplierSumEvent};
 use self::critical_range::{sum_crit_range_mods, CritThreatModSumEvent};
 use crate::plugins::item::equipment::weapon::EquippedWeapons;
 use crate::plugins::player::attacks::IterativeAttack;
@@ -27,10 +28,8 @@ pub mod critical_range_modifier;
 pub mod damage;
 pub mod damage_modifier;
 
-use crate::plugins::combat::attack::armor_class::{ACBonusEvent, ACBonusSumEvent};
-
 #[derive(Clone, Hash, Debug, PartialEq, Eq, SystemSet)]
-pub struct AttackRollModifier;
+pub struct AttackModifier;
 
 #[derive(Clone, Hash, Debug, PartialEq, Eq, SystemSet)]
 pub struct SumRollModifier;
@@ -55,11 +54,14 @@ impl Plugin for AttackPlugin {
             // Critical Threat related events
             .add_event::<critical_range_modifier::CritThreatModEvent>()
             .add_event::<critical_range::CritThreatModSumEvent>()
+            // Crit Multiplier related events
+            .add_event::<crit_multiplier_modifier::CritMultiplierModEvent>()
+            .add_event::<crit_multiplier::CritMultiplierSumEvent>()
             // Attack outcome and associated data
             .add_event::<CompleteAttackEvent>();
 
-        app.configure_set(Update, AttackRollModifier.after(start_attack));
-        app.configure_set(Update, SumRollModifier.after(AttackRollModifier));
+        app.configure_set(Update, AttackModifier.after(start_attack));
+        app.configure_set(Update, SumRollModifier.after(AttackModifier));
         app.configure_set(Update, AttackRollComplete.after(SumRollModifier));
 
         app.add_systems(
@@ -79,14 +81,21 @@ impl Plugin for AttackPlugin {
                 attack_roll_modifier::add_weapon_focus,
                 critical_range_modifier::base,
                 critical_range_modifier::improved_critical,
+                crit_multiplier_modifier::base,
                 ac_modifier::add_dexterity,
             )
-                .in_set(AttackRollModifier),
+                .in_set(AttackModifier),
         );
 
         app.add_systems(
             Update,
-            (sum_ac_modifiers, sum_attack_modifier, sum_crit_range_mods).in_set(SumRollModifier),
+            (
+                sum_ac_modifiers,
+                sum_attack_modifier,
+                sum_crit_range_mods,
+                sum_crit_multiplier,
+            )
+                .in_set(SumRollModifier),
         );
 
         app.add_systems(Update, evaluate_complete_attack.in_set(AttackRollComplete));
@@ -214,7 +223,7 @@ pub struct CompleteAttack {
     outcome: AttackOutcome,
     attack_modifier: isize,
     crit_range_lower: usize,
-    // crit_multiplier: CritMultiplier,
+    crit_multiplier: CritMultiplier,
     roll_raw: usize,
     roll_total: isize,
     defender_ac: isize,
@@ -231,27 +240,27 @@ pub fn evaluate_complete_attack(
     mut ac_mod_finished: EventReader<ACBonusSumEvent>,
     mut atk_mod_finished: EventReader<AttackBonusSumEvent>,
     mut crit_range_mod_finished: EventReader<CritThreatModSumEvent>,
+    mut crit_multiplier_mod_finished: EventReader<CritMultiplierSumEvent>,
     mut complete_attack_writer: EventWriter<CompleteAttackEvent>,
     attacker_query: Query<&BaseAttackBonus>,
 ) {
-    for (((attack_data, ac_mod), atk_mod), crit_range_mod) in attack_data_event
+    for ((((attack_data, ac_mod), atk_mod), crit_range_mod), crit_multiplier) in attack_data_event
         .into_iter()
         .zip(ac_mod_finished.into_iter())
         .zip(atk_mod_finished.into_iter())
         .zip(crit_range_mod_finished.into_iter())
-        .inspect(|(((attack_data, ac_mod), atk_mod), crit_range_mod)| {
-            let ac_mod = ***attack_data == ac_mod.attack_data;
-            let atk_mod = ***attack_data == atk_mod.attack_data;
-            let crit_range_mod = ***attack_data == crit_range_mod.attack_data;
-            println!(
-                "inspecting: ac_mod {}, atk_mod {},crit_range_mod {}",
-                ac_mod, atk_mod, crit_range_mod
-            );
+        .zip(crit_multiplier_mod_finished.into_iter())
+        .inspect(|((((data, ac), atk), crit_r), crit_m)| {
+            let ac = ***data == ac.attack_data;
+            let atk = ***data == atk.attack_data;
+            let crit_r = ***data == crit_r.attack_data;
+            println!("inspecting: ac {}, atk {},crit_r {}", ac, atk, crit_r);
         })
-        .filter(|(((attack_data, ac_mod), atk_mod), crit_range_mod)| {
-            ***attack_data == ac_mod.attack_data
-                && ***attack_data == atk_mod.attack_data
-                && ***attack_data == crit_range_mod.attack_data
+        .filter(|((((data, ac), atk), crit_r), crit_m)| {
+            ***data == ac.attack_data
+                && ***data == atk.attack_data
+                && ***data == crit_r.attack_data
+                && ***data == crit_m.attack_data
         })
     {
         println!("{:-<10}", "start evaluate_complete_attack");
@@ -284,6 +293,7 @@ pub fn evaluate_complete_attack(
             roll_total: attack_roll_total,
             defender_ac: total_defender_ac,
             attack_data: **attack_data,
+            crit_multiplier: crit_multiplier.val,
         };
         complete_attack_writer.send(CompleteAttackEvent(complete_attack));
         debug_complete_attack(
@@ -294,6 +304,7 @@ pub fn evaluate_complete_attack(
             attack_roll_total,
             outcome,
             **attack_data,
+            crit_multiplier.val,
         );
     }
 }
@@ -315,6 +326,7 @@ fn debug_complete_attack(
     attack_roll_total: isize,
     attack_outcome: AttackOutcome,
     attack_data: AttackData,
+    crit_multiplier: CritMultiplier,
 ) {
     println!("      |                     | D20 roll: {}", attack_roll);
     println!("      |                     | BAB: {}", **attacker_bab);
@@ -345,5 +357,9 @@ fn debug_complete_attack(
     println!(
         "      |                     | attack_data: {:?}",
         attack_data
+    );
+    println!(
+        "      |                     | crit_multiplier: {:?}",
+        crit_multiplier
     );
 }

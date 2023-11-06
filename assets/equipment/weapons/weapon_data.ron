@@ -6,7 +6,7 @@ Armory({
       base_damage_dice: D8,
       crit_threat_range: ( 19, 20 ),
       reach: ( 5 ),
-      crit_multiplier: 2,
+      crit_multiplier: X2,
       melee: true,
       thrown: false,
       racial_group: Some(Elf),

@@ -2,14 +2,13 @@
 use bevy::prelude::*;
 use std::slice::Iter;
 
-use super::crit_multiplier::CritMultiplier;
+use super::{crit_multiplier::CritMultiplier, AttackData, AttackDataEvent};
 
 #[derive(Copy, Clone, Debug)]
 pub struct CritMultiplierMod {
-    attacker: Entity,
-    defender: Entity,
     val: u8,
     source: CritMultiplierSource,
+    attack_data: AttackData,
 }
 
 #[derive(Event, Copy, Clone, Debug, Deref)]
@@ -22,6 +21,20 @@ pub struct CritMultiplierModList(Vec<CritMultiplierMod>);
 pub enum CritMultiplierSource {
     LethalAccuracy,
     MythicImprovedCritical,
+    None,
+}
+
+pub fn base(
+    mut attack_data_event: EventReader<AttackDataEvent>,
+    mut crit_mod_writer: EventWriter<CritMultiplierModEvent>,
+) {
+    for attack_data in attack_data_event.into_iter() {
+        crit_mod_writer.send(CritMultiplierModEvent(CritMultiplierMod {
+            val: 0,
+            source: CritMultiplierSource::None,
+            attack_data: **attack_data,
+        }))
+    }
 }
 
 impl CritMultiplierSource {
@@ -54,6 +67,7 @@ impl CritMultiplierSource {
     pub fn limit(self) -> Option<CritMultiplier> {
         match self {
             CritMultiplierSource::LethalAccuracy => None,
+            CritMultiplierSource::None => None,
             CritMultiplierSource::MythicImprovedCritical => Some(CritMultiplier::X6),
         }
     }
@@ -124,47 +138,24 @@ impl CritMultiplierModList {
         }
     }
 
-    pub fn verified_attacker(&self) -> Option<Entity> {
-        if self.is_empty()
-            || self
-                .iter()
-                .any(|atk_mod| atk_mod.attacker != self[0].attacker)
+    pub fn verified_data(&self) -> Result<AttackData, &'static str> {
+        if self.is_empty() {
+            Err("Attempted to verify an empty list of CritMultiplier. \
+                CritMultiplierList must have at least one element")
+        } else if self
+            .iter()
+            .any(|crit_mod| crit_mod.attack_data != self[0].attack_data)
         {
-            None
+            Err("Mismatched data in AttackModList")
         } else {
-            Some(self[0].attacker)
+            Ok(self[0].attack_data)
         }
     }
-
-    pub fn verified_defender(&self) -> Option<Entity> {
-        if self.is_empty()
-            || self
-                .iter()
-                .any(|atk_mod| atk_mod.defender != self[0].defender)
-        {
-            None
-        } else {
-            Some(self[0].defender)
-        }
-    }
-
-    // should probably implement this, maybe do it later
-    // pub fn verified_weapon(&self, weapon: &Weapon) -> Option<Weapon> {
-    //     if self.is_empty()
-    //         || self
-    //             .iter()
-    //             .any(|atk_mod| atk_mod.attacker_weapon != self[0].attacker_weapon)
-    //     {
-    //         None
-    //     } else {
-    //         Some(self[0].attacker_weapon.clone())
-    //     }
-    // }
 }
 
 fn debug_sum_non_stackable(base_crit: CritMultiplier, total: CritMultiplier) {
     println!(
-        "debug | attack_modifier::sum_non_stackable| bonus type: {:?}, total: {:?}",
+        "debug | crit_multiplier_modifier::sum_without_limit | bonus type: {:?}, total: {:?}",
         base_crit, total
     );
 }
