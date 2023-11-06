@@ -20,7 +20,7 @@ is within the critical threat range, and the roll results in a hit, then the
 attack is a critical threat. To become a critical, a second attack roll called
 a "critical confirmation roll" is made, with all relevant bonuses included,
 and if the critical confirmation roll is a success, then the threat becomes a
-critical. More information is available on d20pfsrd.
+critical. More information is available on [d20pfsrd](https://www.d20pfsrd.com/).
 Critical threat range can be altered by some choices in the player's character
 build.
 ### 2. Critical Multiplier
@@ -58,8 +58,8 @@ parallel processes as possible.
   from another system will run after that system, but can also run in parallel
   with other systems in the same `SystemSet`.
 
-The mind map below shows how the attack is handled:
-![Mindmap of the attack plugin](/readme_mindmaps/attack_system.pdf)
+The mind map linked below shows how the attack is handled:
+[Mindmap of the attack plugin](/readme_mindmaps/attack_system.pdf)
 ## Extensible Design
 As you can see in the above mindmap, there can be many modifier systems running
 in parallel. Because none of the systems blocks the access of another to
