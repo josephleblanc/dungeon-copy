@@ -57,7 +57,7 @@ from another system will run after that system, but can also run in parallel
 with other systems in the same `SystemSet`.
 
 The mind map below shows how the attack is handled:
-[Mindmap of the attack plugin](/readme_mindmaps/attack.pdf)
+[Mindmap of the attack plugin](/readme_mindmaps/attack_system.pdf)
 ## Extensible Design
 As you can see in the above mindmap, there can be many modifier systems running
 in parallel. Because none of the systems blocks the access of another to
