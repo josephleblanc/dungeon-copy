@@ -63,12 +63,14 @@ impl From<AttackModEvent> for AttackMod {
 
 pub fn base_attack_bonus(
     mut attack_data_event: EventReader<AttackDataEvent>,
-    mut attack_bonus_event: EventReader<AttackBonusEvent>,
+    // mut attack_bonus_event: EventReader<AttackBonusEvent>,
     bab_query: Query<&BaseAttackBonus>,
     mut event_writer: EventWriter<AttackModEvent>,
 ) {
     let debug = false;
-    for (attack_data, _) in attack_data_event.iter().zip(attack_bonus_event.iter()) {
+    for attack_data in attack_data_event.iter()
+    // .zip(attack_bonus_event.iter())
+    {
         if debug {
             println!("debug | attack_modifier::add_strength | start");
         }
@@ -96,12 +98,12 @@ fn debug_base_attack_bonus(attack_modifier: AttackMod) {
 
 pub fn add_strength(
     mut attack_data_event: EventReader<AttackDataEvent>,
-    mut attack_bonus_event: EventReader<AttackBonusEvent>,
+    // mut attack_bonus_event: EventReader<AttackBonusEvent>,
     mut event_writer: EventWriter<AttackModEvent>,
     query_attacker: Query<&Strength, With<ActionPriority>>,
 ) {
     let debug = false;
-    for (attack_data, _attack_bonus) in attack_data_event.iter().zip(attack_bonus_event.iter()) {
+    for attack_data in attack_data_event.iter() {
         if debug {
             println!("debug | attack_modifier::add_strength | start");
         }
@@ -131,13 +133,13 @@ fn debug_add_strength(attack_modifier: AttackMod) {
 
 pub fn add_weapon_focus(
     mut attack_data_event: EventReader<AttackDataEvent>,
-    mut attack_bonus_event: EventReader<AttackBonusEvent>,
+    // mut attack_bonus_event: EventReader<AttackBonusEvent>,
     mut event_writer: EventWriter<AttackModEvent>,
     query_attacker: Query<&WeaponFocus, With<ActionPriority>>,
     query_weapon: Query<&Weapon>,
 ) {
     let debug = false;
-    for (attack_data, _bonus_event) in attack_data_event.iter().zip(attack_bonus_event.iter()) {
+    for attack_data in attack_data_event.iter() {
         println!("debug | attack_modifier::add_weapon_focus | start");
         if let Ok(weapon_focus) = query_attacker.get(attack_data.attacker) {
             let weapon = query_weapon.get(attack_data.weapon_slot.entity).unwrap();

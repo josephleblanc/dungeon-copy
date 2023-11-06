@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use super::{
-    ac_modifier::{ACModEvent, ACModList},
+    armor_class_modifier::{ACModEvent, ACModList},
     AttackData,
 };
 
@@ -17,7 +17,7 @@ pub struct ACBonusSumEvent {
 
 /// Collects the various AC modifiers from the systems which manage those modifiers and send out
 /// events with their individual bonuses.
-pub fn sum_ac_modifiers(
+pub fn sum_armor_class_modifiers(
     mut ac_mod_events: EventReader<ACModEvent>,
     mut ac_mod_finished: EventWriter<ACBonusSumEvent>,
 ) {
@@ -25,7 +25,7 @@ pub fn sum_ac_modifiers(
     let ac_mod_list: ACModList = ac_mod_events.into_iter().map(|event| (**event)).collect();
     if !ac_mod_list.is_empty() {
         if debug {
-            println!("debug | armor_class::sum_ac_modifiers | start");
+            println!("debug | armor_class::sum_armor_class_modifiers | start");
         }
         let attack_data = ac_mod_list.verified_data().unwrap();
         let sum_event = ACBonusSumEvent {

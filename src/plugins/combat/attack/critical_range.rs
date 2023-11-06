@@ -1,29 +1,29 @@
 use bevy::prelude::*;
 
 use super::{
-    critical_range_modifier::{CritThreatModEvent, CritThreatModList},
+    critical_range_modifier::{CritRangeModEvent, CritRangeModList},
     AttackData,
 };
 
 #[derive(Copy, Clone, Event, Deref)]
-pub struct CritThreatModSumEvent {
+pub struct CritRangeModSumEvent {
     pub attack_data: AttackData,
     #[deref]
     pub total_crit_range: [usize; 2],
 }
 
-impl CritThreatModSumEvent {
+impl CritRangeModSumEvent {
     pub fn lower_crit(&self) -> usize {
         self.total_crit_range[0]
     }
 }
 
 pub fn sum_crit_range_mods(
-    mut crit_range_mods_reader: EventReader<CritThreatModEvent>,
-    mut crit_range_mod_finished: EventWriter<CritThreatModSumEvent>,
+    mut crit_range_mods_reader: EventReader<CritRangeModEvent>,
+    mut crit_range_mod_finished: EventWriter<CritRangeModSumEvent>,
 ) {
     let debug = false;
-    let crit_range_mod_list: CritThreatModList = crit_range_mods_reader
+    let crit_range_mod_list: CritRangeModList = crit_range_mods_reader
         .into_iter()
         .map(|event| (**event))
         .collect();
@@ -40,7 +40,7 @@ pub fn sum_crit_range_mods(
                 total_crit_range
             );
         }
-        let sum_event = CritThreatModSumEvent {
+        let sum_event = CritRangeModSumEvent {
             attack_data,
             total_crit_range,
         };

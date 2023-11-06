@@ -8,14 +8,14 @@ use crate::{
 use crate::plugins::combat::attack::{AttackData, AttackDataEvent};
 
 #[derive(Copy, Clone, Debug)]
-pub struct CritThreatMod {
+pub struct CritRangeMod {
     pub val: usize,
     pub source: CritThreatBonusSource,
     pub bonus_type: CritThreatBonusType,
     pub attack_data: AttackData,
 }
 
-impl CritThreatMod {
+impl CritRangeMod {
     pub fn base(attack_data: AttackData, attacker_weapon_stats: &Weapon) -> Self {
         Self {
             val: attacker_weapon_stats.crit_threat_lower(),
@@ -47,17 +47,17 @@ impl CritThreatBonusType {
 }
 
 #[derive(Event, Clone, Copy, Deref, DerefMut)]
-pub struct CritThreatModEvent(CritThreatMod);
+pub struct CritRangeModEvent(CritRangeMod);
 
 #[derive(Debug, Deref)]
-pub struct CritThreatModList(Vec<CritThreatMod>);
+pub struct CritRangeModList(Vec<CritRangeMod>);
 
-impl CritThreatModList {
-    fn new() -> CritThreatModList {
-        CritThreatModList(Vec::new())
+impl CritRangeModList {
+    fn new() -> CritRangeModList {
+        CritRangeModList(Vec::new())
     }
 
-    fn add(&mut self, elem: CritThreatMod) {
+    fn add(&mut self, elem: CritRangeMod) {
         self.0.push(elem);
     }
 
@@ -102,13 +102,13 @@ impl CritThreatModList {
 
     pub fn verified_data(&self) -> Result<AttackData, &'static str> {
         if self.is_empty() {
-            Err("Attempted to verify an empty list of CritThreatModList. \
-                CritThreatModList must have at least one element")
+            Err("Attempted to verify an empty list of CritRangeModList. \
+                CritRangeModList must have at least one element")
         } else if self
             .iter()
             .any(|crit_threat_mod| crit_threat_mod.attack_data != self[0].attack_data)
         {
-            Err("Mismatched data in CritThreatModList")
+            Err("Mismatched data in CritRangeModList")
         } else {
             Ok(self[0].attack_data)
         }
@@ -158,9 +158,9 @@ fn debug_sum_non_stackable(bonus_type: CritThreatBonusType, total: usize) {
     );
 }
 
-impl FromIterator<CritThreatMod> for CritThreatModList {
-    fn from_iter<I: IntoIterator<Item = CritThreatMod>>(iter: I) -> Self {
-        let mut c = CritThreatModList::new();
+impl FromIterator<CritRangeMod> for CritRangeModList {
+    fn from_iter<I: IntoIterator<Item = CritRangeMod>>(iter: I) -> Self {
+        let mut c = CritRangeModList::new();
 
         for i in iter {
             c.add(i);
@@ -172,10 +172,10 @@ impl FromIterator<CritThreatMod> for CritThreatModList {
 
 /// Adds the base critical threat range for the weapon used in an attack.
 /// This system exists to make sure `critical_range::sum_crit_range_mods` has at least one
-/// `CritThreatModEvent` to receive and run.
+/// `CritRangeModEvent` to receive and run.
 pub fn base(
     mut attack_data_event: EventReader<AttackDataEvent>,
-    mut crit_mod_writer: EventWriter<CritThreatModEvent>,
+    mut crit_mod_writer: EventWriter<CritRangeModEvent>,
     weapon_query: Query<&Weapon>,
 ) {
     for attack_data in attack_data_event.into_iter() {
@@ -183,7 +183,7 @@ pub fn base(
 
         let weapon = weapon_query.get(attack_data.weapon_slot.entity).unwrap();
 
-        crit_mod_writer.send(CritThreatModEvent(CritThreatMod::base(
+        crit_mod_writer.send(CritRangeModEvent(CritRangeMod::base(
             **attack_data,
             weapon,
         )));
@@ -194,7 +194,7 @@ pub fn base(
 /// This will only run if the attacker entity has the `ImporovedCritical` feat as a component.
 pub fn improved_critical(
     mut attack_data_event: EventReader<AttackDataEvent>,
-    mut crit_mod_writer: EventWriter<CritThreatModEvent>,
+    mut crit_mod_writer: EventWriter<CritRangeModEvent>,
     attacker_query: Query<&ImprovedCritical, With<ActionPriority>>,
     weapon_query: Query<&Weapon>,
 ) {
@@ -203,7 +203,7 @@ pub fn improved_critical(
         let weapon = weapon_query.get(attack_data.weapon_slot.entity).unwrap();
         if let Ok(improved_critical) = attacker_query.get(attack_data.attacker) {
             if let Some(modifier) = improved_critical.to_crit_range_mod(**attack_data, weapon) {
-                crit_mod_writer.send(CritThreatModEvent(modifier));
+                crit_mod_writer.send(CritRangeModEvent(modifier));
             }
         }
     }

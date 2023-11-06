@@ -20,6 +20,7 @@ impl BonusType {
 
 #[derive(Copy, Clone, Debug)]
 pub enum BonusSource {
+    Base,
     Strength,
     Dexterity,
     WeaponFocus,

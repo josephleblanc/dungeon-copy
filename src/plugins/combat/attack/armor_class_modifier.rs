@@ -52,39 +52,60 @@ impl From<ACModEvent> for ACMod {
     }
 }
 
+/// The base modifer of 0 is sent to ensure that `armor_class::sum_armor_class_modifiers` has at
+/// least one event so it will run.
+pub fn base(
+    mut attack_data_event: EventReader<AttackDataEvent>,
+    mut event_writer: EventWriter<ACModEvent>,
+) {
+    let debug = false;
+    for attack_data in attack_data_event.into_iter() {
+        if debug {
+            println!("debug | armor_class_modifier::base | start");
+        }
+        let armor_class_modifier = ACMod {
+            val: 0,
+            source: BonusSource::Base,
+            bonus_type: BonusType::Untyped,
+            attack_data: **attack_data,
+        };
+
+        event_writer.send(armor_class_modifier.into());
+    }
+}
+
+/// Add the dexterity modifier to armor class, if applicable.
 pub fn add_dexterity(
-    mut ac_event: EventReader<ACBonusEvent>,
     mut attack_data_event: EventReader<AttackDataEvent>,
     mut event_writer: EventWriter<ACModEvent>,
     defender_query: Query<&Dexterity>,
 ) {
     let debug = false;
-    // TODO: This could be .into_iter().next() to avoid the clone. Mess around with it.
-    for (attack_data, _ac) in attack_data_event.into_iter().zip(ac_event.into_iter()) {
+    for attack_data in attack_data_event.into_iter() {
         if debug {
-            println!("debug | ac_modifier::add_dexterity | start");
+            println!("debug | armor_class_modifier::add_dexterity | start");
         }
         if let Ok(dexterity) = defender_query.get(attack_data.defender) {
-            let mut ac_modifier = ACMod {
+            let mut armor_class_modifier = ACMod {
                 val: 0,
                 source: BonusSource::Dexterity,
                 bonus_type: BonusType::Untyped,
                 attack_data: **attack_data,
             };
-            ac_modifier.add_attribute_bonus(*dexterity);
+            armor_class_modifier.add_attribute_bonus(*dexterity);
             if debug {
-                debug_add_dexterity(ac_modifier);
+                debug_add_dexterity(armor_class_modifier);
             }
 
-            event_writer.send(ac_modifier.into());
+            event_writer.send(armor_class_modifier.into());
         }
     }
 }
 
-fn debug_add_dexterity(ac_modifier: ACMod) {
+fn debug_add_dexterity(armor_class_modifier: ACMod) {
     println!(
         "{:>6}|{:>28}| dexterity bonus added: {}",
-        "", "", ac_modifier.val
+        "", "", armor_class_modifier.val
     );
 }
 
