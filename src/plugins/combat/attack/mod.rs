@@ -1,21 +1,21 @@
 use bevy::prelude::*;
 
-use self::armor_class::{sum_armor_class_modifiers, ACBonusEvent, ACBonusSumEvent};
-use self::attack_roll::{sum_attack_modifier, AttackBonusEvent, AttackBonusSumEvent};
+use self::armor_class::{sum_armor_class_modifiers, ACBonusSumEvent};
+use self::attack_roll::{sum_attack_modifier, AttackBonusSumEvent};
 use self::crit_multiplier::{sum_crit_multiplier, CritMultiplier, CritMultiplierSumEvent};
 use self::critical_range::{sum_crit_range_mods, CritRangeModSumEvent};
+use crate::plugins::combat::CompleteAttack;
 use crate::plugins::item::equipment::weapon::EquippedWeapons;
 use crate::plugins::player::attacks::IterativeAttack;
 use crate::plugins::player::equipment::{WeaponSlot, WeaponSlotName};
+use crate::plugins::{
+    interact::{InteractingPos, InteractingType},
+    player::control::ActionPriority,
+};
 use crate::resources::dice::Dice;
 use crate::scenes::SceneState;
-use crate::{
-    components::attack_bonus::BaseAttackBonus,
-    plugins::{
-        interact::{InteractingPos, InteractingType},
-        player::control::ActionPriority,
-    },
-};
+
+use super::CompleteAttackEvent;
 
 pub mod armor_class;
 pub mod armor_class_modifier;
@@ -25,8 +25,6 @@ pub mod crit_multiplier;
 pub mod crit_multiplier_modifier;
 pub mod critical_range;
 pub mod critical_range_modifier;
-pub mod damage;
-pub mod damage_modifier;
 
 #[derive(Clone, Hash, Debug, PartialEq, Eq, SystemSet)]
 pub struct AttackModifier;
@@ -34,8 +32,8 @@ pub struct AttackModifier;
 #[derive(Clone, Hash, Debug, PartialEq, Eq, SystemSet)]
 pub struct SumRollModifier;
 
-#[derive(Clone, Hash, Debug, PartialEq, Eq, SystemSet)]
-pub struct AttackRollComplete;
+// #[derive(Clone, Hash, Debug, PartialEq, Eq, SystemSet)]
+// pub struct AttackRollComplete;
 
 pub struct AttackPlugin;
 
@@ -44,11 +42,9 @@ impl Plugin for AttackPlugin {
         app.add_event::<StartAttack>()
             .add_event::<AttackDataEvent>()
             // AC-related Events
-            // .add_event::<armor_class::ACBonusEvent>()
             .add_event::<armor_class::ACBonusSumEvent>()
             .add_event::<armor_class_modifier::ACModEvent>()
             // Attack roll related events
-            // .add_event::<attack_roll::AttackBonusEvent>()
             .add_event::<attack_roll::AttackBonusSumEvent>()
             .add_event::<attack_roll_modifier::AttackModEvent>()
             // Critical Threat related events
@@ -56,21 +52,15 @@ impl Plugin for AttackPlugin {
             .add_event::<critical_range::CritRangeModSumEvent>()
             // Crit Multiplier related events
             .add_event::<crit_multiplier_modifier::CritMultiplierModEvent>()
-            .add_event::<crit_multiplier::CritMultiplierSumEvent>()
-            // Attack outcome and associated data
-            .add_event::<CompleteAttackEvent>();
+            .add_event::<crit_multiplier::CritMultiplierSumEvent>();
 
         app.configure_set(Update, AttackModifier.after(check_attack_conditions));
         app.configure_set(Update, SumRollModifier.after(AttackModifier));
-        app.configure_set(Update, AttackRollComplete.after(SumRollModifier));
+        // app.configure_set(Update, AttackRollComplete.after(SumRollModifier));
 
         app.add_systems(
             Update,
-            (
-                check_attack_conditions,
-                // start_attack.after(check_attack_conditions),
-            )
-                .run_if(in_state(SceneState::InGameClassicMode)),
+            (check_attack_conditions,).run_if(in_state(SceneState::InGameClassicMode)),
         );
 
         app.add_systems(
@@ -99,7 +89,7 @@ impl Plugin for AttackPlugin {
                 .in_set(SumRollModifier),
         );
 
-        app.add_systems(Update, evaluate_complete_attack.in_set(AttackRollComplete));
+        app.add_systems(Update, evaluate_complete_attack.after(SumRollModifier));
     }
 }
 
@@ -179,29 +169,6 @@ pub fn check_attack_conditions(
     }
 }
 
-/// start_attack runs when the conditions for an attack have been met in `check_attack_conditions`.
-/// Then it sends two events, one to start the systems calculating the total of the attack modifiers,
-/// another to the systems calculating the ac of the defender.
-/// There are multiple systems which check whether each modifier should be applied to ac and attack,
-/// and then send an event listened to by `sum_attack_modifier`.
-pub fn start_attack(
-    mut start_attack_events: EventReader<StartAttack>,
-    mut attack_event_writer: EventWriter<AttackBonusEvent>,
-    mut ac_event_writer: EventWriter<ACBonusEvent>,
-) {
-    let debug = false;
-    if !start_attack_events.is_empty() {
-        start_attack_events.clear();
-
-        if debug {
-            println!("debug | attack::start_attack | start");
-        }
-
-        attack_event_writer.send(AttackBonusEvent);
-        ac_event_writer.send(ACBonusEvent);
-    }
-}
-
 #[derive(Debug, Copy, Clone, PartialEq)]
 /// AttackOutcome is the enum which describes the outcome of an attack roll, with modifiers
 /// applied, against a valid target.
@@ -211,24 +178,6 @@ pub enum AttackOutcome {
     Hit,
     Miss,
     CritMiss,
-}
-
-#[derive(Event, Copy, Clone, Deref)]
-/// AttackRollEvent is the event sent out by `attack_roll`, and includes the outcome of an attack
-/// against a valid target. This event is listened to by `start_damage`, which is the gatekeeper
-/// for the systems which calculate the attack's damage.
-pub struct CompleteAttackEvent(CompleteAttack);
-
-#[derive(Copy, Clone)]
-pub struct CompleteAttack {
-    outcome: AttackOutcome,
-    attack_modifier: isize,
-    crit_range_lower: usize,
-    crit_multiplier: CritMultiplier,
-    roll_raw: usize,
-    roll_total: isize,
-    defender_ac: isize,
-    attack_data: AttackData,
 }
 
 /// `complete_attack` is the system which takes the sums of the attack bonus, critical threat, and
@@ -250,16 +199,6 @@ pub fn evaluate_complete_attack(
         .zip(atk_mod_finished.into_iter())
         .zip(crit_range_mod_finished.into_iter())
         .zip(crit_multiplier_mod_finished.into_iter())
-        .inspect(|((((data, ac), atk), crit_r), crit_m)| {
-            let ac = ***data == ac.attack_data;
-            let atk = ***data == atk.attack_data;
-            let crit_r = ***data == crit_r.attack_data;
-            let crit_m = ***data == crit_m.attack_data;
-            println!(
-                "inspecting: ac {}, atk {}, crit_r {}, crit_m {}",
-                ac, atk, crit_r, crit_m
-            );
-        })
         .filter(|((((data, ac), atk), crit_r), crit_m)| {
             ***data == ac.attack_data
                 && ***data == atk.attack_data
@@ -318,6 +257,33 @@ pub fn debug_complete_attack_event(mut attack_roll_event_reader: EventReader<Com
             println!("attack roll outcome: {:?}", event.outcome);
         }
     }
+}
+
+fn debug_evaluate_attack_complete(
+    mut attack_data_event: EventReader<'_, '_, AttackDataEvent>,
+    mut ac_mod_finished: EventReader<'_, '_, ACBonusSumEvent>,
+    mut atk_mod_finished: EventReader<'_, '_, AttackBonusSumEvent>,
+    mut crit_range_mod_finished: EventReader<'_, '_, CritRangeModSumEvent>,
+    mut crit_multiplier_mod_finished: EventReader<'_, '_, CritMultiplierSumEvent>,
+) {
+    for ((((attack_data, ac_mod), atk_mod), crit_range_mod), crit_multiplier) in attack_data_event
+        .into_iter()
+        .zip(ac_mod_finished.into_iter())
+        .zip(atk_mod_finished.into_iter())
+        .zip(crit_range_mod_finished.into_iter())
+        .zip(crit_multiplier_mod_finished.into_iter())
+        .inspect(|((((data, ac), atk), crit_r), crit_m)| {
+            let ac = ***data == ac.attack_data;
+            let atk = ***data == atk.attack_data;
+            let crit_r = ***data == crit_r.attack_data;
+            let crit_m = ***data == crit_m.attack_data;
+            println!(
+                "debug | evaluate_complete_attack | inspecting iterator: \
+                \n\tcheck that attack_data is equal: ac {}, atk {}, crit_r {}, crit_m {}",
+                ac, atk, crit_r, crit_m
+            );
+        })
+    {}
 }
 
 fn debug_complete_attack(

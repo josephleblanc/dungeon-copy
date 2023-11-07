@@ -5,21 +5,6 @@ use crate::plugins::combat::attack::{
     AttackData,
 };
 
-#[derive(Copy, Clone, Event)]
-/// AttackBonusEvent is sent by `start_attack` and listened for by all of the systems in the
-/// `attack_modifier` mod. This event is the signal for all of the systems which check to see if
-/// they can apply an attack modifier to an attack should be run.
-/// Since this event is sent by one system and listened to by many, it is important for the system
-/// scheduling to ensure that all of the systems which listen for it run after this event is sent.
-/// If not, logic errors could pop up - for example, if two attacks different attacks occured in
-/// consecutive frames, then the bonuses from one attack might try to be added to another.
-pub struct AttackBonusEvent;
-// pub struct AttackBonusEvent {
-//     pub attacker: Entity,
-//     pub defender: Entity,
-//     pub attacker_weapon: Entity,
-// }
-
 #[derive(Copy, Clone, Event, Deref)]
 pub struct AttackBonusSumEvent {
     pub attack_data: AttackData,

@@ -11,7 +11,6 @@ use crate::{
     plugins::{combat::bonus::BonusType, player::control::ActionPriority},
 };
 
-use super::attack_roll::AttackBonusEvent;
 use super::{AttackData, AttackDataEvent};
 
 // TODO: Add a corresponding trait for this, then impl it for all the modifiers,
@@ -72,7 +71,7 @@ pub fn base_attack_bonus(
     // .zip(attack_bonus_event.iter())
     {
         if debug {
-            println!("debug | attack_modifier::add_strength | start");
+            println!("debug | attack_modifier::add_bab | start");
         }
         let attacker_bab = bab_query.get(attack_data.attacker).unwrap();
         let attack_modifier = AttackMod {
@@ -91,7 +90,7 @@ pub fn base_attack_bonus(
 
 fn debug_base_attack_bonus(attack_modifier: AttackMod) {
     println!(
-        "{:>6}|{:>31}| attacker_bab: {}",
+        "{:>6}|{:>26}| attacker_bab: {}",
         " ", " ", attack_modifier.val
     );
 }

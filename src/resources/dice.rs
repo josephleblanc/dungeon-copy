@@ -40,7 +40,18 @@ impl Dice {
         roll_die.next().unwrap()
     }
 
-    pub fn roll_multiple<R: Rng + ?Sized, const N: usize>(self, rng: &mut R) -> [usize; N] {
+    pub fn roll_n<R: Rng + ?Sized>(self, rng: &mut R, mut rolls: usize) -> usize {
+        let die_range: Uniform<usize> = self.into();
+        let mut roll_die = rng.sample_iter(die_range);
+        let mut total: usize = 0;
+        while rolls > 0 {
+            total += roll_die.next().unwrap();
+            rolls -= 1;
+        }
+        total
+    }
+
+    pub fn roll_const<R: Rng + ?Sized, const N: usize>(self, rng: &mut R) -> [usize; N] {
         let mut rolls: [usize; N] = [1; N];
 
         let die_range: Uniform<usize> = self.into();

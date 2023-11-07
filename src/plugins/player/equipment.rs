@@ -8,6 +8,7 @@ pub enum WeaponSlotName {
     TwoHanded,
     MainHand,
     OffHand,
+    NaturalOnly,
     NaturalPrimary,
     NaturalSecondary,
 }

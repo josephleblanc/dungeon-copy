@@ -5,16 +5,17 @@ pub enum BonusType {
     Morale,
     Size,
     Dodge,
+    Strength,
     Untyped, // more here
 }
 
 impl BonusType {
-    pub fn stackable() -> [BonusType; 2] {
-        [BonusType::Dodge, BonusType::Untyped]
+    pub fn stackable() -> [Self; 2] {
+        [Self::Dodge, Self::Untyped]
     }
 
-    pub fn non_stackable() -> [BonusType; 1] {
-        [BonusType::Morale]
+    pub fn non_stackable() -> [Self; 2] {
+        [Self::Morale, Self::Strength]
     }
 }
 

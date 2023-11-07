@@ -5,9 +5,6 @@ use super::{
     AttackData,
 };
 
-#[derive(Copy, Clone, Event)]
-pub struct ACBonusEvent;
-
 #[derive(Copy, Clone, Event, Deref)]
 pub struct ACBonusSumEvent {
     pub attack_data: AttackData,

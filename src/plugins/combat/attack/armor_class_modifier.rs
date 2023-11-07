@@ -5,7 +5,7 @@ use crate::{
     plugins::combat::bonus::{BonusSource, BonusType},
 };
 
-use super::{armor_class::ACBonusEvent, AttackData, AttackDataEvent};
+use super::{AttackData, AttackDataEvent};
 
 #[derive(Copy, Clone, Debug)]
 pub struct ACMod {
