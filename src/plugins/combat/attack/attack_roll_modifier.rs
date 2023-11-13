@@ -2,6 +2,7 @@ use bevy::prelude::*;
 
 use crate::components::attack_bonus::BaseAttackBonus;
 use crate::plugins::combat::bonus::BonusSource;
+use crate::plugins::combat::{AttackData, AttackDataEvent};
 use crate::resources::equipment::weapon::Weapon;
 use crate::{
     components::{
@@ -10,8 +11,6 @@ use crate::{
     },
     plugins::{combat::bonus::BonusType, player::control::ActionPriority},
 };
-
-use super::{AttackData, AttackDataEvent};
 
 // TODO: Add a corresponding trait for this, then impl it for all the modifiers,
 // and use that to make the systems to track them.
@@ -139,7 +138,9 @@ pub fn add_weapon_focus(
 ) {
     let debug = false;
     for attack_data in attack_data_event.iter() {
-        println!("debug | attack_modifier::add_weapon_focus | start");
+        if debug {
+            println!("debug | attack_modifier::add_weapon_focus | start");
+        }
         if let Ok(weapon_focus) = query_attacker.get(attack_data.attacker) {
             let weapon = query_weapon.get(attack_data.weapon_slot.entity).unwrap();
             if weapon_focus.contains(&weapon.weapon_name) {

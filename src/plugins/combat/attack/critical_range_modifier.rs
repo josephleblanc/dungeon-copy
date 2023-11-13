@@ -5,7 +5,7 @@ use crate::{
     resources::equipment::weapon::Weapon,
 };
 
-use crate::plugins::combat::attack::{AttackData, AttackDataEvent};
+use crate::plugins::combat::{AttackData, AttackDataEvent};
 
 #[derive(Copy, Clone, Debug)]
 pub struct CritRangeMod {
@@ -179,14 +179,11 @@ pub fn base(
     weapon_query: Query<&Weapon>,
 ) {
     for attack_data in attack_data_event.into_iter() {
-        println!("debug | critical_range_mod::base | start base");
+        // println!("debug | critical_range_mod::base | start base");
 
         let weapon = weapon_query.get(attack_data.weapon_slot.entity).unwrap();
 
-        crit_mod_writer.send(CritRangeModEvent(CritRangeMod::base(
-            **attack_data,
-            weapon,
-        )));
+        crit_mod_writer.send(CritRangeModEvent(CritRangeMod::base(**attack_data, weapon)));
     }
 }
 
@@ -198,8 +195,11 @@ pub fn improved_critical(
     attacker_query: Query<&ImprovedCritical, With<ActionPriority>>,
     weapon_query: Query<&Weapon>,
 ) {
+    let debug = false;
     for attack_data in attack_data_event.iter() {
-        println!("debug | critical_range_mod::base | start improved_critical");
+        if debug {
+            println!("debug | critical_range_mod::base | start improved_critical");
+        }
         let weapon = weapon_query.get(attack_data.weapon_slot.entity).unwrap();
         if let Ok(improved_critical) = attacker_query.get(attack_data.attacker) {
             if let Some(modifier) = improved_critical.to_crit_range_mod(**attack_data, weapon) {

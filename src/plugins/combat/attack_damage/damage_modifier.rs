@@ -5,26 +5,29 @@ use std::cmp::Ordering;
 use crate::{
     components::attributes::{Attribute, Strength},
     plugins::{
-        combat::{attack::AttackData, bonus::BonusType, CompleteAttackEvent},
+        combat::{bonus::BonusType, damage::DamageType, AttackData, AttackDataEvent},
         player::equipment::WeaponSlotName,
     },
-    resources::dice::Dice,
+    resources::{
+        dice::Dice,
+        equipment::weapon::{self, Weapon},
+    },
 };
 
 use super::damage::DamageBonusSource;
 
-#[derive(Copy, Clone, Deref, DerefMut)]
+#[derive(Debug, Copy, Clone)]
 pub struct AttackDamageMod {
-    #[deref]
-    val: isize,
-    attack_data: AttackData,
-    bonus_type: BonusType,
-    bonus_source: DamageBonusSource,
-    damage_crit_type: DamageCritType,
-    damage_dice: Option<DamageDice>,
+    pub val: isize,
+    pub attack_data: AttackData,
+    pub bonus_type: BonusType,
+    pub damage_type: DamageType,
+    pub bonus_source: DamageBonusSource,
+    pub on_crit: OnCrit,
+    pub damage_dice: Option<DamageDice>,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct DamageDice {
     dice: Dice,
     dice_rolls: usize,
@@ -46,9 +49,9 @@ impl DamageDice {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 /// The way this damage interacts with criticals hits.
-pub enum DamageCritType {
+pub enum OnCrit {
     /// The damage is only applied on a critical hit.
     OnlyOn,
     /// The damage can be multiplied on a critical hit.
@@ -63,53 +66,84 @@ impl AttackDamageMod {
     }
 }
 
-#[derive(Event, Copy, Clone)]
+#[derive(Event, Copy, Clone, Deref, DerefMut)]
 pub struct AttackDamageModEvent(AttackDamageMod);
 
 pub fn base(
-    mut attack_reader: EventReader<CompleteAttackEvent>,
+    mut attack_reader: EventReader<AttackDataEvent>,
     mut damage_mod_writer: EventWriter<AttackDamageModEvent>,
 ) {
     for attack in attack_reader.into_iter() {
         let damage_mod = AttackDamageMod {
+            damage_type: DamageType::Weapon,
             val: 0,
-            attack_data: attack.attack_data,
+            attack_data: **attack,
             bonus_type: BonusType::Untyped,
             bonus_source: DamageBonusSource::Base,
-            damage_crit_type: DamageCritType::CannotMultiply,
+            on_crit: OnCrit::CannotMultiply,
             damage_dice: None,
+        };
+        damage_mod_writer.send(AttackDamageModEvent(damage_mod));
+    }
+}
+
+pub fn weapon(
+    mut attack_reader: EventReader<AttackDataEvent>,
+    mut damage_mod_writer: EventWriter<AttackDamageModEvent>,
+    weapon_query: Query<&Weapon>,
+) {
+    for data in attack_reader.into_iter() {
+        let weapon = weapon_query.get(data.weapon_slot.entity).unwrap();
+        let damage_dice = DamageDice {
+            dice: weapon.damage_dice,
+            dice_rolls: weapon.dice_rolls,
+            bonus_per_roll: 0,
+        };
+
+        // TODO: Add a way for weapons with variable damage types, like Slashing/Piercing, to do
+        // the type of damage which the opponent does not have any DR for, once DR is implemented.
+        let damage_mod = AttackDamageMod {
+            damage_type: DamageType::Weapon,
+            val: 0,
+            attack_data: **data,
+            bonus_type: BonusType::Untyped,
+            bonus_source: DamageBonusSource::Weapon,
+            on_crit: OnCrit::CanMultiply,
+            damage_dice: Some(damage_dice),
         };
         damage_mod_writer.send(AttackDamageModEvent(damage_mod));
     }
 }
 
 pub fn add_strength(
-    mut attack_reader: EventReader<CompleteAttackEvent>,
+    mut attack_reader: EventReader<AttackDataEvent>,
     mut damage_mod_writer: EventWriter<AttackDamageModEvent>,
     query_attacker: Query<&Strength>,
 ) {
     for attack in attack_reader.into_iter() {
         let mut damage_mod = AttackDamageMod {
+            damage_type: DamageType::Weapon,
             val: 0,
-            attack_data: attack.attack_data,
+            attack_data: **attack,
             bonus_type: BonusType::Strength,
             bonus_source: DamageBonusSource::Strength,
-            damage_crit_type: DamageCritType::CanMultiply,
+            on_crit: OnCrit::CanMultiply,
             damage_dice: None,
         };
-        let strength = query_attacker.get(attack.attack_data.attacker).unwrap();
-        *damage_mod = match attack.attack_data.weapon_slot.slot {
+        let strength = query_attacker.get(attack.attacker).unwrap();
+        damage_mod.val = match attack.weapon_slot.slot {
             WeaponSlotName::TwoHanded | WeaponSlotName::NaturalOnly => {
                 strength.bonus() + strength.bonus() / 2
             }
             WeaponSlotName::OffHand | WeaponSlotName::NaturalSecondary => strength.bonus() / 2,
             _ => strength.bonus(),
         };
+        // println!("||| strength mod | damage_mod.val: {}", damage_mod.val);
         damage_mod_writer.send(AttackDamageModEvent(damage_mod));
     }
 }
 
-#[derive(Deref, DerefMut)]
+#[derive(Deref, DerefMut, Clone, Debug)]
 pub struct AttackDamageModList(Vec<AttackDamageMod>);
 
 impl AttackDamageModList {
@@ -120,44 +154,88 @@ impl AttackDamageModList {
     fn add(&mut self, elem: AttackDamageMod) {
         self.0.push(elem);
     }
-
-    fn sum_stackable(&self) -> isize {
-        let debug = false;
-        let mut total = 0;
-        for bonus_type in BonusType::stackable() {
-            total += self
-                .iter()
-                .filter(|dmg_mod| dmg_mod.bonus_type == bonus_type)
-                .fold(0, |acc, x| acc + x.val);
-            if debug {
-                debug_sum_stackable(bonus_type, total);
-            }
-        }
-        total
-    }
-
-    fn sum_non_stackable(&self) -> isize {
-        let debug = false;
-        let mut total = 0;
-        for bonus_type in BonusType::non_stackable() {
-            if let Some(highest_modifier) = self
-                .iter()
-                .filter(|dmg_mod| dmg_mod.bonus_type == bonus_type)
-                .max_by(|x, y| x.val.cmp(&y.val))
-            {
-                total += highest_modifier.val;
-                if debug {
-                    debug_sum_non_stackable(bonus_type, total);
-                }
-            }
-        }
-        total
-    }
-
     pub fn sum_all(&self) -> isize {
-        self.sum_stackable() + self.sum_non_stackable()
+        let mut total_stackable: isize = 0;
+        let mut total_non_stackable: isize = 0;
+        for bonus_type in BonusType::stackable() {
+            total_stackable += self
+                .iter()
+                // .inspect(|dmg_mod| {
+                //     println!(
+                //         "debug | damage::SumStackable::sum_stackable | checking {:?}\
+                //         val: {}\
+                //         dice: {:?}\
+                //         dice.roll(): {:?}",
+                //         dmg_mod.bonus_type,
+                //         dmg_mod.val,
+                //         dmg_mod.damage_dice,
+                //         if dmg_mod.damage_dice.is_some() {
+                //             Some(dmg_mod.damage_dice.unwrap().roll())
+                //         } else {
+                //             None
+                //         }
+                //     )
+                // })
+                .filter(|dmg_mod| {
+                    // println!(
+                    //     "||| dmg_mod.bonus_type == bonus_type: {}, \
+                    // bonus_type: {:?}, dmg_mod.bonus_type: {:?}",
+                    //     dmg_mod.bonus_type == bonus_type,
+                    //     bonus_type,
+                    //     dmg_mod.bonus_type,
+                    // );
+                    dmg_mod.bonus_type == bonus_type
+                })
+                .fold(0, |acc, x| {
+                    let new_val = acc
+                        + x.val
+                        + if let Some(dice) = x.damage_dice {
+                            dice.roll() as isize
+                        } else {
+                            0
+                        };
+                    // println!("|||> sum_stackable new_val: {}", new_val);
+                    new_val
+                });
+        }
+        for bonus_type in BonusType::non_stackable() {
+            total_non_stackable += if let Some(total) = self
+                .iter()
+                // .inspect(|dmg_mod| {
+                //     println!(
+                //         "debug | damage_modifier::DamageModList::sum_non_stackable iterator | checking {:?}",
+                //         dmg_mod.bonus_type
+                //     )
+                // })
+                .filter(|dmg_mod| {
+                    // println!(
+                    //     "||| dmg_mod.bonus_type == bonus_type: {}, \
+                    // bonus_type: {:?}, dmg_mod.bonus_type: {:?}",
+                    //     dmg_mod.bonus_type == bonus_type,
+                    //     bonus_type,
+                    //     dmg_mod.bonus_type,
+                    // );
+                    dmg_mod.bonus_type == bonus_type
+                })
+                .map(|x| {
+                    let new_val = x.val
+                        + if let Some(dice) = x.damage_dice {
+                            dice.roll() as isize
+                        } else {
+                            0
+                        };
+                    // println!("new_val: {}", new_val);
+                    new_val
+                })
+                .max_by(|x, y| x.cmp(y))
+            {
+                total
+            } else {
+                0
+            };
+        }
+        total_stackable + total_non_stackable
     }
-
     pub fn verified_data(&self) -> Result<AttackData, &'static str> {
         if self.is_empty() {
             Err("Attempted to verify an empty list of AttackDamageMods. \
@@ -173,26 +251,24 @@ impl AttackDamageModList {
     }
 }
 
-fn debug_sum_non_stackable(bonus_type: BonusType, total: isize) {
-    println!(
-        "debug | attack_modifier::sum_non_stackable| bonus type: {:?}, total: {}",
-        bonus_type, total
-    );
-}
-
-fn debug_sum_stackable(bonus_type: BonusType, total: isize) {
-    println!(
-        "debug | attack_modifier::sum_stackable| bonus type: {:?}, total: {}",
-        bonus_type, total
-    );
-}
-
 impl FromIterator<AttackDamageMod> for AttackDamageModList {
     fn from_iter<I: IntoIterator<Item = AttackDamageMod>>(iter: I) -> Self {
         let mut c = AttackDamageModList::new();
 
         for i in iter {
             c.add(i);
+        }
+
+        c
+    }
+}
+
+impl<'a> FromIterator<&'a AttackDamageMod> for AttackDamageModList {
+    fn from_iter<I: IntoIterator<Item = &'a AttackDamageMod>>(iter: I) -> Self {
+        let mut c = AttackDamageModList::new();
+
+        for i in iter {
+            c.add(*i);
         }
 
         c

@@ -1,3 +1,4 @@
+pub mod alignment;
 pub mod armor_class;
 pub mod attack_bonus;
 pub mod attributes;

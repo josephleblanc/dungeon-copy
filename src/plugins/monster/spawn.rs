@@ -1,4 +1,6 @@
 use crate::config::TILE_SIZE;
+use crate::plugins::combat::attack_damage::damage_reduction::{DRSource, DRTypes, DamageReduction};
+use crate::plugins::combat::attack_damage::damage_reduction_modifier::BarbarianDR;
 use crate::plugins::interact::{Interactable, InteractingType};
 use crate::plugins::monster::animation::MonsterAnimationComponent;
 use crate::plugins::monster::collisions::MonsterBox;
@@ -67,7 +69,13 @@ pub fn spawn_training_dummy(
             interactable_box_upper,
             InteractingType::Enemy,
         ))
-        .insert(Name::new(component_name));
+        .insert(Name::new(component_name))
+        .insert(BarbarianDR::new(DamageReduction {
+            dr_val: 3,
+            reduction_source: DRSource::Barbarian,
+            damage_types: DRTypes::all(),
+            overcome: None,
+        }));
 }
 
 fn get_texture(monster: &Monster, ingame_materials: &InGameMaterials) -> TextureAtlas {

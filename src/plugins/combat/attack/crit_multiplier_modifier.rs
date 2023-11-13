@@ -2,7 +2,9 @@
 use bevy::prelude::*;
 use std::slice::Iter;
 
-use super::{crit_multiplier::CritMultiplier, AttackData, AttackDataEvent};
+use crate::plugins::combat::{AttackData, AttackDataEvent};
+
+use super::crit_multiplier::CritMultiplier;
 
 #[derive(Copy, Clone, Debug)]
 pub struct CritMultiplierMod {

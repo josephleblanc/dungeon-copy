@@ -3,7 +3,8 @@ Armory({
       weapon_name: Longsword,
       attack_bonus: 0,
       damage_bonus: 0,
-      base_damage_dice: D8,
+      damage_dice: D8,
+      dice_rolls: 1,
       crit_threat_range: ( 19, 20 ),
       reach: ( 5 ),
       crit_multiplier: X2,
@@ -11,7 +12,7 @@ Armory({
       thrown: false,
       racial_group: Some(Elf),
       martial_group: Martial,
-      weapon_damage_types: ( [ Slashing, Piercing, Blunt ] ),
+      weapon_damage_types: ( ( ( Slashing, true ), ( Piercing, false ), ( Blunt, false ) ) ),
       weapon_group: Some( ( HeavyBlades ) ),
     )
 })

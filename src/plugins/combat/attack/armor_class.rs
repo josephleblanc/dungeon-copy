@@ -1,9 +1,8 @@
 use bevy::prelude::*;
 
-use super::{
-    armor_class_modifier::{ACModEvent, ACModList},
-    AttackData,
-};
+use crate::plugins::combat::AttackData;
+
+use super::armor_class_modifier::{ACModEvent, ACModList};
 
 #[derive(Copy, Clone, Event, Deref)]
 pub struct ACBonusSumEvent {

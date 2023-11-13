@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
-use crate::plugins::combat::attack::{
-    attack_roll_modifier::{AttackModEvent, AttackModList},
+use crate::plugins::combat::{
+    attack::attack_roll_modifier::{AttackModEvent, AttackModList},
     AttackData,
 };
 

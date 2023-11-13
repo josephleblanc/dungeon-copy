@@ -2,10 +2,11 @@ use bevy::prelude::*;
 
 use crate::{
     components::attributes::{Attribute, Dexterity},
-    plugins::combat::bonus::{BonusSource, BonusType},
+    plugins::combat::{
+        bonus::{BonusSource, BonusType},
+        AttackData, AttackDataEvent,
+    },
 };
-
-use super::{AttackData, AttackDataEvent};
 
 #[derive(Copy, Clone, Debug)]
 pub struct ACMod {

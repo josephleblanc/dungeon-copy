@@ -1,9 +1,8 @@
 use bevy::prelude::*;
 
-use super::{
-    critical_range_modifier::{CritRangeModEvent, CritRangeModList},
-    AttackData,
-};
+use crate::plugins::combat::AttackData;
+
+use super::critical_range_modifier::{CritRangeModEvent, CritRangeModList};
 
 #[derive(Copy, Clone, Event, Deref)]
 pub struct CritRangeModSumEvent {

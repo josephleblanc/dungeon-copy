@@ -2,12 +2,9 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::slice::Iter;
 
-use crate::resources::equipment::weapon::Weapon;
+use crate::{plugins::combat::AttackData, resources::equipment::weapon::Weapon};
 
-use super::{
-    crit_multiplier_modifier::{CritMultiplierModEvent, CritMultiplierModList},
-    AttackData, AttackDataEvent,
-};
+use super::crit_multiplier_modifier::{CritMultiplierModEvent, CritMultiplierModList};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum CritMultiplier {
@@ -18,8 +15,9 @@ pub enum CritMultiplier {
     X6,
 }
 
-#[derive(Event, Copy, Clone)]
+#[derive(Event, Copy, Clone, Deref)]
 pub struct CritMultiplierSumEvent {
+    #[deref]
     pub val: CritMultiplier,
     pub attack_data: AttackData,
 }
@@ -62,7 +60,7 @@ impl CritMultiplier {
             .enumerate()
             .find(|(_i, val)| self == **val)
             .unwrap();
-        size
+        size + 2
     }
     pub fn add(self, other: Self) -> Self {
         let index = self.size() + other.size();

@@ -24,3 +24,17 @@ impl Armory {
         }
     }
 }
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+pub enum Enhancement {
+    Plus1,
+    Plus2,
+    Plus3,
+    Plus4,
+    Plus5,
+    Plus6,
+    Plus7,
+    Plus8,
+    Plus9,
+    Plus10,
+}

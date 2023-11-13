@@ -4,10 +4,10 @@ use crate::{
     plugins::combat::{
         attack::{
             attack_roll_modifier::AttackMod,
-            critical_range_modifier::{CritThreatBonusSource, CritThreatBonusType, CritRangeMod},
-            AttackData,
+            critical_range_modifier::{CritRangeMod, CritThreatBonusSource, CritThreatBonusType},
         },
         bonus::{BonusSource, BonusType},
+        AttackData,
     },
     resources::equipment::weapon::{Weapon, WeaponName},
 };
