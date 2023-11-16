@@ -60,7 +60,7 @@ pub fn base(
     mut event_writer: EventWriter<ACModEvent>,
 ) {
     let debug = false;
-    for attack_data in attack_data_event.into_iter() {
+    for attack_data in attack_data_event.read() {
         if debug {
             println!("debug | armor_class_modifier::base | start");
         }
@@ -82,7 +82,7 @@ pub fn add_dexterity(
     defender_query: Query<&Dexterity>,
 ) {
     let debug = false;
-    for attack_data in attack_data_event.into_iter() {
+    for attack_data in attack_data_event.read() {
         if debug {
             println!("debug | armor_class_modifier::add_dexterity | start");
         }

@@ -180,7 +180,7 @@ pub fn sum_damage_reduction(
 ) {
     let debug = true;
     if !dr_events.is_empty() {
-        let list_in: DRModList = dr_events.into_iter().map(|dr_event| **dr_event).collect();
+        let list_in: DRModList = dr_events.read().map(|dr_event| **dr_event).collect();
 
         // debug
         debug_sum_damage_reduction_inner(debug, &list_in);

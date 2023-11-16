@@ -30,7 +30,7 @@ pub fn base(
     mut attack_data_event: EventReader<AttackDataEvent>,
     mut crit_mod_writer: EventWriter<CritMultiplierModEvent>,
 ) {
-    for attack_data in attack_data_event.into_iter() {
+    for attack_data in attack_data_event.read() {
         crit_mod_writer.send(CritMultiplierModEvent(CritMultiplierMod {
             val: 0,
             source: CritMultiplierSource::None,

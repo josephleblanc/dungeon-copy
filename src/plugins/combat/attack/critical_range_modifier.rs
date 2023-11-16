@@ -178,7 +178,7 @@ pub fn base(
     mut crit_mod_writer: EventWriter<CritRangeModEvent>,
     weapon_query: Query<&Weapon>,
 ) {
-    for attack_data in attack_data_event.into_iter() {
+    for attack_data in attack_data_event.read() {
         // println!("debug | critical_range_mod::base | start base");
 
         let weapon = weapon_query.get(attack_data.weapon_slot.entity).unwrap();

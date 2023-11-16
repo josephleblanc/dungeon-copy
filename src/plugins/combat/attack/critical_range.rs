@@ -23,7 +23,7 @@ pub fn sum_crit_range_mods(
 ) {
     let debug = false;
     let crit_range_mod_list: CritRangeModList = crit_range_mods_reader
-        .into_iter()
+        .read()
         .map(|event| (**event))
         .collect();
     if !crit_range_mod_list.is_empty() {

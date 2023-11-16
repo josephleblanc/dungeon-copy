@@ -28,7 +28,7 @@ pub fn sum_crit_multiplier(
     weapon_query: Query<&Weapon>,
 ) {
     let crit_mod_list: CritMultiplierModList =
-        crit_mod_reader.into_iter().map(|event| **event).collect();
+        crit_mod_reader.read().map(|event| **event).collect();
     if !crit_mod_list.is_empty() {
         let attack_data = crit_mod_list.verified_data().unwrap();
         let base_crit = weapon_query
