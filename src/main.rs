@@ -61,6 +61,7 @@ fn main() {
         .add_plugins(plugins::interact::InteractionPlugin)
         .add_plugins(plugins::monster::MonsterPlugin)
         .add_plugins(plugins::combat::CombatPlugin)
+        .add_plugins(plugins::combat_mode::CombatModePlugin)
         .add_plugins(DebugPlugin)
         .run();
 }

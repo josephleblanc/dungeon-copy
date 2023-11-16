@@ -1,13 +1,22 @@
 use bevy::prelude::*;
 
-use crate::plugins::combat::bonus::{BonusSource, BonusType};
+use crate::components::attributes::Attribute;
+use crate::{
+    components::{attributes::Dexterity, creature::Creature},
+    plugins::combat::bonus::{BonusSource, BonusType},
+};
 
 use super::StartInitiative;
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum InitiativeBonusSource {
+    Dexterity,
+}
 
 #[derive(Copy, Clone, Debug)]
 pub struct InitiativeMod {
     pub val: isize,
-    pub source: BonusSource,
+    pub source: InitiativeBonusSource,
     pub bonus_type: BonusType,
     pub entity: Entity,
 }
@@ -27,6 +36,12 @@ impl From<InitiativeMod> for isize {
 #[derive(Event, Clone, Deref, DerefMut)]
 pub struct InitiativeModEvent(InitiativeMod);
 
+impl InitiativeModEvent {
+    pub fn from(initiative_mod: InitiativeMod) -> Self {
+        Self(initiative_mod)
+    }
+}
+
 impl From<InitiativeMod> for InitiativeModEvent {
     fn from(value: InitiativeMod) -> Self {
         InitiativeModEvent(value)
@@ -39,4 +54,24 @@ impl From<InitiativeModEvent> for InitiativeMod {
     }
 }
 
-pub fn base_initiative(query_dexterity: EventReader<StartInitiative>) {}
+pub fn base_initiative(
+    mut event_reader: EventReader<StartInitiative>,
+    mut event_writer: EventWriter<InitiativeModEvent>,
+    query_dexterity: Query<&Dexterity, With<Creature>>,
+) {
+    for creature in event_reader.read() {
+        if let Ok(dexterity) = query_dexterity.get(**creature) {
+            event_writer.send(InitiativeModEvent::from(InitiativeMod {
+                val: dexterity.bonus(),
+                source: InitiativeBonusSource::Dexterity,
+                bonus_type: BonusType::Untyped,
+                entity: **creature,
+            }))
+        } else {
+            panic!(
+                "Cannot have a creature without dexterity roll initiative. \
+            Every Creature must have Dexterity."
+            )
+        }
+    }
+}
