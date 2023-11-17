@@ -8,13 +8,16 @@ use crate::components::player::PlayerComponent;
 use crate::config::{RESOLUTION, WINDOW_HEIGHT};
 use crate::materials::font::FontMaterials;
 use crate::materials::ingame::InGameMaterials;
+use crate::plugins::combat_mode::CombatMode;
 // use crate::plugins::game_ui::IngameUiData;
 use crate::resources::dictionary::Dictionary;
+
+use super::ui_root::UserInterfaceRoot;
 // use crate::resources::skill::skill_type::SkillType;
 
 #[derive(Resource)]
 pub struct MovementModeData {
-    user_interface_root: Entity,
+    movement_interface_root: Entity,
 }
 
 #[derive(Resource, Clone, Default, Debug)]
@@ -59,29 +62,28 @@ pub struct TurnBasedMovement {}
 
 pub fn setup(
     mut commands: Commands,
+    ui_root: Res<UserInterfaceRoot>,
     font_materials: Res<FontMaterials>,
     dictionary: Res<Dictionary>,
 ) {
-    let user_interface_root = commands
-        .spawn(NodeBundle {
-            style: Style {
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
-                position_type: PositionType::Absolute,
-                ..Default::default()
-            },
-            background_color: BackgroundColor(Color::NONE),
-            ..Default::default()
-        })
-        .with_children(|parent| {
-            movement_mode_buttons(parent, &font_materials, &dictionary);
-        })
-        .insert(Name::new("PlayerUI"))
-        .id();
+    let mut movement_interface_root: Option<Entity> = None;
+    commands
+        .get_entity(ui_root.entity)
+        .unwrap()
+        .with_children(|builder| {
+            movement_interface_root = Some(
+                builder
+                    .spawn(NodeBundle::default())
+                    .with_children(|builder| {
+                        movement_mode_buttons(builder, &font_materials, &dictionary);
+                    })
+                    .id(),
+            );
+        });
 
     commands.insert_resource(MovementModeRes::default());
     commands.insert_resource(MovementModeData {
-        user_interface_root,
+        movement_interface_root: movement_interface_root.unwrap(),
     });
 }
 
@@ -154,7 +156,12 @@ pub fn movement_mode_buttons(
 pub fn button_handle_system(
     mut button_query: Query<
         (&Interaction, &MovementMode, &mut BackgroundColor),
-        (Changed<Interaction>, With<Button>),
+        (
+            Changed<Interaction>,
+            With<Button>,
+            With<MovementMode>,
+            Without<CombatMode>,
+        ),
     >,
     mut current_mode: ResMut<MovementModeRes>,
 ) {

@@ -18,5 +18,9 @@
   "movement_mode": {
     "wander_movement": "Wander",
     "turn_based_movement": "Turn-Based"
+  },
+  "combat_mode": {
+    "in_combat": "In Combat",
+    "out_of_combat": "Out of Combat"
   }
 }

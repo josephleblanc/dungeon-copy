@@ -5,11 +5,14 @@ use crate::{
     resources::dictionary::Dictionary,
 };
 
-use super::turn_mode::{MovementMode, MovementModeRes};
+use super::{
+    turn_mode::{MovementMode, MovementModeRes},
+    ui_root::UserInterfaceRoot,
+};
 
 #[derive(Debug, Resource, Copy, Clone)]
 pub struct CombatModeData {
-    user_interface_root: Entity,
+    combat_interface_root: Entity,
 }
 
 #[derive(Deref, DerefMut, Resource, Clone, Default, Debug)]
@@ -17,31 +20,58 @@ pub struct CombatModeRes(CombatMode);
 
 pub fn setup(
     mut commands: Commands,
+    ui_root: Res<UserInterfaceRoot>,
     font_materials: Res<FontMaterials>,
     dictionary: Res<Dictionary>,
 ) {
-    let user_interface_root = commands
-        .spawn(NodeBundle {
-            style: Style {
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
-                position_type: PositionType::Absolute,
-                ..Default::default()
-            },
-            background_color: BackgroundColor(Color::NONE),
-            ..Default::default()
-        })
-        .with_children(|parent| {
-            combat_mode_buttons(parent, &font_materials, &dictionary);
-        })
-        .insert(Name::new("PlayerUI"))
-        .id();
+    let mut combat_interface_root: Option<Entity> = None;
+    commands
+        .get_entity(ui_root.entity)
+        .unwrap()
+        .with_children(|builder| {
+            combat_interface_root = Some(
+                builder
+                    .spawn(NodeBundle::default())
+                    .with_children(|builder| {
+                        combat_mode_buttons(builder, &font_materials, &dictionary);
+                    })
+                    .id(),
+            );
+        });
 
     commands.insert_resource(CombatModeRes::default());
     commands.insert_resource(CombatModeData {
-        user_interface_root,
+        combat_interface_root: combat_interface_root.unwrap(),
     });
 }
+
+// pub fn setup(
+//     mut commands: Commands,
+//     font_materials: Res<FontMaterials>,
+//     dictionary: Res<Dictionary>,
+// ) {
+//     let user_interface_root = commands
+//         .spawn(NodeBundle {
+//             style: Style {
+//                 width: Val::Percent(100.0),
+//                 height: Val::Percent(100.0),
+//                 position_type: PositionType::Absolute,
+//                 ..Default::default()
+//             },
+//             background_color: BackgroundColor(Color::NONE),
+//             ..Default::default()
+//         })
+//         .with_children(|parent| {
+//             combat_mode_buttons(parent, &font_materials, &dictionary);
+//         })
+//         .insert(Name::new("PlayerUI"))
+//         .id();
+//
+//     commands.insert_resource(CombatModeRes::default());
+//     commands.insert_resource(CombatModeData {
+//         user_interface_root,
+//     });
+// }
 
 pub fn combat_mode_buttons(
     root: &mut ChildBuilder,
@@ -112,7 +142,12 @@ pub fn combat_mode_buttons(
 pub fn button_handle_system(
     mut button_query: Query<
         (&Interaction, &CombatMode, &mut BackgroundColor),
-        (Changed<Interaction>, With<Button>),
+        (
+            Changed<Interaction>,
+            With<Button>,
+            With<CombatMode>,
+            Without<MovementMode>,
+        ),
     >,
     mut current_combat_mode: ResMut<CombatModeRes>,
     mut current_movement_mode: ResMut<MovementModeRes>,

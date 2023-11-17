@@ -6,6 +6,7 @@ pub mod combat_mode;
 pub mod map;
 pub mod translate;
 pub mod turn_mode;
+pub mod ui_root;
 
 pub struct IngameUiPlugin;
 
@@ -15,8 +16,10 @@ impl Plugin for IngameUiPlugin {
             OnEnter(SceneState::InGameClassicMode),
             (
                 map::setup,
-                turn_mode::setup,
+                ui_root::setup,
+                apply_deferred,
                 combat_mode::setup,
+                turn_mode::setup,
                 apply_deferred,
                 map::pathing::setup,
             )
