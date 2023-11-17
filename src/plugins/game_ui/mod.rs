@@ -2,6 +2,7 @@ use bevy::prelude::*;
 
 use crate::scenes::SceneState;
 
+pub mod combat_mode;
 pub mod map;
 pub mod translate;
 pub mod turn_mode;
@@ -15,6 +16,7 @@ impl Plugin for IngameUiPlugin {
             (
                 map::setup,
                 turn_mode::setup,
+                combat_mode::setup,
                 apply_deferred,
                 map::pathing::setup,
             )
@@ -25,6 +27,7 @@ impl Plugin for IngameUiPlugin {
             Update,
             (
                 turn_mode::button_handle_system,
+                combat_mode::button_handle_system,
                 map::focus_box::mouse_handle_system,
                 map::pathing::spawn_move_path,
                 // map::pathing::despawn_move_path,

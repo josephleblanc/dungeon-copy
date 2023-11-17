@@ -12,7 +12,15 @@ pub struct Glossary {
     pub loading_scene_text: LoadingSceneText,
     pub shared_text: SharedText,
     pub movement_mode: MovementModeText,
+    pub combat_mode: CombatModeText,
 }
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct CombatModeText {
+    pub in_combat: String,
+    pub out_of_combat: String,
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct MainMenuSceneText {
     pub play: String,
