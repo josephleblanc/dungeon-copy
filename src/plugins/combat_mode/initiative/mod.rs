@@ -39,7 +39,14 @@ pub fn start_initiative(
     query_creatures: Query<Entity, With<Creature>>,
     mut event_writer: EventWriter<StartInitiative>,
 ) {
+    let debug = true;
+    if debug {
+        println!("debug | initiative::start_initiative | start");
+    }
     for creature in query_creatures.iter() {
+        if debug {
+            println!("debug | initiative::start_initiative | start");
+        }
         event_writer.send(StartInitiative::from(creature));
     }
 }

@@ -8,7 +8,7 @@ use crate::components::player::PlayerComponent;
 use crate::config::{RESOLUTION, WINDOW_HEIGHT};
 use crate::materials::font::FontMaterials;
 use crate::materials::ingame::InGameMaterials;
-use crate::plugins::combat_mode::CombatMode;
+use crate::plugins::combat_mode::state::CombatMode;
 // use crate::plugins::game_ui::IngameUiData;
 use crate::resources::dictionary::Dictionary;
 
@@ -73,7 +73,13 @@ pub fn setup(
         .with_children(|builder| {
             movement_interface_root = Some(
                 builder
-                    .spawn(NodeBundle::default())
+                    .spawn(NodeBundle {
+                        style: Style {
+                            position_type: PositionType::Absolute,
+                            ..default()
+                        },
+                        ..default()
+                    })
                     .with_children(|builder| {
                         movement_mode_buttons(builder, &font_materials, &dictionary);
                     })

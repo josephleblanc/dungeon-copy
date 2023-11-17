@@ -1,27 +1,19 @@
 use bevy::{prelude::*, utils::hashbrown::HashMap};
-use std::slice::Iter;
 
-use self::initiative::{initiative_modifier::InitiativeMod, *};
+use self::{
+    initiative::{
+        initiative_modifier::{InitiativeMod, InitiativeModEvent},
+        *,
+    },
+    state::CombatMode,
+};
 
-use super::combat::bonus::BonusType;
+use super::{combat::bonus::BonusType, game_ui::combat_mode::CombatModeRes};
 
 pub mod initiative;
 pub mod state;
 
 pub struct CombatModePlugin;
-
-#[derive(Component, Debug, Clone, Eq, PartialEq, Hash, States, Default)]
-pub enum CombatMode {
-    InCombat,
-    #[default]
-    OutOfCombat,
-}
-
-impl CombatMode {
-    pub fn iterator() -> Iter<'static, CombatMode> {
-        [CombatMode::InCombat, CombatMode::OutOfCombat].iter()
-    }
-}
 
 #[derive(Clone, Hash, Debug, PartialEq, Eq, SystemSet)]
 pub struct StartSet;
@@ -34,23 +26,32 @@ pub struct SumSet;
 
 impl Plugin for CombatModePlugin {
     fn build(&self, app: &mut App) {
-        app.configure_sets(
-            OnEnter(CombatMode::InCombat),
-            (StartSet, ModSet.after(StartSet), SumSet.after(ModSet)),
-        )
-        .init_resource::<TurnOrder>()
-        .add_systems(
-            OnEnter(CombatMode::InCombat),
-            start_initiative.in_set(StartSet),
-        )
-        .add_systems(
-            OnEnter(CombatMode::InCombat),
-            (initiative_modifier::base_initiative).in_set(ModSet),
-        )
-        .add_systems(
-            OnEnter(CombatMode::InCombat),
-            sum_initiative_modifiers.in_set(SumSet),
-        );
+        app.add_event::<StartInitiative>()
+            .add_event::<InitiativeModEvent>()
+            .configure_sets(
+                Update,
+                (
+                    StartSet.run_if(
+                        resource_exists_and_changed::<CombatModeRes>()
+                            .and_then(resource_equals(CombatModeRes(CombatMode::InCombat))),
+                    ),
+                    ModSet.after(StartSet).run_if(
+                        resource_exists_and_changed::<CombatModeRes>()
+                            .and_then(resource_equals(CombatModeRes(CombatMode::InCombat))),
+                    ),
+                    SumSet.after(ModSet).run_if(
+                        resource_exists_and_changed::<CombatModeRes>()
+                            .and_then(resource_equals(CombatModeRes(CombatMode::InCombat))),
+                    ),
+                ),
+            )
+            .init_resource::<TurnOrder>()
+            .add_systems(Update, start_initiative.in_set(StartSet))
+            .add_systems(
+                Update,
+                (initiative_modifier::base_initiative).in_set(ModSet),
+            )
+            .add_systems(Update, sum_initiative_modifiers.in_set(SumSet));
     }
 }
 

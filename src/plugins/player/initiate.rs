@@ -5,14 +5,10 @@ use bevy::sprite::Anchor;
 
 use crate::components::creature::Creature;
 use crate::components::feats::combat_feats::{ImprovedCritical, WeaponFocus};
-// use crate::components::invinsible_cooldown::InvisibleCooldownComponent;
 use crate::components::player::PlayerComponent;
 use crate::components::player_animation::PlayerAnimation;
-// use crate::components::player_list_effects::PlayerListEffectsComponent;
-// use crate::components::skill::SkillComponent;
 use crate::materials::ingame::InGameMaterials;
 use crate::plugins::item::equipment::weapon::EquippedWeapons;
-// use crate::plugins::player::PlayerEntity;
 use crate::plugins::player::{PLAYER_SIZE_HEIGHT, PLAYER_SIZE_WIDTH};
 use crate::resources::equipment::weapon::{WeaponBundle, WeaponName};
 use crate::resources::equipment::Armory;

@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
-    materials::font::FontMaterials, plugins::combat_mode::CombatMode,
+    materials::font::FontMaterials, plugins::combat_mode::state::CombatMode,
     resources::dictionary::Dictionary,
 };
 
@@ -15,8 +15,8 @@ pub struct CombatModeData {
     combat_interface_root: Entity,
 }
 
-#[derive(Deref, DerefMut, Resource, Clone, Default, Debug)]
-pub struct CombatModeRes(CombatMode);
+#[derive(Deref, DerefMut, Resource, Clone, Default, Debug, Eq, PartialEq)]
+pub struct CombatModeRes(pub CombatMode);
 
 pub fn setup(
     mut commands: Commands,
@@ -31,7 +31,13 @@ pub fn setup(
         .with_children(|builder| {
             combat_interface_root = Some(
                 builder
-                    .spawn(NodeBundle::default())
+                    .spawn(NodeBundle {
+                        style: Style {
+                            position_type: PositionType::Absolute,
+                            ..default()
+                        },
+                        ..default()
+                    })
                     .with_children(|builder| {
                         combat_mode_buttons(builder, &font_materials, &dictionary);
                     })
@@ -148,4 +154,11 @@ pub fn button_handle_system(
             Interaction::None => *bg_color = Color::DARK_GREEN.into(),
         };
     }
+}
+
+pub fn debug_buttons(combat_mode: Res<CombatModeRes>) {
+    println!(
+        "debug | combat_mode::debug_buttons | CombatModeRes: {:?}",
+        combat_mode
+    );
 }

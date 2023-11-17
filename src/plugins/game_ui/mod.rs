@@ -2,6 +2,8 @@ use bevy::prelude::*;
 
 use crate::scenes::SceneState;
 
+use self::{combat_mode::CombatModeRes, turn_mode::button_handle_system};
+
 pub mod combat_mode;
 pub mod map;
 pub mod translate;
@@ -18,9 +20,9 @@ impl Plugin for IngameUiPlugin {
                 map::setup,
                 ui_root::setup,
                 apply_deferred,
-                // combat_mode::setup,
-                // turn_mode::setup,
-                // apply_deferred,
+                combat_mode::setup,
+                turn_mode::setup,
+                apply_deferred,
                 map::pathing::setup,
             )
                 .chain(),
@@ -37,6 +39,11 @@ impl Plugin for IngameUiPlugin {
                 map::pathing::despawn_on_move,
             )
                 .run_if(in_state(SceneState::InGameClassicMode)),
+        );
+
+        app.add_systems(
+            Update,
+            (combat_mode::debug_buttons).run_if(resource_exists_and_changed::<CombatModeRes>()),
         );
 
         app.add_systems(OnExit(SceneState::InGameClassicMode), map::cleanup);

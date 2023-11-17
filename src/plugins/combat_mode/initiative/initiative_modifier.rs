@@ -33,7 +33,7 @@ impl From<InitiativeMod> for isize {
     }
 }
 
-#[derive(Event, Clone, Deref, DerefMut)]
+#[derive(Debug, Event, Clone, Copy, Deref, DerefMut)]
 pub struct InitiativeModEvent(InitiativeMod);
 
 impl InitiativeModEvent {
@@ -61,12 +61,17 @@ pub fn base_initiative(
 ) {
     for creature in event_reader.into_iter() {
         if let Ok(dexterity) = query_dexterity.get(**creature) {
-            event_writer.send(InitiativeModEvent::from(InitiativeMod {
+            let initiative_event = InitiativeModEvent::from(InitiativeMod {
                 val: dexterity.bonus(),
                 source: InitiativeBonusSource::Dexterity,
                 bonus_type: BonusType::Untyped,
                 entity: **creature,
-            }))
+            });
+            event_writer.send(initiative_event);
+            println!(
+                "debug | initiative_modifier::base_initiative | sending initiative event: {:?}",
+                initiative_event
+            );
         } else {
             panic!(
                 "Cannot have a creature without dexterity roll initiative. \
