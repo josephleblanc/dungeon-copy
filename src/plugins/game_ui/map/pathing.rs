@@ -149,7 +149,7 @@ pub fn spawn_move_path(
     //     println!("debug | spawn_move_path | start");
     // }
     let Some(move_path) = event_reader
-        .read()
+        .into_iter()
         .filter(|event| event.action == SpriteAction::Spawn)
         .find_map(|event| event.move_path.clone())
     else {

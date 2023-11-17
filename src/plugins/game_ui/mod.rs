@@ -18,9 +18,9 @@ impl Plugin for IngameUiPlugin {
                 map::setup,
                 ui_root::setup,
                 apply_deferred,
-                combat_mode::setup,
-                turn_mode::setup,
-                apply_deferred,
+                // combat_mode::setup,
+                // turn_mode::setup,
+                // apply_deferred,
                 map::pathing::setup,
             )
                 .chain(),

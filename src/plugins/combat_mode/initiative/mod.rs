@@ -50,7 +50,7 @@ pub fn sum_initiative_modifiers(
     // mut event_writer: EventWriter<EndInitiative>,
 ) {
     let debug = true;
-    for event in event_reader.read() {
+    for event in event_reader.into_iter() {
         initiative_res
             .entry(event.entity)
             .and_modify(|e| e.push(**event))

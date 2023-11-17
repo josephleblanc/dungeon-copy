@@ -55,7 +55,7 @@ pub fn move_event_system(
         println!("debug | move_event_system | start move_event_system");
     }
     if **movement_mode == MovementMode::TurnBasedMovement {
-        if let Some(event) = event_reader.read().next() {
+        if let Some(event) = event_reader.into_iter().next() {
             if let Some(action) = event.action {
                 match action {
                     MovePathAction::InsertOrActivate => {

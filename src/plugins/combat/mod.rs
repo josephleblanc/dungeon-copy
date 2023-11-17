@@ -174,13 +174,13 @@ pub fn evaluate_complete_attack(
         (((((attack_data, ac_mod), atk_mod), crit_range_mod), crit_multiplier), damage),
         dr_total,
     ) in attack_data_event
-        .read()
-        .zip(ac_mod_finished.read())
-        .zip(atk_mod_finished.read())
-        .zip(crit_range_mod_finished.read())
-        .zip(crit_multiplier_mod_finished.read())
-        .zip(damage_finished.read())
-        .zip(dr_total_reader.read())
+        .into_iter()
+        .zip(ac_mod_finished.into_iter())
+        .zip(atk_mod_finished.into_iter())
+        .zip(crit_range_mod_finished.into_iter())
+        .zip(crit_multiplier_mod_finished.into_iter())
+        .zip(damage_finished.into_iter())
+        .zip(dr_total_reader.into_iter())
         .filter(|((((((data, ac), atk), crit_r), crit_m), dmg), dr)| {
             ***data == ac.attack_data
                 && ***data == atk.attack_data
@@ -281,11 +281,11 @@ fn debug_evaluate_attack_complete(
     mut crit_multiplier_mod_finished: EventReader<'_, '_, CritMultiplierSumEvent>,
 ) {
     for ((((attack_data, ac_mod), atk_mod), crit_range_mod), crit_multiplier) in attack_data_event
-        .read()
-        .zip(ac_mod_finished.read())
-        .zip(atk_mod_finished.read())
-        .zip(crit_range_mod_finished.read())
-        .zip(crit_multiplier_mod_finished.read())
+        .into_iter()
+        .zip(ac_mod_finished.into_iter())
+        .zip(atk_mod_finished.into_iter())
+        .zip(crit_range_mod_finished.into_iter())
+        .zip(crit_multiplier_mod_finished.into_iter())
         .inspect(|((((data, ac), atk), crit_r), crit_m)| {
             let ac = ***data == ac.attack_data;
             let atk = ***data == atk.attack_data;

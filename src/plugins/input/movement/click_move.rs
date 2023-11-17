@@ -224,7 +224,7 @@ pub fn start_path_list(
 ) {
     open_paths.reset();
     if event_reader
-        .read()
+        .into_iter()
         .filter_map(|event| event.action)
         .any(|action| action == PathListAction::StartPath)
     {
@@ -277,7 +277,7 @@ pub fn add_path(
     // if debug {
     //     println!("debug | add_path start");
     // }
-    if let Some(action) = event_reader.read().find_map(|event| event.action) {
+    if let Some(action) = event_reader.into_iter().find_map(|event| event.action) {
         if action == PathListAction::AddPath {
             if let Some(mut path_list) = path_list {
                 let start = path_list.end;
@@ -370,7 +370,7 @@ pub fn path_list_cleanup(
     mut list_event_reader: EventReader<PathListEvent>,
     mut sprite_writer: EventWriter<PathSpriteEvent>,
 ) {
-    for event in list_event_reader.read() {
+    for event in list_event_reader.into_iter() {
         if let Some(action) = event.action {
             if action == PathListAction::Remove {
                 commands.remove_resource::<MovementPathList>();

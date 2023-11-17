@@ -18,7 +18,7 @@ pub fn sum_armor_class_modifiers(
     mut ac_mod_finished: EventWriter<ACBonusSumEvent>,
 ) {
     let debug = false;
-    let ac_mod_list: ACModList = ac_mod_events.read().map(|event| (**event)).collect();
+    let ac_mod_list: ACModList = ac_mod_events.into_iter().map(|event| (**event)).collect();
     if !ac_mod_list.is_empty() {
         if debug {
             println!("debug | armor_class::sum_armor_class_modifiers | start");

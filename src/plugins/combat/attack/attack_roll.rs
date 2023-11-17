@@ -24,7 +24,7 @@ pub fn sum_attack_modifier(
     mut atk_mod_events: EventReader<AttackModEvent>,
     mut atk_mod_finished: EventWriter<AttackBonusSumEvent>,
 ) {
-    let atk_mod_list: AttackModList = atk_mod_events.read().map(|event| **event).collect();
+    let atk_mod_list: AttackModList = atk_mod_events.into_iter().map(|event| **event).collect();
     if !atk_mod_list.is_empty() {
         let attack_data = atk_mod_list.verified_data().unwrap();
         let sum_event = AttackBonusSumEvent {

@@ -73,7 +73,7 @@ pub fn base(
     mut attack_reader: EventReader<AttackDataEvent>,
     mut damage_mod_writer: EventWriter<AttackDamageModEvent>,
 ) {
-    for attack in attack_reader.read() {
+    for attack in attack_reader.into_iter() {
         let damage_mod = AttackDamageMod {
             damage_type: DamageType::Weapon,
             val: 0,
@@ -92,7 +92,7 @@ pub fn weapon(
     mut damage_mod_writer: EventWriter<AttackDamageModEvent>,
     weapon_query: Query<&Weapon>,
 ) {
-    for data in attack_reader.read() {
+    for data in attack_reader.into_iter() {
         let weapon = weapon_query.get(data.weapon_slot.entity).unwrap();
         let damage_dice = DamageDice {
             dice: weapon.damage_dice,
@@ -120,7 +120,7 @@ pub fn add_strength(
     mut damage_mod_writer: EventWriter<AttackDamageModEvent>,
     query_attacker: Query<&Strength>,
 ) {
-    for attack in attack_reader.read() {
+    for attack in attack_reader.into_iter() {
         let mut damage_mod = AttackDamageMod {
             damage_type: DamageType::Weapon,
             val: 0,

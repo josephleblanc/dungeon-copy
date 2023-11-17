@@ -48,7 +48,7 @@ pub fn sum_damage_mod(
     weapon_query: Query<&Weapon>,
 ) {
     let dmg_mod_list = damage_mod_reader
-        .read()
+        .into_iter()
         .map(|dmg_event| **dmg_event)
         .collect::<AttackDamageModList>();
     if !dmg_mod_list.is_empty() {

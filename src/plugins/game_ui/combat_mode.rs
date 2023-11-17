@@ -45,34 +45,6 @@ pub fn setup(
     });
 }
 
-// pub fn setup(
-//     mut commands: Commands,
-//     font_materials: Res<FontMaterials>,
-//     dictionary: Res<Dictionary>,
-// ) {
-//     let user_interface_root = commands
-//         .spawn(NodeBundle {
-//             style: Style {
-//                 width: Val::Percent(100.0),
-//                 height: Val::Percent(100.0),
-//                 position_type: PositionType::Absolute,
-//                 ..Default::default()
-//             },
-//             background_color: BackgroundColor(Color::NONE),
-//             ..Default::default()
-//         })
-//         .with_children(|parent| {
-//             combat_mode_buttons(parent, &font_materials, &dictionary);
-//         })
-//         .insert(Name::new("PlayerUI"))
-//         .id();
-//
-//     commands.insert_resource(CombatModeRes::default());
-//     commands.insert_resource(CombatModeData {
-//         user_interface_root,
-//     });
-// }
-
 pub fn combat_mode_buttons(
     root: &mut ChildBuilder,
     font_materials: &FontMaterials,

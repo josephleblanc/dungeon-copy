@@ -59,7 +59,7 @@ pub fn base_initiative(
     mut event_writer: EventWriter<InitiativeModEvent>,
     query_dexterity: Query<&Dexterity, With<Creature>>,
 ) {
-    for creature in event_reader.read() {
+    for creature in event_reader.into_iter() {
         if let Ok(dexterity) = query_dexterity.get(**creature) {
             event_writer.send(InitiativeModEvent::from(InitiativeMod {
                 val: dexterity.bonus(),

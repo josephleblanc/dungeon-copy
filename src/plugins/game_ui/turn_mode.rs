@@ -93,7 +93,7 @@ pub fn movement_mode_buttons(
     dictionary: &Dictionary,
 ) {
     let font = font_materials.get_font(dictionary.get_current_language());
-    let font_size = 20.0;
+    let font_size = 22.0;
 
     let glossary = dictionary.get_glossary();
     let ingame_glossary = glossary.movement_mode;
