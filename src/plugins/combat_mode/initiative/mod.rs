@@ -17,15 +17,6 @@ impl StartInitiative {
     }
 }
 
-// #[derive(Event, Clone, Copy, Deref, DerefMut)]
-// pub struct EndInitiative(Entity);
-//
-// impl EndInitiative {
-//     pub fn from(creature: Entity) -> Self {
-//         Self(creature)
-//     }
-// }
-
 #[derive(Debug, Clone, Copy, Deref, DerefMut, Default)]
 pub struct Initiative(isize);
 
@@ -38,6 +29,7 @@ impl Initiative {
 pub fn start_initiative(
     query_creatures: Query<Entity, With<Creature>>,
     mut event_writer: EventWriter<StartInitiative>,
+    mut commands: Commands,
 ) {
     let debug = true;
     if debug {
@@ -49,22 +41,23 @@ pub fn start_initiative(
         }
         event_writer.send(StartInitiative::from(creature));
     }
+    commands.init_resource::<TurnOrder>();
 }
 
 pub fn sum_initiative_modifiers(
     mut event_reader: EventReader<InitiativeModEvent>,
-    mut initiative_res: ResMut<TurnOrder>,
+    mut turn_order: ResMut<TurnOrder>,
     // mut event_writer: EventWriter<EndInitiative>,
 ) {
     let debug = true;
     for event in event_reader.into_iter() {
-        initiative_res
+        turn_order
             .entry(event.entity)
             .and_modify(|e| e.push(**event))
             .or_insert(SummedInitiative::from(**event));
     }
 
-    for (entity, summed_initiative) in initiative_res.iter_mut() {
+    for (entity, summed_initiative) in turn_order.iter_mut() {
         summed_initiative.val = Initiative::from_isize(summed_initiative.sum_all());
         if debug {
             println!(
@@ -73,4 +66,8 @@ pub fn sum_initiative_modifiers(
             );
         }
     }
+}
+
+pub fn cleanup(mut commands: Commands) {
+    commands.remove_resource::<TurnOrder>();
 }

@@ -45,13 +45,24 @@ impl Plugin for CombatModePlugin {
                     ),
                 ),
             )
-            .init_resource::<TurnOrder>()
-            .add_systems(Update, start_initiative.in_set(StartSet))
+            // .init_resource::<TurnOrder>()
+            .add_systems(
+                Update,
+                (start_initiative, apply_deferred).chain().in_set(StartSet),
+            )
             .add_systems(
                 Update,
                 (initiative_modifier::base_initiative).in_set(ModSet),
             )
             .add_systems(Update, sum_initiative_modifiers.in_set(SumSet));
+
+        app.add_systems(
+            Update,
+            cleanup.run_if(
+                resource_exists_and_changed::<CombatModeRes>()
+                    .and_then(resource_equals(CombatModeRes(CombatMode::OutOfCombat))),
+            ),
+        );
     }
 }
 
