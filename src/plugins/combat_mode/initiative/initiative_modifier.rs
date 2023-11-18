@@ -15,7 +15,7 @@ pub enum InitiativeBonusSource {
 
 #[derive(Copy, Clone, Debug)]
 pub struct InitiativeMod {
-    pub val: isize,
+    pub bonus: isize,
     pub source: InitiativeBonusSource,
     pub bonus_type: BonusType,
     pub entity: Entity,
@@ -23,13 +23,13 @@ pub struct InitiativeMod {
 
 impl From<InitiativeMod> for usize {
     fn from(value: InitiativeMod) -> Self {
-        value.val as usize
+        value.bonus as usize
     }
 }
 
 impl From<InitiativeMod> for isize {
     fn from(value: InitiativeMod) -> Self {
-        value.val
+        value.bonus
     }
 }
 
@@ -62,7 +62,7 @@ pub fn base_initiative(
     for creature in event_reader.into_iter() {
         if let Ok(dexterity) = query_dexterity.get(**creature) {
             let initiative_event = InitiativeModEvent::from(InitiativeMod {
-                val: dexterity.bonus(),
+                bonus: dexterity.bonus(),
                 source: InitiativeBonusSource::Dexterity,
                 bonus_type: BonusType::Untyped,
                 entity: **creature,

@@ -4,7 +4,7 @@ use crate::components::creature::Creature;
 
 use self::initiative_modifier::InitiativeModEvent;
 
-use super::{SummedInitiative, TurnOrder};
+use super::{InitiativeDetails, InitiativeMap, TurnOrder};
 
 pub mod initiative_modifier;
 
@@ -41,33 +41,42 @@ pub fn start_initiative(
         }
         event_writer.send(StartInitiative::from(creature));
     }
+    commands.init_resource::<InitiativeMap>();
     commands.init_resource::<TurnOrder>();
 }
 
 pub fn sum_initiative_modifiers(
     mut event_reader: EventReader<InitiativeModEvent>,
+    mut initiative_map: ResMut<InitiativeMap>,
     mut turn_order: ResMut<TurnOrder>,
-    // mut event_writer: EventWriter<EndInitiative>,
 ) {
     let debug = true;
     for event in event_reader.into_iter() {
-        turn_order
+        initiative_map
             .entry(event.entity)
             .and_modify(|e| e.push(**event))
-            .or_insert(SummedInitiative::from(**event));
+            .or_insert(InitiativeDetails::from(**event));
     }
 
-    for (entity, summed_initiative) in turn_order.iter_mut() {
-        summed_initiative.val = Initiative::from_isize(summed_initiative.sum_all());
+    for (entity, summed_initiative) in initiative_map.iter_mut() {
+        summed_initiative.bonus = Initiative::from_isize(summed_initiative.sum_all());
         if debug {
-            println!(
-                "entity: {:?} has initiative modifier: {:?}",
-                entity, summed_initiative.val
-            );
+            debug_sum_initiative_modifers(entity, summed_initiative);
         }
     }
+
+    let mut rng = rand::thread_rng();
+    *turn_order = TurnOrder::from_vec(initiative_map.generate_turn_order(&mut rng));
+}
+
+fn debug_sum_initiative_modifers(entity: &Entity, summed_initiative: &mut InitiativeDetails) {
+    println!(
+        "entity: {:?} has initiative modifier: {:?}",
+        entity, summed_initiative.bonus
+    );
 }
 
 pub fn cleanup(mut commands: Commands) {
+    commands.remove_resource::<InitiativeMap>();
     commands.remove_resource::<TurnOrder>();
 }
