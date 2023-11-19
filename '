@@ -1,0 +1,16 @@
+use bevy::prelude::*;
+
+pub mod aoo_round_modifier;
+
+#[derive(Copy, Clone, Debug, Event)]
+pub struct AOORoundStart(Entity);
+
+#[derive(Copy, Clone, Event, Deref)]
+pub struct AOORoundSumEvent {
+    pub aoo_per_round: usize,
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum AOOBonusSource {
+    Dexterity,
+}

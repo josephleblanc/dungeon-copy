@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use std::slice::Iter;
 
-#[derive(Component, Debug, Clone, Eq, PartialEq, Hash, States, Default)]
+#[derive(Reflect, Component, Debug, Clone, Eq, PartialEq, Hash, States, Default)]
 pub enum CombatMode {
     InCombat,
     #[default]

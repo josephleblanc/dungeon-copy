@@ -224,43 +224,6 @@ impl AttackModList {
             Ok(self[0].attack_data)
         }
     }
-
-    // TODO: Delete these once I feel good about the refactor
-    // pub fn verified_attacker(&self) -> Option<Entity> {
-    //     if self.is_empty()
-    //         || self
-    //             .iter()
-    //             .any(|atk_mod| atk_mod.attacker != self[0].attacker)
-    //     {
-    //         None
-    //     } else {
-    //         Some(self[0].attacker)
-    //     }
-    // }
-    //
-    // pub fn verified_defender(&self) -> Option<Entity> {
-    //     if self.is_empty()
-    //         || self
-    //             .iter()
-    //             .any(|atk_mod| atk_mod.defender != self[0].defender)
-    //     {
-    //         None
-    //     } else {
-    //         Some(self[0].defender)
-    //     }
-    // }
-    //
-    // pub fn verified_weapon(&self) -> Option<Entity> {
-    //     if self.is_empty()
-    //         || self
-    //             .iter()
-    //             .any(|atk_mod| atk_mod.attacker_weapon != self[0].attacker_weapon)
-    //     {
-    //         None
-    //     } else {
-    //         Some(self[0].attacker_weapon)
-    //     }
-    // }
 }
 
 fn debug_sum_non_stackable(bonus_type: BonusType, total: isize) {

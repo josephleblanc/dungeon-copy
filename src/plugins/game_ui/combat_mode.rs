@@ -15,7 +15,7 @@ pub struct CombatModeData {
     combat_interface_root: Entity,
 }
 
-#[derive(Deref, DerefMut, Resource, Clone, Default, Debug, Eq, PartialEq)]
+#[derive(Reflect, Deref, DerefMut, Resource, Clone, Default, Debug, Eq, PartialEq)]
 pub struct CombatModeRes(pub CombatMode);
 
 pub fn setup(

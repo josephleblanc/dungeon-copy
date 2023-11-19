@@ -9,12 +9,14 @@ use self::{
         *,
     },
     state::CombatMode,
+    turn::TurnPlugin,
 };
 
 use super::{combat::bonus::BonusType, game_ui::combat_mode::CombatModeRes};
 
 pub mod initiative;
 pub mod state;
+pub mod turn;
 
 pub struct CombatModePlugin;
 
@@ -29,8 +31,10 @@ pub struct SumSet;
 
 impl Plugin for CombatModePlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<StartInitiative>()
+        app.add_plugins(TurnPlugin)
+            .add_event::<StartInitiative>()
             .add_event::<InitiativeModEvent>()
+            .add_event::<EndInitiative>()
             .configure_sets(
                 Update,
                 (
@@ -66,6 +70,14 @@ impl Plugin for CombatModePlugin {
                     .and_then(resource_equals(CombatModeRes(CombatMode::OutOfCombat))),
             ),
         );
+
+        app.add_systems(Update, debug_end_initiative);
+    }
+}
+
+pub fn debug_end_initiative(mut events: EventReader<EndInitiative>) {
+    for _event in events.into_iter() {
+        println!("debug_end_initiative | EndInitiative Event received");
     }
 }
 

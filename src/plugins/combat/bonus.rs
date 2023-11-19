@@ -6,6 +6,7 @@ pub enum BonusType {
     Size,
     Dodge,
     Strength,
+    Dexterity,
     Untyped, // more here
 }
 
@@ -14,8 +15,8 @@ impl BonusType {
         [Self::Dodge, Self::Untyped]
     }
 
-    pub fn non_stackable() -> [Self; 2] {
-        [Self::Morale, Self::Strength]
+    pub fn non_stackable() -> [Self; 4] {
+        [Self::Morale, Self::Strength, Self::Dexterity, Self::Size]
     }
 }
 

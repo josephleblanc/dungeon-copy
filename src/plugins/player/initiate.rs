@@ -8,6 +8,7 @@ use crate::components::feats::combat_feats::{ImprovedCritical, WeaponFocus};
 use crate::components::player::PlayerComponent;
 use crate::components::player_animation::PlayerAnimation;
 use crate::materials::ingame::InGameMaterials;
+use crate::plugins::combat::attack_of_opportunity::aoo_round_modifier::CombatReflexes;
 use crate::plugins::item::equipment::weapon::EquippedWeapons;
 use crate::plugins::player::{PLAYER_SIZE_HEIGHT, PLAYER_SIZE_WIDTH};
 use crate::resources::equipment::weapon::{WeaponBundle, WeaponName};
@@ -98,6 +99,7 @@ pub fn initiate_player(
             weapon_entity = Some(builder.spawn(WeaponBundle { weapon: longsword }).id());
         })
         .insert(player)
+        .insert(CombatReflexes)
         .insert(player_attributes)
         .insert(player_bab)
         .insert(weapon_focus)

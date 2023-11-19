@@ -16,6 +16,7 @@ use self::{
     attack_damage::{
         damage::AttackDamageSumEvent, damage_reduction::DRTotalEvent, AttackDamagePlugin,
     },
+    attack_of_opportunity::AOORoundPlugin,
 };
 
 use super::{
@@ -30,6 +31,7 @@ use super::{
 
 pub mod attack;
 pub mod attack_damage;
+pub mod attack_of_opportunity;
 pub mod bonus;
 pub mod damage;
 
@@ -90,7 +92,7 @@ impl Plugin for CombatPlugin {
             .add_event::<CompleteAttackEvent>()
             .add_event::<AttackDataEvent>();
 
-        app.add_plugins((AttackPlugin, AttackDamagePlugin));
+        app.add_plugins((AttackPlugin, AttackDamagePlugin, AOORoundPlugin));
 
         app.add_systems(
             Update,

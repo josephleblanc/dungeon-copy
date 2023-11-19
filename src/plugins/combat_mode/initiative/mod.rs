@@ -4,7 +4,7 @@ use crate::components::creature::Creature;
 
 use self::initiative_modifier::InitiativeModEvent;
 
-use super::{InitiativeDetails, InitiativeMap, TurnOrder};
+use super::{turn::action::CurrentTurn, InitiativeDetails, InitiativeMap, TurnOrder};
 
 pub mod initiative_modifier;
 
@@ -16,6 +16,9 @@ impl StartInitiative {
         Self(creature)
     }
 }
+
+#[derive(Event, Clone, Copy)]
+pub struct EndInitiative;
 
 #[derive(Debug, Clone, Copy, Deref, DerefMut, Default)]
 pub struct Initiative(isize);
@@ -47,6 +50,7 @@ pub fn start_initiative(
 
 pub fn sum_initiative_modifiers(
     mut event_reader: EventReader<InitiativeModEvent>,
+    mut end_initiative: EventWriter<EndInitiative>,
     mut initiative_map: ResMut<InitiativeMap>,
     mut turn_order: ResMut<TurnOrder>,
 ) {
@@ -67,6 +71,8 @@ pub fn sum_initiative_modifiers(
 
     let mut rng = rand::thread_rng();
     *turn_order = TurnOrder::from_vec(initiative_map.generate_turn_order(&mut rng));
+
+    end_initiative.send(EndInitiative);
 }
 
 fn debug_sum_initiative_modifers(entity: &Entity, summed_initiative: &mut InitiativeDetails) {
