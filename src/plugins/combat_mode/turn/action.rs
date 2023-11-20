@@ -11,7 +11,7 @@ use crate::plugins::{
 /// A resource with the Entity whose turn it currently is, along with the index of the entity in
 /// the turn order tracker resource, TurnOrder.
 pub struct CurrentTurn {
-    entity: Entity,
+    pub entity: Entity,
     turn_index: usize,
 }
 
@@ -23,11 +23,11 @@ impl CurrentTurn {
 
 #[derive(Component, Copy, Clone)]
 pub struct TurnActions {
-    move_action: bool,
-    standard_action: bool,
-    immediate_action: bool,
+    pub move_action: bool,
+    pub standard_action: bool,
+    pub immediate_action: bool,
     // Attacks of Oppertunity per round.
-    aoo_round: usize,
+    pub aoo_round: usize,
 }
 
 impl TurnActions {

@@ -17,6 +17,9 @@ pub struct PlayerEntity {
     pub entity: Entity,
 }
 
+#[derive(Component, Copy, Clone, Debug)]
+pub struct PlayerLabel;
+
 pub const PLAYER_SIZE_WIDTH: f32 = 16.0 * 3.5;
 pub const PLAYER_SIZE_HEIGHT: f32 = 28.0 * 3.5;
 

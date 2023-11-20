@@ -2,7 +2,9 @@ use bevy::prelude::*;
 
 use crate::scenes::SceneState;
 
-use self::combat_mode::CombatModeRes;
+use self::{combat_mode::CombatModeRes, turn_actions::TurnActionEvent};
+
+use super::combat_mode::turn::action::CurrentTurn;
 
 pub mod combat_mode;
 pub mod map;
@@ -15,7 +17,7 @@ pub struct IngameUiPlugin;
 
 impl Plugin for IngameUiPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
+        app.add_event::<TurnActionEvent>().add_systems(
             OnEnter(SceneState::InGameClassicMode),
             (
                 map::setup,
@@ -39,6 +41,9 @@ impl Plugin for IngameUiPlugin {
                 map::pathing::spawn_move_path,
                 // map::pathing::despawn_move_path,
                 map::pathing::despawn_on_move,
+                turn_actions::TurnActionButton::update_color.run_if(on_event::<TurnActionEvent>()),
+                turn_actions::TurnActionButton::reset_color
+                    .run_if(resource_exists_and_changed::<CurrentTurn>()),
             )
                 .run_if(in_state(SceneState::InGameClassicMode)),
         );

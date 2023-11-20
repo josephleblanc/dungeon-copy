@@ -1,7 +1,14 @@
 #![allow(dead_code)]
 use bevy::prelude::*;
 
-use crate::{materials::font::FontMaterials, resources::dictionary::Dictionary};
+use crate::{
+    materials::font::FontMaterials,
+    plugins::{
+        combat_mode::turn::action::{CurrentTurn, TurnActions},
+        player::{PlayerEntity, PlayerLabel},
+    },
+    resources::dictionary::Dictionary,
+};
 
 use super::ui_root::UserInterfaceRoot;
 
@@ -79,23 +86,164 @@ fn turn_action_display(
     })
     .with_children(|builder| {
         let turn_action_items = [
-            ingame_glossary.move_action,
-            ingame_glossary.standard_action,
-            ingame_glossary.immediate_action,
-            ingame_glossary.five_foot_step,
+            (ingame_glossary.move_action, TurnActionButton::Move),
+            (ingame_glossary.standard_action, TurnActionButton::Standard),
+            (
+                ingame_glossary.immediate_action,
+                TurnActionButton::Immediate,
+            ),
+            (
+                ingame_glossary.five_foot_step,
+                TurnActionButton::FiveFootStep,
+            ),
         ];
-        for item in turn_action_items {
-            builder.spawn(TextBundle {
-                text: Text::from_section(item, text_style.clone())
-                    .with_alignment(TextAlignment::Center)
-                    .with_no_wrap(),
-                background_color: Color::DARK_GREEN.into(),
+        builder
+            .spawn(ButtonBundle {
                 style: Style {
-                    border: UiRect::all(Val::Px(10.0)),
+                    flex_direction: FlexDirection::Row,
+                    margin: UiRect::top(Val::Px(8.0)),
+                    padding: UiRect {
+                        left: Val::Px(6.0),
+                        right: Val::Px(6.0),
+                        top: Val::Px(4.0),
+                        bottom: Val::Px(4.0),
+                    },
                     ..default()
                 },
-                ..Default::default()
+                background_color: Color::rgba(0.1, 0.1, 0.1, 0.9).into(),
+                ..default()
+            })
+            .insert(Name::from("Attacks of Opportunity"))
+            .with_children(|builder| {
+                builder.spawn(TextBundle {
+                    text: Text::from_section("AoO: ", text_style.clone())
+                        .with_alignment(TextAlignment::Center)
+                        .with_no_wrap(),
+                    ..Default::default()
+                });
+                builder
+                    .spawn(TextBundle {
+                        text: Text::from_section("1", text_style.clone())
+                            .with_alignment(TextAlignment::Center)
+                            .with_no_wrap(),
+                        ..Default::default()
+                    })
+                    .insert(AOOLabel(1));
             });
+        for (text, component) in turn_action_items {
+            builder
+                .spawn(ButtonBundle {
+                    background_color: Color::DARK_GREEN.into(),
+                    style: Style {
+                        padding: UiRect {
+                            left: Val::Px(6.0),
+                            right: Val::Px(6.0),
+                            top: Val::Px(4.0),
+                            bottom: Val::Px(4.0),
+                        },
+                        ..default()
+                    },
+                    ..default()
+                })
+                .insert(component)
+                .insert(Name::from(format!("Turn Action Item: {}", text)))
+                .with_children(|builder| {
+                    builder.spawn(TextBundle {
+                        text: Text::from_section(text, text_style.clone())
+                            .with_alignment(TextAlignment::Center)
+                            .with_no_wrap(),
+                        ..Default::default()
+                    });
+                });
         }
     });
+}
+
+#[derive(Component, Copy, Clone, Debug, PartialEq, Eq, Deref, DerefMut)]
+pub struct AOOLabel(usize);
+
+#[derive(Event, Copy, Clone, Debug, PartialEq, Eq)]
+pub struct TurnActionEvent {
+    turn_action: TurnAction,
+    status: TurnActionStatus,
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum TurnActionStatus {
+    Used,
+    Available,
+    Planned,
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+enum TurnAction {
+    Move,
+    Standard,
+    FiveFootStep,
+    Immediate,
+}
+
+impl From<TurnActionButton> for TurnAction {
+    fn from(value: TurnActionButton) -> Self {
+        match value {
+            TurnActionButton::Immediate => TurnAction::Immediate,
+            TurnActionButton::Move => TurnAction::Move,
+            TurnActionButton::Standard => TurnAction::Standard,
+            TurnActionButton::FiveFootStep => TurnAction::FiveFootStep,
+        }
+    }
+}
+
+#[derive(Component, Copy, Clone, Debug, PartialEq, Eq)]
+pub enum TurnActionButton {
+    Move,
+    Standard,
+    FiveFootStep,
+    Immediate,
+}
+
+impl TurnActionButton {
+    const GREEN_BUTTON: Color = Color::rgba(0.5, 0.5, 0.0, 0.9);
+    pub fn update_color(
+        mut query_button: Query<(&Self, &mut BackgroundColor), With<Button>>,
+        mut turn_action_event: EventReader<TurnActionEvent>,
+    ) {
+        for event in turn_action_event.into_iter() {
+            match event.status {
+                TurnActionStatus::Used => {
+                    let (_button, mut bg_color) = query_button
+                        .iter_mut()
+                        .find(|(button, _bg_color)| event.turn_action == (**button).into())
+                        .unwrap();
+                    *bg_color = Color::rgba(0.5, 0.0, 0.0, 0.9).into();
+                }
+                TurnActionStatus::Available => {
+                    let (_button, mut bg_color) = query_button
+                        .iter_mut()
+                        .find(|(button, _bg_color)| event.turn_action == (**button).into())
+                        .unwrap();
+                    *bg_color = Self::GREEN_BUTTON.into();
+                }
+                TurnActionStatus::Planned => {
+                    let (_button, mut bg_color) = query_button
+                        .iter_mut()
+                        .find(|(button, _bg_color)| event.turn_action == (**button).into())
+                        .unwrap();
+                    *bg_color = Color::rgba(0.5, 0.5, 0.0, 0.9).into();
+                }
+            }
+        }
+    }
+
+    pub fn reset_color(
+        mut query_button: Query<&mut BackgroundColor, With<Button>>,
+        current_turn: Res<CurrentTurn>,
+        query_player: Query<Entity, With<PlayerLabel>>,
+    ) {
+        if current_turn.is_changed() && query_player.get(current_turn.entity).is_ok() {
+            for mut bg_color in query_button.iter_mut() {
+                *bg_color = Self::GREEN_BUTTON.into();
+            }
+        }
+    }
 }
