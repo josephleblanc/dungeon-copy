@@ -13,6 +13,15 @@ pub struct Glossary {
     pub shared_text: SharedText,
     pub movement_mode: MovementModeText,
     pub combat_mode: CombatModeText,
+    pub turn_action_display: TurnActionDisplay,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct TurnActionDisplay {
+    pub move_action: String,
+    pub standard_action: String,
+    pub immediate_action: String,
+    pub five_foot_step: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

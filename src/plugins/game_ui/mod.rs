@@ -2,11 +2,12 @@ use bevy::prelude::*;
 
 use crate::scenes::SceneState;
 
-use self::{combat_mode::CombatModeRes, turn_mode::button_handle_system};
+use self::combat_mode::CombatModeRes;
 
 pub mod combat_mode;
 pub mod map;
 pub mod translate;
+pub mod turn_actions;
 pub mod turn_mode;
 pub mod ui_root;
 
@@ -22,6 +23,7 @@ impl Plugin for IngameUiPlugin {
                 apply_deferred,
                 combat_mode::setup,
                 turn_mode::setup,
+                turn_actions::setup,
                 apply_deferred,
                 map::pathing::setup,
             )

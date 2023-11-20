@@ -22,5 +22,11 @@
   "combat_mode": {
     "in_combat": "In Combat",
     "out_of_combat": "Out of Combat"
+  },
+  "turn_action_display": {
+    "move_action": "Move Action",
+    "standard_action": "Standard Action",
+    "immediate_action": "Immediate Action",
+    "five_foot_step": "Five Foot Step"
   }
 }
