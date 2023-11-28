@@ -28,5 +28,9 @@
     "standard_action": "Standard Action",
     "immediate_action": "Immediate Action",
     "five_foot_step": "Five Foot Step"
+  },
+  "action_bar": {
+    "attack": "Attack",
+    "move_action": "Move"
   }
 }

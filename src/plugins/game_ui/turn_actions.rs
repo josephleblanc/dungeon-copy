@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 use bevy::prelude::*;
+use std::slice::Iter;
 
 use crate::{
     materials::font::FontMaterials,
@@ -181,6 +182,18 @@ enum TurnAction {
     Standard,
     FiveFootStep,
     Immediate,
+}
+
+impl TurnAction {
+    pub fn iterator() -> Iter<'static, Self> {
+        [
+            TurnAction::Move,
+            TurnAction::Standard,
+            TurnAction::FiveFootStep,
+            TurnAction::Immediate,
+        ]
+        .iter()
+    }
 }
 
 impl From<TurnActionButton> for TurnAction {

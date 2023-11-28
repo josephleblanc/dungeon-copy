@@ -14,6 +14,13 @@ pub struct Glossary {
     pub movement_mode: MovementModeText,
     pub combat_mode: CombatModeText,
     pub turn_action_display: TurnActionDisplay,
+    pub action_bar: ActionBar,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ActionBar {
+    pub attack: String,
+    pub move_action: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

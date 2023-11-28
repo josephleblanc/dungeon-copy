@@ -6,6 +6,7 @@ use self::{combat_mode::CombatModeRes, turn_actions::TurnActionEvent};
 
 use super::combat_mode::turn::action::CurrentTurn;
 
+pub mod action_bar;
 pub mod combat_mode;
 pub mod map;
 pub mod translate;
@@ -26,6 +27,7 @@ impl Plugin for IngameUiPlugin {
                 combat_mode::setup,
                 turn_mode::setup,
                 turn_actions::setup,
+                action_bar::setup,
                 apply_deferred,
                 map::pathing::setup,
             )
