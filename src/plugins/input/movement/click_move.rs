@@ -383,3 +383,13 @@ pub fn path_list_cleanup(
         }
     }
 }
+
+pub fn reset_by_action_button(
+    mut list_event_writer: EventWriter<PathListEvent>,
+    current_mode: ResMut<SelectedAction>,
+) {
+    if **current_mode != ActionBarButton::Move {
+        println!("sending pathlist remove");
+        list_event_writer.send(PathListEvent::from(PathListAction::Remove));
+    }
+}

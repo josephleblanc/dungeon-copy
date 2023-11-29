@@ -8,6 +8,8 @@ pub mod movement;
 use movement::click_move;
 use movement::path_list_event;
 
+use super::game_ui::action_bar::ActionBarButton;
+use super::game_ui::action_bar::SelectedAction;
 use super::{game_ui::map::pathing::PathSpriteEvent, interact::InteractingPosEvent};
 use crate::plugins::input::movement::move_event;
 use crate::plugins::input::movement::move_event::MovementPathEvent;
@@ -53,6 +55,13 @@ impl Plugin for InputHandlePlugin {
                     .after(click_move::handle_path),
                 move_event::move_event_system,
             )
+                .run_if(in_state(SceneState::InGameClassicMode)),
+        );
+
+        app.add_systems(
+            Update,
+            click_move::reset_by_action_button
+                .run_if(resource_exists_and_changed::<SelectedAction>())
                 .run_if(in_state(SceneState::InGameClassicMode)),
         );
     }

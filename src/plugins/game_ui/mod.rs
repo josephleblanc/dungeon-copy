@@ -2,7 +2,10 @@ use bevy::prelude::*;
 
 use crate::scenes::SceneState;
 
-use self::{action_bar::SelectedAction, combat_mode::CombatModeRes, turn_actions::TurnActionEvent};
+use self::{
+    action_bar::SelectedAction, combat_mode::CombatModeRes, map::pathing::PathSpriteEvent,
+    turn_actions::TurnActionEvent,
+};
 
 use super::combat_mode::turn::action::CurrentTurn;
 
@@ -47,6 +50,7 @@ impl Plugin for IngameUiPlugin {
                 turn_actions::TurnActionButton::reset_color
                     .run_if(resource_exists_and_changed::<CurrentTurn>()),
                 action_bar::handle_buttons.run_if(resource_exists::<SelectedAction>()),
+                map::pathing::despawn_move_path.run_if(on_event::<PathSpriteEvent>()),
             )
                 .run_if(in_state(SceneState::InGameClassicMode)),
         );

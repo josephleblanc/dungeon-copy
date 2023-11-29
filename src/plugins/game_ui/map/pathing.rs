@@ -275,21 +275,21 @@ pub fn despawn_on_move(
     }
 }
 
-// Despawns a move path by recursively despawning the children of the Entity
-// stored in the resource `Res<MovePathFrameData>`.
-// The resource itself is despawned in the cleanup function of the containing
-// map crate.
-// pub fn despawn_move_path(
-//     mut commands: Commands,
-//     move_path_frame: Res<MovePathFrameData>,
-//     mut event_reader: EventReader<PathSpriteEvent>,
-// ) {
-//     if event_reader
-//         .into_iter()
-//         .any(|event| event.action == SpriteAction::Despawn)
-//     {
-//         commands
-//             .entity(move_path_frame.frame_root)
-//             .despawn_descendants();
-//     }
-// }
+/// Despawns a move path by recursively despawning the children of the Entity
+/// stored in the resource `Res<MovePathFrameData>`.
+/// The resource itself is despawned in the cleanup function of the containing
+/// map crate.
+pub fn despawn_move_path(
+    mut commands: Commands,
+    move_path_frame: Res<MovePathFrameData>,
+    mut event_reader: EventReader<PathSpriteEvent>,
+) {
+    if event_reader
+        .into_iter()
+        .any(|event| event.action == SpriteAction::Despawn)
+    {
+        commands
+            .entity(move_path_frame.frame_root)
+            .despawn_descendants();
+    }
+}
