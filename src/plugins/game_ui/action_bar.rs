@@ -136,7 +136,7 @@ pub fn action_bar(
     .insert(Name::new("Movement Mode"));
 }
 
-#[derive(Resource, Copy, Clone, Debug, Deref, DerefMut)]
+#[derive(Resource, Copy, Clone, Debug, Deref, DerefMut, Eq, PartialEq)]
 pub struct SelectedAction(pub ActionBarButton);
 
 pub fn handle_buttons(

@@ -20,6 +20,7 @@ use self::{
 };
 
 use super::{
+    game_ui::action_bar::{ActionBarButton, SelectedAction},
     interact::{InteractingPos, InteractingType},
     item::equipment::weapon::EquippedWeapons,
     player::{
@@ -96,7 +97,11 @@ impl Plugin for CombatPlugin {
 
         app.add_systems(
             Update,
-            check_attack_conditions.run_if(in_state(SceneState::InGameClassicMode)),
+            check_attack_conditions
+                .run_if(in_state(SceneState::InGameClassicMode))
+                .run_if(resource_exists_and_equals(SelectedAction(
+                    ActionBarButton::Attack,
+                ))),
         );
 
         app.configure_set(Update, AttackModifier.after(check_attack_conditions));
@@ -116,6 +121,7 @@ pub fn check_attack_conditions(
     interacting_pos: Res<InteractingPos>,
     mut attack_event_writer: EventWriter<StartAttack>,
     button: Res<Input<MouseButton>>,
+    selected_action: Res<SelectedAction>,
 
     // TODO: Move the below arguments into the system which prompts the attack, once it has been
     // created.
@@ -130,7 +136,8 @@ pub fn check_attack_conditions(
             interacting_pos.entity.is_some()
         );
     }
-    if interacting_pos.interacting_type == InteractingType::Enemy
+    if **selected_action == ActionBarButton::Attack
+        && interacting_pos.interacting_type == InteractingType::Enemy
         && interacting_pos.entity.is_some()
         && button.just_pressed(MouseButton::Left)
     {
