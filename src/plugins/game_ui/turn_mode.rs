@@ -3,13 +3,8 @@ use std::ops::Deref;
 use std::ops::DerefMut;
 use std::slice::Iter;
 
-use crate::components::player::PlayerComponent;
-// use crate::components::skill::SkillComponent;
-use crate::config::{RESOLUTION, WINDOW_HEIGHT};
 use crate::materials::font::FontMaterials;
-use crate::materials::ingame::InGameMaterials;
 use crate::plugins::combat_mode::state::CombatMode;
-// use crate::plugins::game_ui::IngameUiData;
 use crate::resources::dictionary::Dictionary;
 
 use super::ui_root::UserInterfaceRoot;

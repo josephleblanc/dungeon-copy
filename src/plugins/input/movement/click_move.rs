@@ -1,4 +1,6 @@
 use crate::config::TILE_SIZE;
+use crate::plugins::game_ui::action_bar::ActionBarButton;
+use crate::plugins::game_ui::action_bar::SelectedAction;
 use crate::plugins::interact::InteractingPosEvent;
 use crate::plugins::interact::InteractingType;
 use crate::plugins::monster::collisions::monster_collision_check;
@@ -119,11 +121,13 @@ pub fn check_path_conditions(
     map_grid: Res<MapGrid>,
     movement: Res<Movement>,
     movement_path: Option<Res<MovementPath>>,
+    selected_action: Res<SelectedAction>,
     mut path_ready: ResMut<PathConditions>,
 ) {
     let player_pos = player_query.get_single().unwrap().1.translation.truncate();
     let focus_pos = interacting_pos.pos;
-    **path_ready = interacting_pos.interacting_type == InteractingType::MapGrid
+    **path_ready = **selected_action == ActionBarButton::Move
+        && interacting_pos.interacting_type == InteractingType::MapGrid
         && **movement_mode == MovementMode::TurnBasedMovement
         && !movement.moving
         && player_pos != focus_pos

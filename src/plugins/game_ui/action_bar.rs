@@ -51,6 +51,7 @@ pub fn setup(
     commands.insert_resource(ActionBarData {
         action_bar_root: action_bar_root.unwrap(),
     });
+    commands.insert_resource(SelectedAction(ActionBarButton::Move));
 }
 
 #[derive(Component, Debug, Copy, Clone, Eq, PartialEq)]
@@ -133,4 +134,35 @@ pub fn action_bar(
         }
     })
     .insert(Name::new("Movement Mode"));
+}
+
+#[derive(Resource, Copy, Clone, Debug, Deref, DerefMut)]
+pub struct SelectedAction(pub ActionBarButton);
+
+pub fn handle_buttons(
+    mut button_query: Query<
+        (&Interaction, &ActionBarButton, &mut BackgroundColor),
+        (Changed<Interaction>, With<Button>),
+    >,
+    mut current_mode: ResMut<SelectedAction>,
+) {
+    for (interaction, button, mut bg_color) in button_query.iter_mut() {
+        use ActionBarButton::*;
+        match interaction {
+            Interaction::Pressed => match *button {
+                Attack => {
+                    if **current_mode != Attack {
+                        **current_mode = Attack;
+                    }
+                }
+                Move => {
+                    if **current_mode != Move {
+                        **current_mode = Move;
+                    }
+                }
+            },
+            Interaction::Hovered => *bg_color = Color::GREEN.into(),
+            Interaction::None => *bg_color = Color::DARK_GREEN.into(),
+        }
+    }
 }
