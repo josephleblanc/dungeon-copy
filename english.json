@@ -32,5 +32,15 @@
   "action_bar": {
     "attack": "Attack",
     "move_action": "Move"
+  },
+  "attack_submenu": {
+    "single_attack": "Single Attack",
+    "full_attack": "Full Attack"
+  },
+  "move_submenu": {
+    "move_action": "Move Action",
+    "standard_action": "Standard Action",
+    "full_move": "Full Move",
+    "five_foot_step": "Five Foot Step"
   }
 }

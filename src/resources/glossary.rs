@@ -15,6 +15,28 @@ pub struct Glossary {
     pub combat_mode: CombatModeText,
     pub turn_action_display: TurnActionDisplay,
     pub action_bar: ActionBar,
+    pub attack_submenu: AttackSubMenu,
+    pub move_submenu: MoveSubMenu,
+}
+
+/// This trait is for enums which have a corresponding translation, and is
+/// mostly used for buttons.
+pub trait Translation {
+    fn to_string_glossary(self, glossary: &Glossary) -> String;
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct MoveSubMenu {
+    pub move_action: String,
+    pub standard_action: String,
+    pub full_move: String,
+    pub five_foot_step: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct AttackSubMenu {
+    pub single_attack: String,
+    pub full_attack: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

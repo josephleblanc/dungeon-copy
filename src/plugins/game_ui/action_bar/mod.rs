@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use bevy::prelude::*;
 use std::slice::Iter;
 
@@ -8,7 +6,11 @@ use crate::{
     resources::{dictionary::Dictionary, glossary::ActionBar},
 };
 
+use self::move_buttons::setup_attack_buttons;
+
 use super::ui_root::UserInterfaceRoot;
+
+pub mod move_buttons;
 
 #[derive(Resource, Debug, Clone, Copy)]
 pub struct ActionBarData {
@@ -101,39 +103,56 @@ pub fn action_bar(
         ..Default::default()
     })
     .with_children(|parent| {
+        let border_size = 5.0;
+        let padding_size = 15.0;
+        let child_dist = border_size + padding_size;
         for action_button in ActionBarButton::iterator() {
             let component_name = action_button.to_string_glossary(&ingame_glossary);
 
             parent
-                .spawn((
-                    ButtonBundle {
-                        style: Style {
-                            border: UiRect::all(Val::Px(5.0)),
-                            padding: UiRect::all(Val::Px(15.)),
-                            margin: UiRect::all(Val::Px(15.)),
-                            ..Default::default()
-                        },
-                        background_color: Color::DARK_GREEN.into(),
-                        border_color: Color::BLACK.into(),
-                        ..Default::default()
+                .spawn(NodeBundle {
+                    style: Style {
+                        flex_direction: FlexDirection::ColumnReverse,
+                        ..default()
                     },
-                    *action_button,
-                    Name::new("Action Button"),
-                ))
-                .with_children(|parent| {
-                    parent.spawn((
-                        TextBundle {
-                            text: Text::from_section(component_name, text_style.clone())
-                                .with_alignment(TextAlignment::Center)
-                                .with_no_wrap(),
-                            ..Default::default()
-                        },
-                        Name::new("Action Button Text"),
-                    ));
+                    ..default()
+                })
+                .insert(Name::from("Button and submenu container"))
+                .with_children(|builder| {
+                    builder
+                        .spawn((
+                            ButtonBundle {
+                                style: Style {
+                                    border: UiRect::all(Val::Px(border_size)),
+                                    padding: UiRect::all(Val::Px(padding_size)),
+                                    margin: UiRect::all(Val::Px(15.)),
+                                    ..Default::default()
+                                },
+                                background_color: Color::DARK_GREEN.into(),
+                                border_color: Color::BLACK.into(),
+                                ..Default::default()
+                            },
+                            *action_button,
+                            Name::new("Action Button"),
+                        ))
+                        .with_children(|parent| {
+                            parent.spawn((
+                                TextBundle {
+                                    text: Text::from_section(component_name, text_style.clone())
+                                        .with_alignment(TextAlignment::Center)
+                                        .with_no_wrap(),
+                                    ..Default::default()
+                                },
+                                Name::new("Action Button Text"),
+                            ));
+                        });
+                })
+                .with_children(|builder| {
+                    setup_attack_buttons(builder, dictionary, &text_style, child_dist)
                 });
         }
     })
-    .insert(Name::new("Movement Mode"));
+    .insert(Name::new("Action Button Bar"));
 }
 
 #[derive(Resource, Copy, Clone, Debug, Deref, DerefMut, Eq, PartialEq)]
