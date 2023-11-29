@@ -166,3 +166,19 @@ pub fn handle_buttons(
         }
     }
 }
+
+pub fn handle_button_borders(
+    mut button_query: Query<
+        (&ActionBarButton, &mut BorderColor),
+        (Changed<Interaction>, With<Button>),
+    >,
+    current_mode: ResMut<SelectedAction>,
+) {
+    for (button, mut border_color) in button_query.iter_mut() {
+        if *button == **current_mode {
+            *border_color = Color::WHITE.into();
+        } else {
+            *border_color = Color::BLACK.into();
+        }
+    }
+}

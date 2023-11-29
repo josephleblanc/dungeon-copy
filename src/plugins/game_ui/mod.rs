@@ -50,6 +50,8 @@ impl Plugin for IngameUiPlugin {
                 turn_actions::TurnActionButton::reset_color
                     .run_if(resource_exists_and_changed::<CurrentTurn>()),
                 action_bar::handle_buttons.run_if(resource_exists::<SelectedAction>()),
+                action_bar::handle_button_borders
+                    .run_if(resource_exists_and_changed::<SelectedAction>()),
                 map::pathing::despawn_move_path.run_if(on_event::<PathSpriteEvent>()),
             )
                 .run_if(in_state(SceneState::InGameClassicMode)),
