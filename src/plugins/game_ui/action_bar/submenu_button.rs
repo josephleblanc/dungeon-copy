@@ -11,8 +11,9 @@ use crate::{
 use bevy::prelude::*;
 use std::{fmt::Display, slice::Iter};
 
-#[derive(Component, Copy, Clone, Eq, PartialEq, Debug)]
+#[derive(Component, Copy, Clone, Eq, PartialEq, Debug, Default)]
 pub enum MoveButton {
+    #[default]
     MoveAction,
     StandardAction,
     FiveFootStep,
@@ -53,8 +54,9 @@ impl Translation for MoveButton {
     }
 }
 
-#[derive(Component, Copy, Clone, Eq, PartialEq, Debug)]
+#[derive(Component, Copy, Clone, Eq, PartialEq, Debug, Default)]
 pub enum AttackButton {
+    #[default]
     Single,
     Full,
 }
@@ -110,8 +112,15 @@ pub fn setup_attack_buttons(
                     .spawn(ButtonBundle {
                         style: Style {
                             display: bevy::ui::Display::None,
+                            border: UiRect {
+                                left: Val::Px(5.0),
+                                right: Val::Px(5.0),
+                                top: Val::Px(2.5),
+                                bottom: Val::Px(2.5),
+                            },
                             ..default()
                         },
+                        border_color: Color::BLACK.into(),
                         ..default()
                     })
                     .insert(*attack_button)
@@ -132,7 +141,7 @@ pub fn setup_attack_buttons(
         });
 }
 
-pub fn setup_move_buttons(
+pub fn setup_submenu_button(
     action_bar_button: &mut ChildBuilder,
     dictionary: &Dictionary,
     text_style: &TextStyle,
@@ -154,6 +163,7 @@ pub fn setup_move_buttons(
                             display: bevy::ui::Display::None,
                             ..default()
                         },
+                        background_color: Color::DARK_GREEN.into(),
                         ..default()
                     })
                     .insert(*move_button)
@@ -174,28 +184,137 @@ pub fn setup_move_buttons(
         });
 }
 
-pub fn handle_submenu_buttons(
+pub fn handle_submenu_display(
     query_button: Query<(&Interaction, &ActionBarButton)>,
     mut query_submenu: Query<(&mut Style, &Interaction, &SubMenu)>,
 ) {
+    fn handle_interaction(
+        interaction: &Interaction,
+        sub_interaction: &Interaction,
+        mut style: Mut<'_, Style>,
+    ) {
+        if *interaction == Interaction::Pressed
+            || *interaction == Interaction::Hovered
+            || *sub_interaction == Interaction::Pressed
+            || *sub_interaction == Interaction::Hovered
+        {
+            style.display = bevy::ui::Display::Flex;
+        }
+        // else if *interaction == Interaction::None
+        //     && *sub_interaction == Interaction::None
+        //     && style.display != bevy::ui::Display::None
+        // {
+        //     style.display = bevy::ui::Display::None;
+        // }
+    }
+
     for (interaction, action_button) in query_button.iter() {
-        if let Some((mut style, sub_interaction, _button)) = match action_button {
-            ActionBarButton::Move => query_submenu
-                .iter_mut()
-                .find(|(_, _, submenu)| **submenu == SubMenu::MoveButton),
-            ActionBarButton::Attack => query_submenu
-                .iter_mut()
-                .find(|(_, _, submenu)| **submenu == SubMenu::AttackButton),
-        } {
-            if *interaction == Interaction::Pressed
-                || *interaction == Interaction::Hovered
-                || *sub_interaction == Interaction::Pressed
-                || *sub_interaction == Interaction::Hovered
-            {
-                style.display = bevy::ui::Display::Flex;
-            } else if *interaction == Interaction::None && style.display != bevy::ui::Display::None
-            {
-                style.display = bevy::ui::Display::None;
+        match action_button {
+            ActionBarButton::Move => {
+                for (mut style, sub_interaction, _button) in query_submenu
+                    .iter_mut()
+                    .filter(|(_, _, submenu)| **submenu == SubMenu::MoveButton)
+                {
+                    handle_interaction(interaction, sub_interaction, style);
+                }
+            }
+            ActionBarButton::Attack => {
+                for (mut style, sub_interaction, _button) in query_submenu
+                    .iter_mut()
+                    .filter(|(_, _, submenu)| **submenu == SubMenu::AttackButton)
+                {
+                    handle_interaction(interaction, sub_interaction, style);
+                }
+            }
+        }
+    }
+    if query_submenu
+        .iter()
+        .all(|(_, sub_interaction, _)| *sub_interaction == Interaction::None)
+        && query_button
+            .iter()
+            .all(|(interaction, _)| *interaction == Interaction::None)
+    {
+        for (mut style, _, _) in query_submenu.iter_mut() {
+            style.display = bevy::ui::Display::None;
+        }
+    }
+}
+
+#[derive(Resource, Copy, Clone, Debug, Default)]
+pub struct SelectedSubMenu {
+    attack_submenu: AttackButton,
+    move_submenu: MoveButton,
+}
+
+pub fn handle_submenu_buttons(
+    mut query_submenu: Query<(
+        &mut BackgroundColor,
+        &mut BorderColor,
+        &Interaction,
+        &SubMenu,
+        Option<&MoveButton>,
+        Option<&AttackButton>,
+    )>,
+    mut selected_submenu: ResMut<SelectedSubMenu>,
+) {
+    for (mut bg_color, mut border_color, interaction, submenu_button, move_button, attack_button) in
+        query_submenu.iter_mut()
+    {
+        match interaction {
+            Interaction::Pressed => {
+                *bg_color = Color::DARK_GREEN.into();
+                match submenu_button {
+                    SubMenu::MoveButton => {
+                        if let Some(button) = move_button {
+                            selected_submenu.move_submenu = *button;
+                        }
+                    }
+                    SubMenu::AttackButton => {
+                        if let Some(button) = attack_button {
+                            selected_submenu.attack_submenu = *button;
+                        }
+                    }
+                }
+            }
+            Interaction::Hovered => {
+                *bg_color = Color::GREEN.into();
+            }
+            Interaction::None => {
+                *bg_color = Color::DARK_GREEN.into();
+            }
+        }
+    }
+}
+
+pub fn handle_submenu_border(
+    mut query_submenu: Query<(
+        &mut BorderColor,
+        &SubMenu,
+        Option<&MoveButton>,
+        Option<&AttackButton>,
+    )>,
+    selected_submenu: Res<SelectedSubMenu>,
+) {
+    for (mut border_color, submenu, move_button, attack_button) in query_submenu.iter_mut() {
+        match submenu {
+            SubMenu::MoveButton => {
+                if let Some(button) = move_button {
+                    if selected_submenu.move_submenu == *button {
+                        *border_color = Color::WHITE.into();
+                    } else {
+                        *border_color = Color::BLACK.into();
+                    }
+                }
+            }
+            SubMenu::AttackButton => {
+                if let Some(button) = attack_button {
+                    if selected_submenu.attack_submenu == *button {
+                        *border_color = Color::WHITE.into();
+                    } else {
+                        *border_color = Color::BLACK.into();
+                    }
+                }
             }
         }
     }

@@ -6,11 +6,11 @@ use crate::{
     resources::{dictionary::Dictionary, glossary::ActionBar},
 };
 
-use self::move_buttons::{setup_attack_buttons, setup_move_buttons};
+use self::submenu_button::{setup_attack_buttons, setup_submenu_button};
 
 use super::ui_root::UserInterfaceRoot;
 
-pub mod move_buttons;
+pub mod submenu_button;
 
 #[derive(Resource, Debug, Clone, Copy)]
 pub struct ActionBarData {
@@ -75,6 +75,15 @@ impl ActionBarButton {
     }
 }
 
+impl std::fmt::Display for ActionBarButton {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ActionBarButton::Attack => write!(f, "Attack"),
+            ActionBarButton::Move => write!(f, "Move"),
+        }
+    }
+}
+
 pub fn action_bar(
     root: &mut ChildBuilder,
     font_materials: &FontMaterials,
@@ -125,7 +134,10 @@ pub fn action_bar(
                     },
                     ..default()
                 })
-                .insert(Name::from("Button and submenu container"))
+                .insert(Name::from(format!(
+                    "{} Button and submenu container",
+                    action_button
+                )))
                 .with_children(|builder| {
                     builder
                         .spawn((
@@ -161,7 +173,7 @@ pub fn action_bar(
                             setup_attack_buttons(builder, dictionary, &text_style, &submenu_style);
                         }
                         ActionBarButton::Move => {
-                            setup_move_buttons(builder, dictionary, &text_style, &submenu_style);
+                            setup_submenu_button(builder, dictionary, &text_style, &submenu_style);
                         }
                     };
                 });

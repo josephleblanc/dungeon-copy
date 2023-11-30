@@ -3,7 +3,9 @@ use bevy::prelude::*;
 use crate::scenes::SceneState;
 
 use self::{
-    action_bar::SelectedAction, combat_mode::CombatModeRes, map::pathing::PathSpriteEvent,
+    action_bar::{submenu_button::SelectedSubMenu, SelectedAction},
+    combat_mode::CombatModeRes,
+    map::pathing::PathSpriteEvent,
     turn_actions::TurnActionEvent,
 };
 
@@ -21,21 +23,23 @@ pub struct IngameUiPlugin;
 
 impl Plugin for IngameUiPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<TurnActionEvent>().add_systems(
-            OnEnter(SceneState::InGameClassicMode),
-            (
-                map::setup,
-                ui_root::setup,
-                apply_deferred,
-                combat_mode::setup,
-                turn_mode::setup,
-                turn_actions::setup,
-                action_bar::setup,
-                apply_deferred,
-                map::pathing::setup,
-            )
-                .chain(),
-        );
+        app.add_event::<TurnActionEvent>()
+            .init_resource::<SelectedSubMenu>()
+            .add_systems(
+                OnEnter(SceneState::InGameClassicMode),
+                (
+                    map::setup,
+                    ui_root::setup,
+                    apply_deferred,
+                    combat_mode::setup,
+                    turn_mode::setup,
+                    turn_actions::setup,
+                    action_bar::setup,
+                    apply_deferred,
+                    map::pathing::setup,
+                )
+                    .chain(),
+            );
 
         app.add_systems(
             Update,
@@ -53,7 +57,10 @@ impl Plugin for IngameUiPlugin {
                 action_bar::handle_button_borders
                     .run_if(resource_exists_and_changed::<SelectedAction>()),
                 map::pathing::despawn_move_path.run_if(on_event::<PathSpriteEvent>()),
-                action_bar::move_buttons::handle_submenu_buttons,
+                action_bar::submenu_button::handle_submenu_display,
+                action_bar::submenu_button::handle_submenu_buttons,
+                action_bar::submenu_button::handle_submenu_border
+                    .run_if(resource_exists_and_changed::<SelectedSubMenu>()),
             )
                 .run_if(in_state(SceneState::InGameClassicMode)),
         );
