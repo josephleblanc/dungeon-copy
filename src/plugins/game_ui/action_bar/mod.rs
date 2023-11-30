@@ -6,7 +6,7 @@ use crate::{
     resources::{dictionary::Dictionary, glossary::ActionBar},
 };
 
-use self::move_buttons::setup_attack_buttons;
+use self::move_buttons::{setup_attack_buttons, setup_move_buttons};
 
 use super::ui_root::UserInterfaceRoot;
 
@@ -92,6 +92,14 @@ pub fn action_bar(
         color: Color::WHITE,
     };
 
+    let submenu_style = Style {
+        flex_direction: FlexDirection::ColumnReverse,
+        bottom: Val::Px(70.0),
+        left: Val::Px(20.0),
+        position_type: PositionType::Absolute,
+        ..default()
+    };
+
     root.spawn(NodeBundle {
         style: Style {
             width: Val::Percent(100.),
@@ -148,7 +156,14 @@ pub fn action_bar(
                         });
                 })
                 .with_children(|builder| {
-                    setup_attack_buttons(builder, dictionary, &text_style, child_dist)
+                    match action_button {
+                        ActionBarButton::Attack => {
+                            setup_attack_buttons(builder, dictionary, &text_style, &submenu_style);
+                        }
+                        ActionBarButton::Move => {
+                            setup_move_buttons(builder, dictionary, &text_style, &submenu_style);
+                        }
+                    };
                 });
         }
     })

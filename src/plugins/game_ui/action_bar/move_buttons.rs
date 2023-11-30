@@ -31,6 +31,17 @@ impl MoveButton {
     }
 }
 
+impl Display for MoveButton {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            MoveButton::MoveAction => write!(f, "Move Action"),
+            MoveButton::StandardAction => write!(f, "Standard Action"),
+            MoveButton::FiveFootStep => write!(f, "Five Foot Step"),
+            MoveButton::FullMove => write!(f, "Full Move"),
+        }
+    }
+}
+
 impl Translation for MoveButton {
     fn to_string_glossary(self, glossary: &crate::resources::glossary::Glossary) -> String {
         match self {
@@ -72,29 +83,40 @@ impl Display for AttackButton {
     }
 }
 
+#[derive(Component, Copy, Clone, Debug, Eq, PartialEq)]
+/// Label struct for the submenu buttons in the action bar.
+pub enum SubMenu {
+    AttackButton,
+    MoveButton,
+}
+
 pub fn setup_attack_buttons(
     action_bar_button: &mut ChildBuilder,
     dictionary: &Dictionary,
     text_style: &TextStyle,
-    child_dist: f32,
+    submenu_style: &Style,
 ) {
     let glossary = &dictionary.get_glossary();
 
     action_bar_button
         .spawn(NodeBundle {
-            style: Style {
-                flex_direction: FlexDirection::ColumnReverse,
-                bottom: Val::Px(child_dist),
-                ..default()
-            },
+            style: submenu_style.clone(),
             ..default()
         })
+        .insert(Name::from("Attack Button Submenu"))
         .with_children(|builder| {
             for attack_button in AttackButton::iterator() {
                 builder
-                    .spawn(ButtonBundle { ..default() })
+                    .spawn(ButtonBundle {
+                        style: Style {
+                            display: bevy::ui::Display::None,
+                            ..default()
+                        },
+                        ..default()
+                    })
                     .insert(*attack_button)
                     .insert(Name::from(format!("Attack Button {}", attack_button)))
+                    .insert(SubMenu::AttackButton)
                     .with_children(|builder| {
                         builder.spawn(TextBundle {
                             text: Text::from_section(
@@ -108,4 +130,73 @@ pub fn setup_attack_buttons(
                     });
             }
         });
+}
+
+pub fn setup_move_buttons(
+    action_bar_button: &mut ChildBuilder,
+    dictionary: &Dictionary,
+    text_style: &TextStyle,
+    submenu_style: &Style,
+) {
+    let glossary = &dictionary.get_glossary();
+
+    action_bar_button
+        .spawn(NodeBundle {
+            style: submenu_style.clone(),
+            ..default()
+        })
+        .insert(Name::from("Move Button Submenu"))
+        .with_children(|builder| {
+            for move_button in MoveButton::iterator() {
+                builder
+                    .spawn(ButtonBundle {
+                        style: Style {
+                            display: bevy::ui::Display::None,
+                            ..default()
+                        },
+                        ..default()
+                    })
+                    .insert(*move_button)
+                    .insert(Name::from(format!("Move Button {}", move_button)))
+                    .insert(SubMenu::MoveButton)
+                    .with_children(|builder| {
+                        builder.spawn(TextBundle {
+                            text: Text::from_section(
+                                move_button.to_string_glossary(glossary),
+                                text_style.clone(),
+                            )
+                            .with_alignment(TextAlignment::Center)
+                            .with_no_wrap(),
+                            ..default()
+                        });
+                    });
+            }
+        });
+}
+
+pub fn handle_submenu_buttons(
+    query_button: Query<(&Interaction, &ActionBarButton)>,
+    mut query_submenu: Query<(&mut Style, &Interaction, &SubMenu)>,
+) {
+    for (interaction, action_button) in query_button.iter() {
+        if let Some((mut style, sub_interaction, _button)) = match action_button {
+            ActionBarButton::Move => query_submenu
+                .iter_mut()
+                .find(|(_, _, submenu)| **submenu == SubMenu::MoveButton),
+            ActionBarButton::Attack => query_submenu
+                .iter_mut()
+                .find(|(_, _, submenu)| **submenu == SubMenu::AttackButton),
+        } {
+            if *interaction == Interaction::Pressed
+                || *interaction == Interaction::Hovered
+                || *sub_interaction == Interaction::Pressed
+                || *sub_interaction == Interaction::Hovered
+            {
+                style.display = bevy::ui::Display::Flex;
+            } else if *interaction == Interaction::None && style.display != bevy::ui::Display::None
+            {
+                style.display = bevy::ui::Display::None;
+            }
+        }
+    }
 }
