@@ -1,3 +1,4 @@
+pub mod actions;
 pub mod camera;
 pub mod classic_mode;
 pub mod combat;

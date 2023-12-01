@@ -1,5 +1,7 @@
 #![allow(dead_code)]
 
+use crate::plugins::actions::MoveAction;
+use crate::plugins::actions::TurnActionStatus;
 use crate::plugins::game_ui::action_bar::ActionBarButton;
 use crate::plugins::game_ui::action_bar::SelectedAction;
 use crate::plugins::interact::InteractingPosEvent;

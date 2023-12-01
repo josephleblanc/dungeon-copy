@@ -4,7 +4,11 @@ use std::slice::Iter;
 
 use crate::{
     materials::font::FontMaterials,
-    plugins::{combat_mode::turn::action::CurrentTurn, player::PlayerLabel},
+    plugins::{
+        actions::{TurnAction, TurnActionEvent, TurnActionStatus},
+        combat_mode::turn::action::CurrentTurn,
+        player::PlayerLabel,
+    },
     resources::dictionary::Dictionary,
 };
 
@@ -159,50 +163,6 @@ fn turn_action_display(
 
 #[derive(Component, Copy, Clone, Debug, PartialEq, Eq, Deref, DerefMut)]
 pub struct AOOLabel(usize);
-
-#[derive(Event, Copy, Clone, Debug, PartialEq, Eq)]
-pub struct TurnActionEvent {
-    turn_action: TurnAction,
-    status: TurnActionStatus,
-}
-
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum TurnActionStatus {
-    Used,
-    Available,
-    Planned,
-}
-
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-enum TurnAction {
-    Move,
-    Standard,
-    FiveFootStep,
-    Immediate,
-}
-
-impl TurnAction {
-    pub fn iterator() -> Iter<'static, Self> {
-        [
-            TurnAction::Move,
-            TurnAction::Standard,
-            TurnAction::FiveFootStep,
-            TurnAction::Immediate,
-        ]
-        .iter()
-    }
-}
-
-impl From<TurnActionButton> for TurnAction {
-    fn from(value: TurnActionButton) -> Self {
-        match value {
-            TurnActionButton::Immediate => TurnAction::Immediate,
-            TurnActionButton::Move => TurnAction::Move,
-            TurnActionButton::Standard => TurnAction::Standard,
-            TurnActionButton::FiveFootStep => TurnAction::FiveFootStep,
-        }
-    }
-}
 
 #[derive(Component, Copy, Clone, Debug, PartialEq, Eq)]
 pub enum TurnActionButton {

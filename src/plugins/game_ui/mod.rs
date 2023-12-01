@@ -6,10 +6,9 @@ use self::{
     action_bar::{submenu_button::SelectedSubMenu, SelectedAction},
     combat_mode::CombatModeRes,
     map::pathing::PathSpriteEvent,
-    turn_actions::TurnActionEvent,
 };
 
-use super::combat_mode::turn::action::CurrentTurn;
+use super::{actions::TurnActionEvent, combat_mode::turn::action::CurrentTurn};
 
 pub mod action_bar;
 pub mod combat_mode;
@@ -23,7 +22,9 @@ pub struct IngameUiPlugin;
 
 impl Plugin for IngameUiPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<TurnActionEvent>()
+        app
+            // TODO: Move TurnActionEvent into the action plugin
+            .add_event::<TurnActionEvent>()
             .init_resource::<SelectedSubMenu>()
             .add_systems(
                 OnEnter(SceneState::InGameClassicMode),
