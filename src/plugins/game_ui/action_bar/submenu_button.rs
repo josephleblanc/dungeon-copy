@@ -88,6 +88,15 @@ pub enum SubMenu {
     MoveButton,
 }
 
+impl From<ActionBarButton> for SubMenu {
+    fn from(value: ActionBarButton) -> Self {
+        match value {
+            ActionBarButton::Move => Self::MoveButton,
+            ActionBarButton::Attack => Self::AttackButton,
+        }
+    }
+}
+
 pub fn setup_attack_buttons(
     action_bar_button: &mut ChildBuilder,
     dictionary: &Dictionary,

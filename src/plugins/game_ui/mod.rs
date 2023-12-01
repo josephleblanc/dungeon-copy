@@ -57,6 +57,7 @@ impl Plugin for IngameUiPlugin {
                 action_bar::handle_buttons.run_if(resource_exists::<SelectedAction>()),
                 action_bar::handle_button_borders
                     .run_if(resource_exists_and_changed::<SelectedAction>()),
+                action_bar::handle_submenu_select,
                 map::pathing::despawn_move_path.run_if(on_event::<PathSpriteEvent>()),
                 action_bar::submenu_button::handle_submenu_display,
                 action_bar::submenu_button::handle_submenu_buttons,

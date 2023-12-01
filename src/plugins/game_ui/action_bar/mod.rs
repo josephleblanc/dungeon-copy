@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_inspector_egui::egui::menu::SubMenuButton;
 use std::slice::Iter;
 
 use crate::{
@@ -6,7 +7,7 @@ use crate::{
     resources::{dictionary::Dictionary, glossary::ActionBar},
 };
 
-use self::submenu_button::{setup_attack_buttons, setup_move_buttons};
+use self::submenu_button::{setup_attack_buttons, setup_move_buttons, SubMenu};
 
 use super::ui_root::UserInterfaceRoot;
 
@@ -87,6 +88,15 @@ impl std::fmt::Display for ActionBarButton {
         match self {
             ActionBarButton::Attack => write!(f, "Attack"),
             ActionBarButton::Move => write!(f, "Move"),
+        }
+    }
+}
+
+impl From<SubMenu> for ActionBarButton {
+    fn from(value: SubMenu) -> Self {
+        match value {
+            SubMenu::MoveButton => Self::Move,
+            SubMenu::AttackButton => Self::Attack,
         }
     }
 }
@@ -192,7 +202,7 @@ pub struct SelectedAction(pub ActionBarButton);
 pub fn handle_buttons(
     mut button_query: Query<
         (&Interaction, &ActionBarButton, &mut BackgroundColor),
-        (Changed<Interaction>, With<Button>),
+        (Changed<Interaction>, Without<SubMenu>),
     >,
     mut current_mode: ResMut<SelectedAction>,
 ) {
@@ -217,11 +227,25 @@ pub fn handle_buttons(
     }
 }
 
+pub fn handle_submenu_select(
+    button_query: Query<&ActionBarButton>,
+    query_submenu: Query<(&Interaction, &SubMenu), Changed<Interaction>>,
+    mut current_mode: ResMut<SelectedAction>,
+) {
+    if let Some((_interaction, submenu_button)) = query_submenu
+        .iter()
+        .find(|(interaction, _)| **interaction == Interaction::Pressed)
+    {
+        for action_button in button_query.iter() {
+            if SubMenu::from(*action_button) == *submenu_button {
+                **current_mode = ActionBarButton::from(*submenu_button);
+            }
+        }
+    }
+}
+
 pub fn handle_button_borders(
-    mut button_query: Query<
-        (&ActionBarButton, &mut BorderColor),
-        (Changed<Interaction>, With<Button>),
-    >,
+    mut button_query: Query<(&ActionBarButton, &mut BorderColor)>,
     current_mode: ResMut<SelectedAction>,
 ) {
     for (button, mut border_color) in button_query.iter_mut() {
