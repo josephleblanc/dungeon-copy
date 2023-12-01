@@ -8,7 +8,6 @@ pub mod movement;
 use movement::click_move;
 use movement::path_list_event;
 
-use super::game_ui::action_bar::ActionBarButton;
 use super::game_ui::action_bar::SelectedAction;
 use super::{game_ui::map::pathing::PathSpriteEvent, interact::InteractingPosEvent};
 use crate::plugins::input::movement::move_event;

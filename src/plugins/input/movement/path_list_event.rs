@@ -1,6 +1,7 @@
+#![allow(dead_code)]
+
 use bevy::prelude::*;
 
-use crate::plugins::input::click_move::MovementPathList;
 use crate::plugins::input::path_move::MovementPath;
 
 #[derive(Event, Debug, Clone)]

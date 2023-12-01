@@ -2,7 +2,6 @@ use bevy::prelude::*;
 
 use crate::config::{RESOLUTION, TILE_SIZE, WINDOW_HEIGHT};
 use crate::materials::ingame::InGameMaterials;
-use crate::plugins::game_ui::map::MapUiData;
 use crate::plugins::interact::Interactable;
 use crate::resources::dungeon::grid_square::GridSquare;
 

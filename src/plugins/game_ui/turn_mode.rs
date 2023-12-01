@@ -15,6 +15,13 @@ pub struct MovementModeData {
     movement_interface_root: Entity,
 }
 
+pub fn cleanup(mut commands: Commands, movement_mode_data: Res<MovementModeData>) {
+    commands
+        .entity(movement_mode_data.movement_interface_root)
+        .despawn_recursive();
+    commands.remove_resource::<MovementModeData>();
+}
+
 #[derive(Resource, Clone, Default, Debug)]
 pub struct MovementModeRes(MovementMode);
 

@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use crate::components::attributes::Attribute;
 use crate::{
     components::{attributes::Dexterity, creature::Creature},
-    plugins::combat::bonus::{BonusSource, BonusType},
+    plugins::combat::bonus::BonusType,
 };
 
 use super::StartInitiative;

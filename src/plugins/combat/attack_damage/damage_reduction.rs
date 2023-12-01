@@ -1,20 +1,16 @@
 #![allow(dead_code)]
 use bevy::prelude::*;
-use std::ops::Add;
 
 use crate::{
     components::alignment,
-    plugins::combat::{damage::DamageType, AttackData},
+    plugins::combat::AttackData,
     resources::equipment::{
-        weapon::{self, Weapon, WeaponDamageTypes},
+        weapon::{self, WeaponDamageTypes},
         Enhancement,
     },
 };
 
-use super::{
-    damage::DamageBonusSource,
-    damage_reduction_modifier::{DRModEvent, DRModList},
-};
+use super::damage_reduction_modifier::{DRModEvent, DRModList};
 
 #[derive(Debug, Copy, Clone)]
 pub enum DRSource {

@@ -1,17 +1,11 @@
 #![allow(dead_code)]
 use crate::{
-    plugins::combat::{
-        damage::DamageType,
-        {AttackData, AttackDataEvent},
-    },
+    plugins::combat::{damage::DamageType, AttackData},
     resources::equipment::weapon::{Weapon, WeaponDamageTypes},
 };
 use bevy::prelude::*;
 
-use super::{
-    damage_modifier::{AttackDamageModEvent, AttackDamageModList, OnCrit},
-    damage_reduction::DRTypes,
-};
+use super::damage_modifier::{AttackDamageModEvent, AttackDamageModList, OnCrit};
 
 #[derive(Debug, Copy, Clone)]
 pub struct AttackDamageSum {

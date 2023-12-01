@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::config::*;
 
 /// Change co-ordinate from transform to UI.

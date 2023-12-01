@@ -15,6 +15,13 @@ pub struct CombatModeData {
     combat_interface_root: Entity,
 }
 
+pub fn cleanup(mut commands: Commands, combat_mode_data: Res<CombatModeData>) {
+    commands
+        .entity(combat_mode_data.combat_interface_root)
+        .despawn_recursive();
+    commands.remove_resource::<CombatModeData>()
+}
+
 #[derive(Reflect, Deref, DerefMut, Resource, Clone, Default, Debug, Eq, PartialEq)]
 pub struct CombatModeRes(pub CombatMode);
 

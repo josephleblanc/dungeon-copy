@@ -70,6 +70,14 @@ impl Plugin for IngameUiPlugin {
             (combat_mode::debug_buttons).run_if(resource_exists_and_changed::<CombatModeRes>()),
         );
 
-        app.add_systems(OnExit(SceneState::InGameClassicMode), map::cleanup);
+        app.add_systems(
+            OnExit(SceneState::InGameClassicMode),
+            (
+                map::cleanup,
+                action_bar::cleanup,
+                combat_mode::cleanup,
+                turn_mode::cleanup,
+            ),
+        );
     }
 }

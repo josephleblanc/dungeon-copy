@@ -19,7 +19,7 @@ pub mod path_move;
 pub mod turn_based;
 pub mod wander;
 
-/// Hands off player movement control to the correct system, either
+/// Directs player movement control to the correct system, either
 /// wander or turn-based.
 pub fn player_movement_system(
     movement_mode: Res<MovementModeRes>,
@@ -61,13 +61,6 @@ pub struct Movement {
     pos: Option<Vec2>,
     moved_length: Option<f32>,
     speed: Option<f32>,
-}
-
-pub enum MoveDirection {
-    Up,
-    Down,
-    Left,
-    Right,
 }
 
 impl Movement {

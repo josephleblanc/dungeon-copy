@@ -5,14 +5,14 @@ use crate::resources::animation_state::AnimationState;
 
 pub fn player_animation_system(
     time: Res<Time>,
-    texture_atlases: Res<Assets<TextureAtlas>>,
+    // texture_atlases: Res<Assets<TextureAtlas>>,
     mut query: Query<(
         &mut PlayerAnimation,
         &mut TextureAtlasSprite,
         &Handle<TextureAtlas>,
     )>,
 ) {
-    for (mut player_animation, mut sprite, texture_atlas_handle) in query.iter_mut() {
+    for (mut player_animation, mut sprite, _texture_atlas_handle) in query.iter_mut() {
         player_animation.animation_timer.tick(time.delta());
         if player_animation.animation_timer.just_finished() {
             match player_animation.animation_state {

@@ -6,7 +6,7 @@ use crate::{
     resources::{dictionary::Dictionary, glossary::ActionBar},
 };
 
-use self::submenu_button::{setup_attack_buttons, setup_submenu_button};
+use self::submenu_button::{setup_attack_buttons, setup_move_buttons};
 
 use super::ui_root::UserInterfaceRoot;
 
@@ -15,6 +15,13 @@ pub mod submenu_button;
 #[derive(Resource, Debug, Clone, Copy)]
 pub struct ActionBarData {
     action_bar_root: Entity,
+}
+
+pub fn cleanup(mut commands: Commands, action_bar_root: Res<ActionBarData>) {
+    commands
+        .entity(action_bar_root.action_bar_root)
+        .despawn_recursive();
+    commands.remove_resource::<ActionBarData>();
 }
 
 pub fn setup(
@@ -120,9 +127,6 @@ pub fn action_bar(
         ..Default::default()
     })
     .with_children(|parent| {
-        let border_size = 5.0;
-        let padding_size = 15.0;
-        let child_dist = border_size + padding_size;
         for action_button in ActionBarButton::iterator() {
             let component_name = action_button.to_string_glossary(&ingame_glossary);
 
@@ -143,8 +147,8 @@ pub fn action_bar(
                         .spawn((
                             ButtonBundle {
                                 style: Style {
-                                    border: UiRect::all(Val::Px(border_size)),
-                                    padding: UiRect::all(Val::Px(padding_size)),
+                                    border: UiRect::all(Val::Px(5.0)),
+                                    padding: UiRect::all(Val::Px(15.0)),
                                     margin: UiRect::all(Val::Px(15.)),
                                     ..Default::default()
                                 },
@@ -173,7 +177,7 @@ pub fn action_bar(
                             setup_attack_buttons(builder, dictionary, &text_style, &submenu_style);
                         }
                         ActionBarButton::Move => {
-                            setup_submenu_button(builder, dictionary, &text_style, &submenu_style);
+                            setup_move_buttons(builder, dictionary, &text_style, &submenu_style);
                         }
                     };
                 });

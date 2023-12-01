@@ -4,7 +4,7 @@ use crate::components::creature::Creature;
 
 use self::initiative_modifier::InitiativeModEvent;
 
-use super::{turn::action::CurrentTurn, InitiativeDetails, InitiativeMap, TurnOrder};
+use super::{InitiativeDetails, InitiativeMap, TurnOrder};
 
 pub mod initiative_modifier;
 

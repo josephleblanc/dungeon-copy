@@ -8,10 +8,7 @@ use crate::{
         combat::{bonus::BonusType, damage::DamageType, AttackData, AttackDataEvent},
         player::equipment::WeaponSlotName,
     },
-    resources::{
-        dice::Dice,
-        equipment::weapon::{self, Weapon},
-    },
+    resources::{dice::Dice, equipment::weapon::Weapon},
 };
 
 use super::damage::DamageBonusSource;
@@ -160,72 +157,27 @@ impl AttackDamageModList {
         for bonus_type in BonusType::stackable() {
             total_stackable += self
                 .iter()
-                // .inspect(|dmg_mod| {
-                //     println!(
-                //         "debug | damage::SumStackable::sum_stackable | checking {:?}\
-                //         val: {}\
-                //         dice: {:?}\
-                //         dice.roll(): {:?}",
-                //         dmg_mod.bonus_type,
-                //         dmg_mod.val,
-                //         dmg_mod.damage_dice,
-                //         if dmg_mod.damage_dice.is_some() {
-                //             Some(dmg_mod.damage_dice.unwrap().roll())
-                //         } else {
-                //             None
-                //         }
-                //     )
-                // })
-                .filter(|dmg_mod| {
-                    // println!(
-                    //     "||| dmg_mod.bonus_type == bonus_type: {}, \
-                    // bonus_type: {:?}, dmg_mod.bonus_type: {:?}",
-                    //     dmg_mod.bonus_type == bonus_type,
-                    //     bonus_type,
-                    //     dmg_mod.bonus_type,
-                    // );
-                    dmg_mod.bonus_type == bonus_type
-                })
+                .filter(|dmg_mod| dmg_mod.bonus_type == bonus_type)
                 .fold(0, |acc, x| {
-                    let new_val = acc
-                        + x.val
+                    acc + x.val
                         + if let Some(dice) = x.damage_dice {
                             dice.roll() as isize
                         } else {
                             0
-                        };
-                    // println!("|||> sum_stackable new_val: {}", new_val);
-                    new_val
+                        }
                 });
         }
         for bonus_type in BonusType::non_stackable() {
             total_non_stackable += if let Some(total) = self
                 .iter()
-                // .inspect(|dmg_mod| {
-                //     println!(
-                //         "debug | damage_modifier::DamageModList::sum_non_stackable iterator | checking {:?}",
-                //         dmg_mod.bonus_type
-                //     )
-                // })
-                .filter(|dmg_mod| {
-                    // println!(
-                    //     "||| dmg_mod.bonus_type == bonus_type: {}, \
-                    // bonus_type: {:?}, dmg_mod.bonus_type: {:?}",
-                    //     dmg_mod.bonus_type == bonus_type,
-                    //     bonus_type,
-                    //     dmg_mod.bonus_type,
-                    // );
-                    dmg_mod.bonus_type == bonus_type
-                })
+                .filter(|dmg_mod| dmg_mod.bonus_type == bonus_type)
                 .map(|x| {
-                    let new_val = x.val
+                    x.val
                         + if let Some(dice) = x.damage_dice {
                             dice.roll() as isize
                         } else {
                             0
-                        };
-                    // println!("new_val: {}", new_val);
-                    new_val
+                        }
                 })
                 .max_by(|x, y| x.cmp(y))
             {

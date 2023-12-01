@@ -1,12 +1,12 @@
 // Inspired by https://github.com/Anshorei/bevy_rei/tree/master
 
+#![allow(dead_code)]
+
 use crate::config::TILE_SIZE;
 use bevy::prelude::*;
-use std::cmp::Ordering;
 use std::ops::Deref;
 use std::ops::DerefMut;
 use std::slice::Iter;
-// use std::ops::{Deref, DerefMut};
 
 use crate::scenes::SceneState;
 

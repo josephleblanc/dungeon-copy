@@ -1,8 +1,6 @@
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::resources::equipment::weapon::WeaponName;
-
 #[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub enum WeaponSlotName {
     TwoHanded,

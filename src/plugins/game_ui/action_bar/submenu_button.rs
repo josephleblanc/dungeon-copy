@@ -1,12 +1,8 @@
 #![allow(dead_code)]
 
 use crate::{
-    materials::font::FontMaterials,
     plugins::game_ui::action_bar::ActionBarButton,
-    resources::{
-        dictionary::Dictionary,
-        glossary::{MoveSubMenu, Translation},
-    },
+    resources::{dictionary::Dictionary, glossary::Translation},
 };
 use bevy::prelude::*;
 use std::{fmt::Display, slice::Iter};
@@ -141,7 +137,7 @@ pub fn setup_attack_buttons(
         });
 }
 
-pub fn setup_submenu_button(
+pub fn setup_move_buttons(
     action_bar_button: &mut ChildBuilder,
     dictionary: &Dictionary,
     text_style: &TextStyle,
@@ -200,18 +196,12 @@ pub fn handle_submenu_display(
         {
             style.display = bevy::ui::Display::Flex;
         }
-        // else if *interaction == Interaction::None
-        //     && *sub_interaction == Interaction::None
-        //     && style.display != bevy::ui::Display::None
-        // {
-        //     style.display = bevy::ui::Display::None;
-        // }
     }
 
     for (interaction, action_button) in query_button.iter() {
         match action_button {
             ActionBarButton::Move => {
-                for (mut style, sub_interaction, _button) in query_submenu
+                for (style, sub_interaction, _button) in query_submenu
                     .iter_mut()
                     .filter(|(_, _, submenu)| **submenu == SubMenu::MoveButton)
                 {
@@ -219,7 +209,7 @@ pub fn handle_submenu_display(
                 }
             }
             ActionBarButton::Attack => {
-                for (mut style, sub_interaction, _button) in query_submenu
+                for (style, sub_interaction, _button) in query_submenu
                     .iter_mut()
                     .filter(|(_, _, submenu)| **submenu == SubMenu::AttackButton)
                 {
@@ -250,7 +240,6 @@ pub struct SelectedSubMenu {
 pub fn handle_submenu_buttons(
     mut query_submenu: Query<(
         &mut BackgroundColor,
-        &mut BorderColor,
         &Interaction,
         &SubMenu,
         Option<&MoveButton>,
@@ -258,7 +247,7 @@ pub fn handle_submenu_buttons(
     )>,
     mut selected_submenu: ResMut<SelectedSubMenu>,
 ) {
-    for (mut bg_color, mut border_color, interaction, submenu_button, move_button, attack_button) in
+    for (mut bg_color, interaction, submenu_button, move_button, attack_button) in
         query_submenu.iter_mut()
     {
         match interaction {

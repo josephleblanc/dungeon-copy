@@ -1,21 +1,11 @@
 use bevy::prelude::*;
 
-use self::armor_class::{sum_armor_class_modifiers, ACBonusSumEvent};
-use self::attack_roll::{sum_attack_modifier, AttackBonusSumEvent};
-use self::crit_multiplier::{sum_crit_multiplier, CritMultiplier, CritMultiplierSumEvent};
-use self::critical_range::{sum_crit_range_mods, CritRangeModSumEvent};
-use crate::plugins::combat::CompleteAttack;
-use crate::plugins::item::equipment::weapon::EquippedWeapons;
-use crate::plugins::player::attacks::IterativeAttack;
-use crate::plugins::player::equipment::{WeaponSlot, WeaponSlotName};
-use crate::plugins::{
-    interact::{InteractingPos, InteractingType},
-    player::control::ActionPriority,
-};
-use crate::resources::dice::Dice;
-use crate::scenes::SceneState;
+use self::armor_class::sum_armor_class_modifiers;
+use self::attack_roll::sum_attack_modifier;
+use self::crit_multiplier::sum_crit_multiplier;
+use self::critical_range::sum_crit_range_mods;
 
-use super::{AttackDataEvent, AttackModifier, CompleteAttackEvent, SumModifier};
+use super::{AttackDataEvent, AttackModifier, SumModifier};
 
 pub mod armor_class;
 pub mod armor_class_modifier;

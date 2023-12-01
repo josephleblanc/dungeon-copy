@@ -1,10 +1,8 @@
 use bevy::prelude::*;
-use bevy::utils::Duration;
 
 use crate::components::player::PlayerComponent;
 use crate::components::player_animation::PlayerAnimation;
 use crate::config::*;
-use crate::plugins::game_ui::translate::trans_to_window;
 use crate::plugins::interact::Interactable;
 use crate::plugins::player::collisions::wall_collision_check;
 use crate::resources::animation_state::AnimationState;
@@ -87,7 +85,7 @@ pub fn to_nearest_square(
     mut movement: ResMut<Movement>,
 ) {
     let debug = false;
-    let (player_stats, mut player_animation, mut transform) = player_query.single_mut();
+    let (player_stats, mut player_animation, transform) = player_query.single_mut();
 
     let player_position = transform.translation;
     player_animation.animation_state = AnimationState::Moving;

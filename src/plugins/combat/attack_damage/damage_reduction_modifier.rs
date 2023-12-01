@@ -1,11 +1,13 @@
+#![allow(dead_code)]
+
 use bevy::prelude::*;
 
 use crate::{
-    plugins::combat::{bonus::BonusType, damage, AttackData, AttackDataEvent},
+    plugins::combat::{AttackData, AttackDataEvent},
     resources::equipment::weapon,
 };
 
-use super::damage_reduction::{DRSource, DamageReduction};
+use super::damage_reduction::DamageReduction;
 
 #[derive(Debug, Copy, Clone, Deref, DerefMut)]
 pub struct DRMod {

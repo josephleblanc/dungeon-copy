@@ -163,22 +163,17 @@ impl InitiativeDetails {
     }
 
     fn sum_stackable(&self) -> isize {
-        let debug = false;
         let mut total = 0;
         for bonus_type in BonusType::stackable() {
             total += self
                 .iter()
                 .filter(|atk_mod| atk_mod.bonus_type == bonus_type)
                 .fold(0, |acc, x| acc + x.bonus);
-            // if debug {
-            //     debug_sum_stackable(bonus_type, total);
-            // }
         }
         total
     }
 
     fn sum_non_stackable(&self) -> isize {
-        let debug = false;
         let mut total = 0;
         for bonus_type in BonusType::non_stackable() {
             if let Some(highest_modifier) = self
@@ -187,9 +182,6 @@ impl InitiativeDetails {
                 .max_by(|x, y| x.bonus.cmp(&y.bonus))
             {
                 total += highest_modifier.bonus;
-                // if debug {
-                //     debug_sum_non_stackable(bonus_type, total);
-                // }
             }
         }
         total

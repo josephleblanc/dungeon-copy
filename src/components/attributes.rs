@@ -76,14 +76,10 @@ where
 }
 
 // Examples of how to use the above trait and structs
-pub fn test_attribute<T>(attribute: T)
-where
-    T: Attribute,
-    usize: std::convert::From<T>,
-{
-    let bonus = attribute.bonus();
-}
-
-pub fn test_strength(str: Strength) {
-    let bonus = str.bonus();
-}
+// pub fn test_attribute<T>(attribute: T)
+// where
+//     T: Attribute,
+//     usize: std::convert::From<T>,
+// {
+//     let bonus = attribute.bonus();
+// }

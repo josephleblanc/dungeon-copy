@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use bevy::prelude::*;
 
 use crate::{
@@ -289,23 +291,24 @@ fn debug_evaluate_attack_complete(
     mut crit_range_mod_finished: EventReader<'_, '_, CritRangeModSumEvent>,
     mut crit_multiplier_mod_finished: EventReader<'_, '_, CritMultiplierSumEvent>,
 ) {
-    for ((((attack_data, ac_mod), atk_mod), crit_range_mod), crit_multiplier) in attack_data_event
-        .into_iter()
-        .zip(ac_mod_finished.into_iter())
-        .zip(atk_mod_finished.into_iter())
-        .zip(crit_range_mod_finished.into_iter())
-        .zip(crit_multiplier_mod_finished.into_iter())
-        .inspect(|((((data, ac), atk), crit_r), crit_m)| {
-            let ac = ***data == ac.attack_data;
-            let atk = ***data == atk.attack_data;
-            let crit_r = ***data == crit_r.attack_data;
-            let crit_m = ***data == crit_m.attack_data;
-            println!(
-                "debug | evaluate_complete_attack | inspecting iterator: \
+    for ((((_attack_data, _ac_mod), _atk_mod), _crit_range_mod), _crit_multiplier) in
+        attack_data_event
+            .into_iter()
+            .zip(ac_mod_finished.into_iter())
+            .zip(atk_mod_finished.into_iter())
+            .zip(crit_range_mod_finished.into_iter())
+            .zip(crit_multiplier_mod_finished.into_iter())
+            .inspect(|((((data, ac), atk), crit_r), crit_m)| {
+                let ac = ***data == ac.attack_data;
+                let atk = ***data == atk.attack_data;
+                let crit_r = ***data == crit_r.attack_data;
+                let crit_m = ***data == crit_m.attack_data;
+                println!(
+                    "debug | evaluate_complete_attack | inspecting iterator: \
                 \n\tcheck that attack_data is equal: ac {}, atk {}, crit_r {}, crit_m {}",
-                ac, atk, crit_r, crit_m
-            );
-        })
+                    ac, atk, crit_r, crit_m
+                );
+            })
     {}
 }
 

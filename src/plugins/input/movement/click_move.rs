@@ -1,4 +1,5 @@
-use crate::config::TILE_SIZE;
+#![allow(dead_code)]
+
 use crate::plugins::game_ui::action_bar::ActionBarButton;
 use crate::plugins::game_ui::action_bar::SelectedAction;
 use crate::plugins::interact::InteractingPosEvent;
@@ -58,7 +59,7 @@ impl MovementPathList {
         self.list.push(path);
     }
 
-    pub fn set_focused(&mut self, mut new_focused: MovementPath) {
+    pub fn set_focused(&mut self, new_focused: MovementPath) {
         self.focused = new_focused;
     }
 
@@ -140,12 +141,12 @@ pub fn check_path_conditions(
 }
 
 pub fn handle_path(
-    mut path_list: Option<ResMut<MovementPathList>>,
+    path_list: Option<ResMut<MovementPathList>>,
     button: Res<Input<MouseButton>>,
 
     mut list_event_writer: EventWriter<PathListEvent>,
     mut move_event_writer: EventWriter<MovementPathEvent>,
-    mut interacting_pos_reader: EventReader<InteractingPosEvent>,
+    interacting_pos_reader: EventReader<InteractingPosEvent>,
 
     interacting_pos: Res<InteractingPos>,
     path_ready: Res<PathConditions>,
@@ -261,11 +262,10 @@ pub fn start_path_list(
 }
 
 pub fn add_path(
-    mut commands: Commands,
     block_type_query: Query<(&BlockType, &Transform), Without<PlayerComponent>>,
     monster_query: Query<(&Monster, &Transform), Without<PlayerComponent>>,
     mut open_paths: ResMut<PathNodes>,
-    mut path_list: Option<ResMut<MovementPathList>>,
+    path_list: Option<ResMut<MovementPathList>>,
     mut event_reader: EventReader<PathListEvent>,
     mut sprite_writer: EventWriter<PathSpriteEvent>,
     interacting_pos: Res<InteractingPos>,

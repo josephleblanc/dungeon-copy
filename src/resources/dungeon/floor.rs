@@ -26,7 +26,7 @@ impl Floor {
         let map_name = path.clone();
         let file = match File::open(path) {
             Ok(file) => file,
-            Err(err) => panic!("Can't open map file {}: {}", file_name, err.to_string()),
+            Err(err) => panic!("Can't open map file {}: {}", file_name, err),
         };
 
         let reader = BufReader::new(file);
@@ -45,7 +45,7 @@ impl Floor {
 
         for (row_index, line) in reader.lines().enumerate() {
             let str_line = line.unwrap();
-            let str_numbers = str_line.split(" ");
+            let str_numbers = str_line.split(' ');
 
             let mut row: Vec<f32> = Vec::new();
 
