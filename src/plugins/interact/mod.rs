@@ -17,10 +17,15 @@ pub struct InteractionPlugin;
 
 impl Plugin for InteractionPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<InteractingPos>();
+        app.init_resource::<InteractingPos>()
+            .init_resource::<InteractionActive>();
         app.add_systems(
             Update,
-            interact_system.run_if(in_state(SceneState::InGameClassicMode)),
+            (
+                interact_system.run_if(resource_exists_and_equals(InteractionActive(false))),
+                detect_ui_interaction,
+            )
+                .run_if(in_state(SceneState::InGameClassicMode)),
         );
         app.add_systems(OnExit(SceneState::InGameClassicMode), cleanup);
     }
@@ -334,6 +339,18 @@ pub fn interact_system(
 //         }
 //     }
 // }
+
+#[derive(Resource, Clone, Copy, PartialEq, Eq, Deref, DerefMut, Default)]
+pub struct InteractionActive(bool);
+
+pub fn detect_ui_interaction(
+    ui_query: Query<&Interaction>,
+    mut interaction_res: ResMut<InteractionActive>,
+) {
+    **interaction_res = ui_query
+        .iter()
+        .any(|interaction| *interaction != Interaction::None);
+}
 
 fn cleanup(mut commands: Commands) {
     commands.remove_resource::<InteractingPos>();

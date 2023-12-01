@@ -6,6 +6,7 @@ use crate::plugins::game_ui::action_bar::ActionBarButton;
 use crate::plugins::game_ui::action_bar::SelectedAction;
 use crate::plugins::interact::InteractingPosEvent;
 use crate::plugins::interact::InteractingType;
+use crate::plugins::interact::InteractionActive;
 use crate::plugins::monster::collisions::monster_collision_check;
 use std::ops::Deref;
 use std::ops::DerefMut;
@@ -125,11 +126,13 @@ pub fn check_path_conditions(
     movement: Res<Movement>,
     movement_path: Option<Res<MovementPath>>,
     selected_action: Res<SelectedAction>,
+    interaction_active: Res<InteractionActive>,
     mut path_ready: ResMut<PathConditions>,
 ) {
     let player_pos = player_query.get_single().unwrap().1.translation.truncate();
     let focus_pos = interacting_pos.pos;
-    **path_ready = **selected_action == ActionBarButton::Move
+    **path_ready = !**interaction_active
+        && **selected_action == ActionBarButton::Move
         && interacting_pos.interacting_type == InteractingType::MapGrid
         && **movement_mode == MovementMode::TurnBasedMovement
         && !movement.moving
@@ -392,6 +395,15 @@ pub fn reset_by_action_button(
 ) {
     if **current_mode != ActionBarButton::Move {
         println!("sending pathlist remove");
+        list_event_writer.send(PathListEvent::from(PathListAction::Remove));
+    }
+}
+
+pub fn reset_on_ui_interaction(
+    mut list_event_writer: EventWriter<PathListEvent>,
+    interaction_active: Res<InteractionActive>,
+) {
+    if **interaction_active {
         list_event_writer.send(PathListEvent::from(PathListAction::Remove));
     }
 }
