@@ -3,21 +3,39 @@
 use bevy::prelude::*;
 use std::{ops::DerefMut, slice::Iter};
 
+use self::event::{update_turn_actions, MoveActionEvent, TurnActionEvent};
+use crate::plugins::actions::event::update_move_actions;
+
 use super::{
     combat_mode::state::CombatMode,
-    game_ui::{combat_mode::CombatModeRes, turn_actions::TurnActionButton},
+    game_ui::{
+        action_bar::submenu_button::{MoveButton, SelectedSubMenu},
+        combat_mode::CombatModeRes,
+        turn_actions::TurnActionButton,
+    },
 };
+
+pub mod event;
 
 pub struct ActionPlugin;
 
 impl Plugin for ActionPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<TurnActionEvent>()
+            .add_event::<MoveActionEvent>()
             .add_systems(
                 Update,
-                setup.run_if(resource_exists_and_equals(CombatModeRes(
-                    CombatMode::InCombat,
-                ))),
+                (
+                    setup.run_if(resource_exists_and_equals(CombatModeRes(
+                        CombatMode::InCombat,
+                    ))),
+                    update_move_actions
+                        .run_if(resource_exists::<SelectedSubMenu>())
+                        .run_if(on_event::<MoveActionEvent>()),
+                    update_turn_actions
+                        .run_if(resource_exists::<ActionStatus>())
+                        .run_if(on_event::<TurnActionEvent>()),
+                ),
             )
             .add_systems(
                 Update,
@@ -34,6 +52,7 @@ pub enum TurnAction {
     Standard,
     FiveFootStep,
     Immediate,
+    FullRound,
 }
 
 impl TurnAction {
@@ -43,6 +62,7 @@ impl TurnAction {
             TurnAction::Standard,
             TurnAction::FiveFootStep,
             TurnAction::Immediate,
+            TurnAction::FullRound,
         ]
         .iter()
     }
@@ -55,14 +75,20 @@ impl From<TurnActionButton> for TurnAction {
             TurnActionButton::Move => TurnAction::Move,
             TurnActionButton::Standard => TurnAction::Standard,
             TurnActionButton::FiveFootStep => TurnAction::FiveFootStep,
+            TurnActionButton::FullRound => TurnAction::FullRound,
         }
     }
 }
 
-#[derive(Event, Copy, Clone, Debug, PartialEq, Eq)]
-pub struct TurnActionEvent {
-    pub turn_action: TurnAction,
-    pub status: TurnActionStatus,
+impl From<MoveButton> for TurnAction {
+    fn from(value: MoveButton) -> Self {
+        match value {
+            MoveButton::MoveAction => TurnAction::Move,
+            MoveButton::StandardAction => TurnAction::Standard,
+            MoveButton::FiveFootStep => TurnAction::FiveFootStep,
+            MoveButton::FullMove => TurnAction::FullRound,
+        }
+    }
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Default)]
@@ -73,41 +99,34 @@ pub enum TurnActionStatus {
     Planned,
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Deref, DerefMut, Resource, Default)]
-pub struct MoveAction(TurnActionStatus);
-impl Action for MoveAction {}
+impl TurnActionStatus {
+    pub fn is_available(self) -> bool {
+        self == TurnActionStatus::Available
+    }
+}
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Deref, DerefMut, Resource, Default)]
-pub struct StandardAction(TurnActionStatus);
-impl Action for StandardAction {}
+#[derive(Clone, Copy, Resource, Debug, PartialEq, Eq, Default)]
+pub struct ActionStatus {
+    pub move_action: TurnActionStatus,
+    pub standard: TurnActionStatus,
+    pub immediate: TurnActionStatus,
+    pub five_foot_step: TurnActionStatus,
+    pub full_round: TurnActionStatus,
+}
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Deref, DerefMut, Resource, Default)]
-pub struct ImmediateAction(TurnActionStatus);
-impl Action for ImmediateAction {}
-
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Deref, DerefMut, Resource, Default)]
-pub struct FiveFootStep(TurnActionStatus);
-impl Action for FiveFootStep {}
-
-pub trait Action {
-    fn reset(&mut self)
-    where
-        Self: std::marker::Sized + DerefMut<Target = TurnActionStatus>,
-    {
-        **self = TurnActionStatus::Available;
+impl ActionStatus {
+    pub fn reset(&mut self) {
+        self.move_action = TurnActionStatus::Available;
+        self.standard = TurnActionStatus::Available;
+        self.immediate = TurnActionStatus::Available;
+        self.five_foot_step = TurnActionStatus::Available;
     }
 }
 
 pub fn setup(mut commands: Commands) {
-    commands.init_resource::<MoveAction>();
-    commands.init_resource::<StandardAction>();
-    commands.init_resource::<ImmediateAction>();
-    commands.init_resource::<FiveFootStep>();
+    commands.init_resource::<ActionStatus>();
 }
 
 pub fn cleanup(mut commands: Commands) {
-    commands.remove_resource::<MoveAction>();
-    commands.remove_resource::<StandardAction>();
-    commands.remove_resource::<ImmediateAction>();
-    commands.remove_resource::<FiveFootStep>();
+    commands.remove_resource::<ActionStatus>();
 }

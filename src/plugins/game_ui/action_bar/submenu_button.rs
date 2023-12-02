@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use crate::{
-    plugins::game_ui::action_bar::ActionBarButton,
+    plugins::{actions::ActionStatus, game_ui::action_bar::ActionBarButton},
     resources::{dictionary::Dictionary, glossary::Translation},
 };
 use bevy::prelude::*;
@@ -25,6 +25,17 @@ impl MoveButton {
             MoveButton::FullMove,
         ]
         .iter()
+    }
+}
+
+impl SubMenuActions for MoveButton {
+    fn is_action_available(self, action_status: &ActionStatus) -> bool {
+        match self {
+            Self::MoveAction => action_status.move_action.is_available(),
+            Self::StandardAction => action_status.standard.is_available(),
+            Self::FiveFootStep => action_status.five_foot_step.is_available(),
+            Self::FullMove => action_status.full_round.is_available(),
+        }
     }
 }
 
@@ -55,6 +66,22 @@ pub enum AttackButton {
     #[default]
     Single,
     Full,
+}
+
+impl SubMenuActions for AttackButton {
+    fn is_action_available(self, action_status: &ActionStatus) -> bool {
+        match self {
+            Self::Single => action_status.standard.is_available(),
+            Self::Full => action_status.full_round.is_available(),
+        }
+    }
+}
+
+pub trait SubMenuActions
+where
+    Self: Copy,
+{
+    fn is_action_available(self, action_status: &ActionStatus) -> bool;
 }
 
 impl AttackButton {
@@ -242,8 +269,8 @@ pub fn handle_submenu_display(
 
 #[derive(Resource, Copy, Clone, Debug, Default)]
 pub struct SelectedSubMenu {
-    attack_submenu: AttackButton,
-    move_submenu: MoveButton,
+    pub attack_submenu: AttackButton,
+    pub move_submenu: MoveButton,
 }
 
 pub fn handle_submenu_buttons(
@@ -255,10 +282,18 @@ pub fn handle_submenu_buttons(
         Option<&AttackButton>,
     )>,
     mut selected_submenu: ResMut<SelectedSubMenu>,
+    action_status: Res<ActionStatus>,
 ) {
     for (mut bg_color, interaction, submenu_button, move_button, attack_button) in
         query_submenu.iter_mut()
     {
+        if !((move_button.is_some() && move_button.unwrap().is_action_available(&action_status))
+            || (attack_button.is_some()
+                && attack_button.unwrap().is_action_available(&action_status)))
+        {
+            *bg_color = Color::DARK_GRAY.into();
+            continue;
+        }
         match interaction {
             Interaction::Pressed => {
                 *bg_color = Color::DARK_GREEN.into();

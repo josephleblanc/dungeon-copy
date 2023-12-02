@@ -5,7 +5,7 @@ use std::slice::Iter;
 use crate::{
     materials::font::FontMaterials,
     plugins::{
-        actions::{TurnAction, TurnActionEvent, TurnActionStatus},
+        actions::{event::TurnActionEvent, TurnAction, TurnActionStatus},
         combat_mode::turn::action::CurrentTurn,
         player::PlayerLabel,
     },
@@ -170,6 +170,7 @@ pub enum TurnActionButton {
     Standard,
     FiveFootStep,
     Immediate,
+    FullRound,
 }
 
 impl TurnActionButton {

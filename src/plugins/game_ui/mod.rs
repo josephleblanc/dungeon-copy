@@ -8,7 +8,10 @@ use self::{
     map::pathing::PathSpriteEvent,
 };
 
-use super::{actions::TurnActionEvent, combat_mode::turn::action::CurrentTurn};
+use super::{
+    actions::{event::TurnActionEvent, ActionStatus},
+    combat_mode::turn::action::CurrentTurn,
+};
 
 pub mod action_bar;
 pub mod combat_mode;
@@ -60,7 +63,8 @@ impl Plugin for IngameUiPlugin {
                 action_bar::handle_submenu_select,
                 map::pathing::despawn_move_path.run_if(on_event::<PathSpriteEvent>()),
                 action_bar::submenu_button::handle_submenu_display,
-                action_bar::submenu_button::handle_submenu_buttons,
+                action_bar::submenu_button::handle_submenu_buttons
+                    .run_if(resource_exists::<ActionStatus>()),
                 action_bar::submenu_button::handle_submenu_border
                     .run_if(resource_exists_and_changed::<SelectedSubMenu>()),
             )

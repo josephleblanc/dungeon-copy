@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use crate::plugins::actions::MoveAction;
+use crate::plugins::actions::event::MoveActionEvent;
 use crate::plugins::actions::TurnActionStatus;
 use crate::plugins::game_ui::action_bar::ActionBarButton;
 use crate::plugins::game_ui::action_bar::SelectedAction;
@@ -152,6 +152,7 @@ pub fn handle_path(
     mut list_event_writer: EventWriter<PathListEvent>,
     mut move_event_writer: EventWriter<MovementPathEvent>,
     interacting_pos_reader: EventReader<InteractingPosEvent>,
+    mut move_action_writer: EventWriter<MoveActionEvent>,
 
     interacting_pos: Res<InteractingPos>,
     path_ready: Res<PathConditions>,
@@ -172,6 +173,7 @@ pub fn handle_path(
                     let move_path = path_list.list_to_path();
                     move_event.set_move_path(move_path);
                     move_event_writer.send(move_event);
+                    move_action_writer.send(MoveActionEvent);
                 }
             } else if button.just_pressed(MouseButton::Right) {
                 list_event_writer.send(PathListAction::Remove.into());

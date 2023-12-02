@@ -63,14 +63,13 @@ pub fn move_event_system(
                         move_path.set_active();
                         move_path.set_traversing();
                         commands.insert_resource::<MovementPath>(move_path);
-                        // }
                     }
                     MovePathAction::Remove => {
                         if move_path.is_some() {
                             commands.remove_resource::<MovementPath>();
                             commands.remove_resource::<MovementPathList>();
                         }
-                    } // MovePathAction::TakePath => todo!(),
+                    }
                 }
             }
         }
